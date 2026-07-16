@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Señal de Vida - Buscar Cita</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=JetBrains+Mono:wght@700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#d6e6ff",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#dee3e7",
+                    "error-container": "#ffdad6",
+                    "surface": "#f5fafe",
+                    "inverse-surface": "#2c3134",
+                    "on-primary": "#ffffff",
+                    "on-background": "#171c1f",
+                    "surface-container": "#e9eef2",
+                    "secondary-container": "#81f3e5",
+                    "on-tertiary-fixed-variant": "#2e4867",
+                    "primary-fixed": "#d6e3ff",
+                    "outline": "#727783",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "secondary": "#006a62",
+                    "outline-variant": "#c2c6d4",
+                    "surface-container-low": "#eff4f8",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f5fafe",
+                    "primary": "#004d99",
+                    "tertiary-fixed": "#d2e4ff",
+                    "inverse-on-surface": "#ecf1f5",
+                    "on-secondary-fixed": "#00201d",
+                    "on-surface": "#171c1f",
+                    "surface-container-highest": "#dee3e7",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-tertiary-fixed": "#001d37",
+                    "surface-tint": "#005db7",
+                    "tertiary-container": "#4e6888",
+                    "on-primary-fixed": "#001b3d",
+                    "surface-container-high": "#e4e9ed",
+                    "on-surface-variant": "#424752",
+                    "surface-dim": "#d5dbdf",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-container": "#1565c0",
+                    "secondary-fixed-dim": "#66d9cc",
+                    "tertiary-fixed-dim": "#aec9ed",
+                    "on-primary-container": "#dae5ff",
+                    "secondary-fixed": "#84f5e8",
+                    "tertiary": "#36506e",
+                    "on-secondary-container": "#006f66",
+                    "inverse-primary": "#a9c7ff",
+                    "background": "#f5fafe",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target-min": "48px",
+                    "button-height": "64px",
+                    "margin-mobile": "20px",
+                    "base": "8px",
+                    "stack-gap": "24px",
+                    "gutter-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Atkinson Hyperlegible Next"],
+                    "body-md": ["Atkinson Hyperlegible Next"],
+                    "display-code": ["JetBrains Mono"],
+                    "body-lg": ["Atkinson Hyperlegible Next"],
+                    "label-md": ["Atkinson Hyperlegible Next"],
+                    "headline-lg": ["Atkinson Hyperlegible Next"],
+                    "label-lg": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                    "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      body {
+        background-color: #f5fafe;
+        color: #171c1f;
+        -webkit-font-smoothing: antialiased;
+      }
+      .custom-card {
+        box-shadow: 0 4px 12px rgba(0, 77, 153, 0.04);
+      }
+      .btn-hover-effect {
+        transition: transform 0.1s ease, opacity 0.2s ease;
+      }
+      .btn-hover-effect:active {
+        transform: scale(0.98);
+        opacity: 0.9;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-body-md text-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background docked full-width top-0 z-50">
+<div class="flex items-center justify-between px-margin-mobile h-touch-target-min w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1 text-primary dark:text-primary-fixed hover:text-primary-container transition-colors" onclick="window.history.back()">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-lg text-label-lg">Volver</span>
+</button>
+</div>
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">
+                Señal de Vida
+            </div>
+<div class="w-20 md:w-24"></div> <!-- Spacer for symmetry -->
+</div>
+</header>
+<main class="max-w-md mx-auto px-margin-mobile pt-10 pb-32 flex flex-col gap-stack-gap">
+<!-- Progress Bar (Booking Flow context) -->
+<div class="flex gap-2 w-full justify-center">
+<div class="h-2 w-full rounded-full bg-primary"></div>
+<div class="h-2 w-full rounded-full bg-primary"></div>
+<div class="h-2 w-full rounded-full bg-primary"></div>
+<div class="h-2 w-full rounded-full bg-primary"></div>
+<div class="h-2 w-full rounded-full bg-outline-variant"></div>
+</div>
+<!-- Illustration & Header Section -->
+<section class="flex flex-col items-center text-center gap-4">
+<div class="w-full flex justify-center py-4">
+<div class="relative w-48 h-48 bg-tertiary-fixed rounded-full flex items-center justify-center overflow-hidden">
+<img class="w-40 h-40 object-contain z-10" data-alt="A clean, minimalist 3D illustration of a medical professional in a soft blue uniform holding a digital tablet with a patient document displayed. The lighting is soft and warm, reflecting a professional and friendly Peruvian healthcare atmosphere. The background is a simple, high-contrast gradient of medical blue and soft white, reinforcing a trustworthy and modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtFhVyiXgU2WfzKlpeh7WD8dNnPr2kB5fXfCekOACt3JGVAxS07asYggLkxHVVERN335Gvv4AQeZtivWw8g-cHqV4Iq6pcycHtnX-ZIrtwHNgNVi6ewsCbJq4cyEJr0QZ0f2ahaCNYnHgXehkg2BO6WLUCnyWWXZAU38El70iWCfOOcfEeyByWmgbIR3tlrUq-8Dfu1ypU2XKRK1IPKlnxfOTkaiDkQTWK59o-DV59k8tj0H9TjxuTeo0dhm6x-8SqIQSXRMcpSnM"/>
+<div class="absolute inset-0 opacity-20 bg-gradient-to-br from-primary to-transparent"></div>
+</div>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-background">
+                Busca tu cita
+            </h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[90%] mx-auto">
+                Ingresa los datos que aparecen en tu comprobante.
+            </p>
+</section>
+<!-- Form Section -->
+<section class="flex flex-col gap-6">
+<!-- DNI Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface" for="dni">DNI</label>
+<input class="h-[56px] w-full px-4 rounded-xl border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-body-lg font-body-lg" id="dni" inputmode="numeric" maxlength="8" name="dni" placeholder="Número de documento" type="text"/>
+</div>
+<!-- Booking Code Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface" for="booking_code">Código de reserva</label>
+<input class="h-[56px] w-full px-4 rounded-xl border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-body-lg font-body-lg uppercase" id="booking_code" name="booking_code" placeholder="Ej: SV-482731" type="text"/>
+<span class="text-on-surface-variant text-label-md font-label-md px-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="info">info</span>
+                    Sugerencia: SV-482731
+                </span>
+</div>
+</section>
+<!-- Action Buttons -->
+<section class="flex flex-col gap-4 pt-4">
+<button class="h-button-height w-full bg-primary text-on-primary rounded-full font-label-lg text-label-lg btn-hover-effect flex items-center justify-center gap-2 shadow-sm">
+                Buscar cita
+                <span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="h-touch-target-min w-full flex items-center justify-center gap-2 text-primary font-label-lg text-label-lg hover:bg-surface-container-high rounded-full transition-all" onclick="window.location.href='/'">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+                Volver al inicio
+            </button>
+</section>
+</main>
+<!-- BottomNavBar (Suppressed for focused task screen, but kept as a subtle placeholder or hidden based on instructions - here we hide for task focus) -->
+<!-- The "Relevance Check" logic suggests suppressing navigation for task-focused pages with "Back" actions -->
+<!-- Micro-interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.parentElement.querySelector('label').classList.add('text-primary');
+                });
+                input.addEventListener('blur', () => {
+                    input.parentElement.querySelector('label').classList.remove('text-primary');
+                });
+            });
+
+            // Prevent scroll jumping on focus
+            window.addEventListener('resize', () => {
+                if (document.activeElement.tagName === 'INPUT') {
+                    document.activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+    </script>
+</body></html>

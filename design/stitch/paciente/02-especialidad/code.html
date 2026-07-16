@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Señal de Vida - Seleccionar Especialidad</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700;800&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#d6e6ff",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#dee3e7",
+                    "error-container": "#ffdad6",
+                    "surface": "#f5fafe",
+                    "inverse-surface": "#2c3134",
+                    "on-primary": "#ffffff",
+                    "on-background": "#171c1f",
+                    "surface-container": "#e9eef2",
+                    "secondary-container": "#81f3e5",
+                    "on-tertiary-fixed-variant": "#2e4867",
+                    "primary-fixed": "#d6e3ff",
+                    "outline": "#727783",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "secondary": "#006a62",
+                    "outline-variant": "#c2c6d4",
+                    "surface-container-low": "#eff4f8",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f5fafe",
+                    "primary": "#004d99",
+                    "tertiary-fixed": "#d2e4ff",
+                    "inverse-on-surface": "#ecf1f5",
+                    "on-secondary-fixed": "#00201d",
+                    "on-surface": "#171c1f",
+                    "surface-container-highest": "#dee3e7",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-tertiary-fixed": "#001d37",
+                    "surface-tint": "#005db7",
+                    "tertiary-container": "#4e6888",
+                    "on-primary-fixed": "#001b3d",
+                    "surface-container-high": "#e4e9ed",
+                    "on-surface-variant": "#424752",
+                    "surface-dim": "#d5dbdf",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-container": "#1565c0",
+                    "secondary-fixed-dim": "#66d9cc",
+                    "tertiary-fixed-dim": "#aec9ed",
+                    "on-primary-container": "#dae5ff",
+                    "secondary-fixed": "#84f5e8",
+                    "tertiary": "#36506e",
+                    "on-secondary-container": "#006f66",
+                    "inverse-primary": "#a9c7ff",
+                    "background": "#f5fafe",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target-min": "48px",
+                    "button-height": "64px",
+                    "margin-mobile": "20px",
+                    "base": "8px",
+                    "stack-gap": "24px",
+                    "gutter-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Atkinson Hyperlegible Next"],
+                    "body-md": ["Atkinson Hyperlegible Next"],
+                    "display-code": ["JetBrains Mono"],
+                    "body-lg": ["Atkinson Hyperlegible Next"],
+                    "label-md": ["Atkinson Hyperlegible Next"],
+                    "headline-lg": ["Atkinson Hyperlegible Next"],
+                    "label-lg": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                    "body-md": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                    "display-code": ["48px", { "lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                    "body-lg": ["20px", { "lineHeight": "30px", "fontWeight": "400" }],
+                    "label-md": ["16px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700" }],
+                    "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                    "label-lg": ["20px", { "lineHeight": "24px", "fontWeight": "700" }]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Atkinson Hyperlegible Next', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .specialty-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .specialty-card:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- Top Navigation Anchor (Suppressing Main Shell for Transactional Context) -->
+<header class="bg-surface sticky top-0 z-40 w-full">
+<div class="flex items-center justify-between px-margin-mobile h-touch-target-min w-full max-w-7xl mx-auto">
+<button aria-label="Volver" class="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-lg text-label-lg">Volver</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</span>
+<div class="w-12"></div> <!-- Spacer for symmetry -->
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-xl mx-auto px-margin-mobile pt-6 pb-32">
+<!-- Progress Indicator -->
+<div class="mb-stack-gap">
+<div class="flex gap-2 w-full h-2 mb-4">
+<div class="flex-1 bg-primary rounded-full"></div>
+<div class="flex-1 bg-surface-container-highest rounded-full"></div>
+<div class="flex-1 bg-surface-container-highest rounded-full"></div>
+<div class="flex-1 bg-surface-container-highest rounded-full"></div>
+<div class="flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Paso 1 de 5</p>
+</div>
+<!-- Header Section -->
+<header class="mb-stack-gap">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">¿En qué necesitas atención?</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Toca una opción para elegirla.</p>
+</header>
+<!-- Specialties Bento-style Grid -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Card 1: Medicina General -->
+<button class="specialty-card flex flex-col items-start p-6 bg-surface-container-lowest rounded-[24px] border border-transparent shadow-sm text-left">
+<div class="w-14 h-14 rounded-[18px] bg-yellow-100 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-yellow-700 !text-[32px]" data-icon="medical_services">medical_services</span>
+</div>
+<p class="font-label-lg text-label-lg text-on-surface leading-tight">Medicina general</p>
+</button>
+<!-- Card 2: Cardiología (Selected State) -->
+<button class="specialty-card flex flex-col items-start p-6 bg-surface-container-lowest rounded-[24px] border-2 border-primary shadow-sm text-left relative overflow-hidden">
+<div class="absolute top-3 right-3 flex items-center gap-1 bg-primary text-on-primary px-2 py-1 rounded-full scale-90">
+<span class="material-symbols-outlined !text-[14px]" data-icon="check" style="font-variation-settings: 'wght' 700;">check</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Elegido</span>
+</div>
+<div class="w-14 h-14 rounded-[18px] bg-[#FFEBEB] flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[#E57373] !text-[32px]" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<p class="font-label-lg text-label-lg text-on-surface leading-tight">Corazón / Cardiología</p>
+</button>
+<!-- Card 3: Pediatría -->
+<button class="specialty-card flex flex-col items-start p-6 bg-surface-container-lowest rounded-[24px] border border-transparent shadow-sm text-left">
+<div class="w-14 h-14 rounded-[18px] bg-[#E0F7F9] flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[#00ACC1] !text-[32px]" data-icon="child_care">child_care</span>
+</div>
+<p class="font-label-lg text-label-lg text-on-surface leading-tight">Niños / Pediatría</p>
+</button>
+<!-- Card 4: Traumatología -->
+<button class="specialty-card flex flex-col items-start p-6 bg-surface-container-lowest rounded-[24px] border border-transparent shadow-sm text-left">
+<div class="w-14 h-14 rounded-[18px] bg-[#F3E5F5] flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[#8E24AA] !text-[32px]" data-icon="bone" style="font-variation-settings: 'FILL' 1;">done</span>
+</div>
+<p class="font-label-lg text-label-lg text-on-surface leading-tight">Huesos y artic. / Traumatología</p>
+</button>
+<!-- Card 5: Ginecología -->
+<button class="specialty-card flex flex-col items-start p-6 bg-surface-container-lowest rounded-[24px] border border-transparent shadow-sm text-left">
+<div class="w-14 h-14 rounded-[18px] bg-[#E3F2FD] flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[#1E88E5] !text-[32px]" data-icon="female">female</span>
+</div>
+<p class="font-label-lg text-label-lg text-on-surface leading-tight">Salud de la mujer / Ginecología</p>
+</button>
+<!-- Card 6: Dermatología -->
+<button class="specialty-card flex flex-col items-start p-6 bg-surface-container-lowest rounded-[24px] border border-transparent shadow-sm text-left">
+<div class="w-14 h-14 rounded-[18px] bg-[#FFF3E0] flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[#FB8C00] !text-[32px]" data-icon="pan_tool">pan_tool</span>
+</div>
+<p class="font-label-lg text-label-lg text-on-surface leading-tight">Piel / Dermatología</p>
+</button>
+</div>
+<!-- Professional Helper Image -->
+<div class="mt-stack-gap flex justify-center items-center opacity-80">
+<div class="relative w-48 h-48">
+<div class="absolute inset-0 bg-primary-fixed rounded-full blur-3xl opacity-20"></div>
+<img class="w-full h-full object-contain relative z-10" data-alt="A friendly and professional female Peruvian doctor with a warm smile, wearing a clean white lab coat and a blue stethoscope. She is captured in a high-key, minimalist medical studio setting with soft, diffused lighting that creates a welcoming and inclusive atmosphere. The style is modern and clean, using a palette of soft medical blues and whites to reinforce trust and empathy in a healthcare context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNzWCuxqqZvhruG8uF1TwyJ23gD4E0kFoMs4A_Sscxss0DOsN_KLJqJ4QLRjuZCchfL6nLdHSoMMr6U9gGp44nK_NJZwZgtIc0t7mVxwJsiSzSaD7PHGzMoiPTily5nt3af8s84GH91dq11S9Ey7I7KLtunSJZci17P0r0nOq4iIlXaaOfqRS-gKMB3NYbDDo1sU2B9qF9_9ZudhgYmYKn_7_m6uDmC1bLh_5krcuKRg7QtlwJs_cg0m4VAvHuhq8eIfXkt4oAIcc"/>
+</div>
+</div>
+</main>
+<!-- Fixed Primary Action Container -->
+<footer class="fixed bottom-0 left-0 right-0 p-margin-mobile bg-gradient-to-t from-background via-background to-transparent pt-12 pb-8 z-50">
+<div class="max-w-xl mx-auto">
+<button class="w-full h-button-height bg-primary text-on-primary rounded-full font-label-lg text-label-lg shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2">
+                Elegir especialidad
+                <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</footer>
+<!-- Interactive Script for micro-interactions -->
+<script>
+        document.querySelectorAll('.specialty-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove selected state from all
+                document.querySelectorAll('.specialty-card').forEach(c => {
+                    c.classList.remove('border-primary', 'border-2');
+                    c.classList.add('border-transparent', 'border');
+                    const badge = c.querySelector('.absolute');
+                    if (badge) badge.remove();
+                    const icon = c.querySelector('.material-symbols-outlined');
+                    if (icon) icon.style.fontVariationSettings = icon.style.fontVariationSettings.replace("'FILL' 1", "'FILL' 0");
+                });
+
+                // Add to selected
+                card.classList.remove('border-transparent', 'border');
+                card.classList.add('border-primary', 'border-2');
+                
+                const badgeHtml = `
+                    <div class="absolute top-3 right-3 flex items-center gap-1 bg-primary text-on-primary px-2 py-1 rounded-full scale-90">
+                        <span class="material-symbols-outlined !text-[14px]" style="font-variation-settings: 'wght' 700;">check</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Elegido</span>
+                    </div>
+                `;
+                card.insertAdjacentHTML('afterbegin', badgeHtml);
+                
+                const icon = card.querySelector('.material-symbols-outlined');
+                if (icon) icon.style.fontVariationSettings = icon.style.fontVariationSettings.replace("'FILL' 0", "'FILL' 1");
+            });
+        });
+    </script>
+</body></html>

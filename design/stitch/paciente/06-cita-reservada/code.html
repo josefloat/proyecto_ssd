@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Señal de Vida - Confirmación de Cita</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=JetBrains+Mono:wght@700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        }
+        body {
+            font-family: 'Atkinson Hyperlegible Next', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .tonal-elevation {
+            box-shadow: 0 4px 20px rgba(0, 77, 153, 0.04);
+        }
+        .success-checkmark-glow {
+            filter: drop-shadow(0 0 12px rgba(129, 243, 229, 0.6));
+        }
+        @keyframes subtle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .float-animation {
+            animation: subtle-float 4s ease-in-out infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#d6e6ff",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#dee3e7",
+                        "error-container": "#ffdad6",
+                        "surface": "#f5fafe",
+                        "inverse-surface": "#2c3134",
+                        "on-primary": "#ffffff",
+                        "on-background": "#171c1f",
+                        "surface-container": "#e9eef2",
+                        "secondary-container": "#81f3e5",
+                        "on-tertiary-fixed-variant": "#2e4867",
+                        "primary-fixed": "#d6e3ff",
+                        "outline": "#727783",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "secondary": "#006a62",
+                        "outline-variant": "#c2c6d4",
+                        "surface-container-low": "#eff4f8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f5fafe",
+                        "primary": "#004d99",
+                        "tertiary-fixed": "#d2e4ff",
+                        "inverse-on-surface": "#ecf1f5",
+                        "on-secondary-fixed": "#00201d",
+                        "on-surface": "#171c1f",
+                        "surface-container-highest": "#dee3e7",
+                        "on-primary-fixed-variant": "#00468c",
+                        "on-tertiary-fixed": "#001d37",
+                        "surface-tint": "#005db7",
+                        "tertiary-container": "#4e6888",
+                        "on-primary-fixed": "#001b3d",
+                        "surface-container-high": "#e4e9ed",
+                        "on-surface-variant": "#424752",
+                        "surface-dim": "#d5dbdf",
+                        "on-secondary-fixed-variant": "#005049",
+                        "primary-container": "#1565c0",
+                        "secondary-fixed-dim": "#66d9cc",
+                        "tertiary-fixed-dim": "#aec9ed",
+                        "on-primary-container": "#dae5ff",
+                        "secondary-fixed": "#84f5e8",
+                        "tertiary": "#36506e",
+                        "on-secondary-container": "#006f66",
+                        "inverse-primary": "#a9c7ff",
+                        "background": "#f5fafe",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "48px",
+                        "button-height": "64px",
+                        "margin-mobile": "20px",
+                        "base": "8px",
+                        "stack-gap": "24px",
+                        "gutter-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Atkinson Hyperlegible Next"],
+                        "body-md": ["Atkinson Hyperlegible Next"],
+                        "display-code": ["JetBrains Mono"],
+                        "body-lg": ["Atkinson Hyperlegible Next"],
+                        "label-md": ["Atkinson Hyperlegible Next"],
+                        "headline-lg": ["Atkinson Hyperlegible Next"],
+                        "label-lg": ["Atkinson Hyperlegible Next"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                        "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container">
+<!-- Top Navigation (Shell suppressed for success state, using simple branding) -->
+<header class="bg-surface w-full flex items-center justify-between px-margin-mobile h-touch-target-min w-full max-w-7xl mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</div>
+<button class="flex items-center gap-2 text-on-surface-variant font-label-lg text-label-lg" onclick="window.history.back()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</header>
+<main class="max-w-xl mx-auto px-margin-mobile pt-8 pb-32 flex flex-col gap-stack-gap">
+<!-- Progress Indicator -->
+<div class="w-full flex gap-2 h-2 mb-4">
+<div class="flex-1 bg-primary rounded-full"></div>
+<div class="flex-1 bg-primary rounded-full"></div>
+<div class="flex-1 bg-primary rounded-full"></div>
+<div class="flex-1 bg-primary rounded-full"></div>
+<div class="flex-1 bg-primary rounded-full"></div>
+</div>
+<!-- Success Intro -->
+<section class="flex flex-col items-center text-center gap-4">
+<div class="relative w-40 h-40 mb-2">
+<!-- Illustration Placeholder -->
+<div class="absolute inset-0 float-animation">
+<img class="w-full h-full object-contain" data-alt="A warm and friendly digital illustration of a smiling Peruvian doctor in a white coat against a soft, pastel blue background with gentle organic shapes. The lighting is bright and cheerful, reinforcing a sense of relief and health success. High-quality vector style with smooth gradients and inclusive design elements." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYZ7byRpjyGlnwA0eIqxWxd4j1GCq-_sJDIm5aZU5I9rYPZg7rgIX8LAadOqPFBuDhf1Eatjl7_Q5vgKiMk_pBBGufor4zxOCS5utnAs-iDgF9QzpTu7f9ku8qhI6JCzcctuoePux4FXqFM_UqKPrT0jtXF3vvMe5Bx2uO-4k9G8NpGUSe-d-71OZ1V7Z54V6ZSEyygvADqULaEJDVStCkjBKcJ_BULm5Ildn6gbei-8vdiZK3c3r6VbrCNzRvD6mNbJzS1IhDqqs"/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-secondary-container p-4 rounded-full tonal-elevation success-checkmark-glow">
+<span class="material-symbols-outlined text-on-secondary-container scale-150" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-secondary mb-1">Paso 5 de 5</p>
+<h1 class="font-headline-lg text-headline-lg text-primary">Tu cita está reservada</h1>
+</div>
+</section>
+<!-- Hero Element: Reservation Code -->
+<section class="bg-primary-container p-8 rounded-3xl tonal-elevation flex flex-col items-center gap-6 relative overflow-hidden group">
+<!-- Background Decorative Texture -->
+<div class="absolute top-0 right-0 p-4 opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700">
+<span class="material-symbols-outlined text-[120px]" data-icon="medical_information">medical_information</span>
+</div>
+<div class="text-center z-10">
+<span class="font-label-md text-label-md text-on-primary-container uppercase tracking-widest opacity-80">Código de reserva</span>
+<p class="font-display-code text-display-code text-on-primary-container mt-2">SV-482731</p>
+</div>
+<button class="flex items-center gap-2 bg-on-primary-container text-primary px-6 py-3 rounded-full font-label-lg text-label-lg active:scale-95 transition-all z-10" onclick="copyCode()">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+<span>Copiar código</span>
+</button>
+</section>
+<!-- Status Summary Card -->
+<section class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+</div>
+<div>
+<h3 class="font-label-lg text-label-lg text-on-surface">Estado de cita</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Confirmación de espacio</p>
+</div>
+</div>
+<div class="bg-error-container text-on-error-container px-4 py-2 rounded-lg font-label-md text-label-md">
+                Pendiente de pago
+            </div>
+</section>
+<!-- Deadline Card -->
+<section class="bg-surface-container-high p-8 rounded-2xl border-l-8 border-primary flex gap-6 items-start tonal-elevation">
+<div class="bg-primary-fixed text-on-primary-fixed p-3 rounded-xl">
+<span class="material-symbols-outlined" data-icon="event_upcoming">event_upcoming</span>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="font-label-lg text-label-lg text-primary uppercase">Plazo máximo</h4>
+<p class="font-headline-md text-headline-md text-on-surface">Paga en la clínica antes de:</p>
+<div class="flex flex-col mt-2">
+<p class="font-body-lg text-body-lg text-on-surface font-bold text-primary">Viernes 24 de julio</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant">10:00 de la mañana</p>
+</div>
+<div class="mt-4 flex items-center gap-2 text-on-surface-variant italic">
+<span class="material-symbols-outlined text-[20px]" data-icon="info">info</span>
+<span class="text-sm">Si no se realiza el pago, la reserva se liberará automáticamente.</span>
+</div>
+</div>
+</section>
+<!-- Final Action -->
+<div class="fixed bottom-0 left-0 w-full bg-surface/80 backdrop-blur-md p-margin-mobile border-t border-outline-variant/20 md:relative md:bg-transparent md:border-none md:p-0 md:mt-4">
+<button class="w-full h-button-height bg-primary text-on-primary rounded-2xl font-label-lg text-label-lg shadow-lg hover:bg-primary-container transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                Guardar comprobante
+            </button>
+<p class="text-center mt-4 text-on-surface-variant font-label-md text-label-md md:mb-8">
+                Enviamos una copia a <span class="font-bold text-on-surface">usuario@email.com</span>
+</p>
+</div>
+</main>
+<script>
+        function copyCode() {
+            const code = "SV-482731";
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('button[onclick="copyCode()"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined">done</span><span>¡Copiado!</span>';
+                btn.classList.replace('text-primary', 'text-secondary');
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.replace('text-secondary', 'text-primary');
+                }, 2000);
+            });
+        }
+
+        // Interaction for "Guardar comprobante"
+        document.querySelector('button[data-icon="download"]')?.parentElement.addEventListener('click', function() {
+            this.classList.add('opacity-50');
+            this.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Procesando...</span>';
+            setTimeout(() => {
+                this.classList.remove('opacity-50');
+                this.innerHTML = '<span class="material-symbols-outlined">check</span><span>Guardado</span>';
+            }, 1500);
+        });
+    </script>
+</body></html>

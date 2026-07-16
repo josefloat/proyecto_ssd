@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Señal de Vida - Completa tus datos</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Atkinson Hyperlegible Next -->
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-error": "#ffffff",
+                "on-tertiary-container": "#d6e6ff",
+                "error": "#ba1a1a",
+                "surface-variant": "#dee3e7",
+                "error-container": "#ffdad6",
+                "surface": "#f5fafe",
+                "inverse-surface": "#2c3134",
+                "on-primary": "#ffffff",
+                "on-background": "#171c1f",
+                "surface-container": "#e9eef2",
+                "secondary-container": "#81f3e5",
+                "on-tertiary-fixed-variant": "#2e4867",
+                "primary-fixed": "#d6e3ff",
+                "outline": "#727783",
+                "primary-fixed-dim": "#a9c7ff",
+                "secondary": "#006a62",
+                "outline-variant": "#c2c6d4",
+                "surface-container-low": "#eff4f8",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary": "#ffffff",
+                "surface-bright": "#f5fafe",
+                "primary": "#004d99",
+                "tertiary-fixed": "#d2e4ff",
+                "inverse-on-surface": "#ecf1f5",
+                "on-secondary-fixed": "#00201d",
+                "on-surface": "#171c1f",
+                "surface-container-highest": "#dee3e7",
+                "on-primary-fixed-variant": "#00468c",
+                "on-tertiary-fixed": "#001d37",
+                "surface-tint": "#005db7",
+                "tertiary-container": "#4e6888",
+                "on-primary-fixed": "#001b3d",
+                "surface-container-high": "#e4e9ed",
+                "on-surface-variant": "#424752",
+                "surface-dim": "#d5dbdf",
+                "on-secondary-fixed-variant": "#005049",
+                "primary-container": "#1565c0",
+                "secondary-fixed-dim": "#66d9cc",
+                "tertiary-fixed-dim": "#aec9ed",
+                "on-primary-container": "#dae5ff",
+                "secondary-fixed": "#84f5e8",
+                "tertiary": "#36506e",
+                "on-secondary-container": "#006f66",
+                "inverse-primary": "#a9c7ff",
+                "background": "#f5fafe",
+                "on-secondary": "#ffffff",
+                "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "touch-target-min": "48px",
+                "button-height": "64px",
+                "margin-mobile": "20px",
+                "base": "8px",
+                "stack-gap": "24px",
+                "gutter-mobile": "16px"
+            },
+            "fontFamily": {
+                "headline-md": ["Atkinson Hyperlegible Next"],
+                "body-md": ["Atkinson Hyperlegible Next"],
+                "display-code": ["JetBrains Mono"],
+                "body-lg": ["Atkinson Hyperlegible Next"],
+                "label-md": ["Atkinson Hyperlegible Next"],
+                "headline-lg": ["Atkinson Hyperlegible Next"],
+                "label-lg": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Atkinson Hyperlegible Next', sans-serif;
+            background-color: #f5fafe;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-active { background-color: #004d99; }
+        .step-inactive { background-color: #dee3e7; }
+        .input-focus:focus-within { border-color: #004d99; box-shadow: 0 0 0 2px rgba(0, 77, 153, 0.1); }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- Top Navigation Bar (Shared Component Logic) -->
+<header class="bg-surface sticky top-0 z-50 w-full flex items-center justify-between px-margin-mobile h-touch-target-min max-w-7xl mx-auto">
+<div class="flex items-center gap-2 cursor-pointer transition-opacity active:opacity-80">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+<span class="font-label-lg text-label-lg text-primary">Volver</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</h1>
+<div class="w-12"></div> <!-- Spacer for balance -->
+</header>
+<main class="px-margin-mobile max-w-lg mx-auto">
+<!-- Progress Bar (5-segment indicator) -->
+<div class="mt-6 flex gap-2 w-full">
+<div class="h-2 flex-1 rounded-full step-active"></div>
+<div class="h-2 flex-1 rounded-full step-active"></div>
+<div class="h-2 flex-1 rounded-full step-active"></div>
+<div class="h-2 flex-1 rounded-full step-active"></div>
+<div class="h-2 flex-1 rounded-full step-inactive"></div>
+</div>
+<p class="mt-2 text-on-surface-variant font-label-md text-label-md">Paso 4 de 5</p>
+<!-- Page Header -->
+<h2 class="mt-4 font-headline-lg text-headline-lg text-on-surface">Completa tus datos</h2>
+<!-- Summary Card (Tonal Layers Depth) -->
+<section class="mt-stack-gap bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm transition-transform active:scale-[0.99]">
+<div class="flex items-start gap-4">
+<div class="w-16 h-16 rounded-xl overflow-hidden bg-primary-fixed shrink-0">
+<img class="w-full h-full object-cover" data-alt="A professional Peruvian doctor with a friendly expression, wearing a white medical coat and a blue stethoscope. He is set against a clean, softly lit hospital background with modern medical equipment. The lighting is warm and reassuring, reinforcing a high-trust healthcare environment with a blue and white color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD8rHmU48lNRsBu8AKqYcpts_zgvw3wCJU703uMrpWL6PiYll9tgS3I00Aga_JU0rHkipwIqn-UXvd1r334hjNfm9VbE-Ekk7A8XWnjvglptZc3V7POONDM10RHVPV_LQ7apPRIz5CUtxxZCJa_oFuyGFXQSylwv5KKhTY1Glz848uMWbdyhLtIdXRhQ-w8adOh0myjtRLszSXkk3G_rHjhSh7KJctUPwB42sHjALSBLLrNcY117UqKOHbfaYwg-l605dlNhLTtUc"/>
+</div>
+<div class="flex-1">
+<h3 class="font-label-lg text-label-lg text-primary">Cardiología</h3>
+<p class="font-body-md text-body-md text-on-surface font-bold">Dr. Ricardo Palma</p>
+<div class="mt-2 flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="font-label-md text-label-md">Viernes, 24 de Julio</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+<span class="font-label-md text-label-md">10:00 AM</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Form Fields -->
+<form class="mt-stack-gap flex flex-col gap-6">
+<!-- DNI Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface" for="dni">DNI (8 números)</label>
+<input class="h-14 px-4 bg-surface-container-low border border-outline-variant rounded-xl font-body-lg text-body-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="dni" maxlength="8" placeholder="Ej: 12345678" type="text"/>
+</div>
+<!-- Full Name Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface" for="fullname">Nombre completo</label>
+<input class="h-14 px-4 bg-surface-container-low border border-outline-variant rounded-xl font-body-lg text-body-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="fullname" placeholder="Ej: Juan Pérez García" type="text"/>
+</div>
+<!-- Phone Number Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface" for="phone">Número de celular (9 dígitos)</label>
+<input class="h-14 px-4 bg-surface-container-low border border-outline-variant rounded-xl font-body-lg text-body-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="phone" maxlength="9" placeholder="Ej: 987 654 321" type="tel"/>
+</div>
+</form>
+<!-- Payment Info Card -->
+<div class="mt-stack-gap p-6 bg-secondary-container/20 rounded-xl border border-secondary/20 flex items-start gap-4">
+<span class="material-symbols-outlined text-secondary text-[28px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+<div>
+<p class="font-label-lg text-label-lg text-on-secondary-container">El pago se realiza en la clínica</p>
+<p class="font-body-md text-body-md text-on-surface-variant">No tienes que pagar por internet</p>
+</div>
+</div>
+<!-- Visual Deadline Box (Amber background for importance) -->
+<div class="mt-6 p-6 bg-amber-50 rounded-xl border border-amber-200 flex flex-col gap-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-amber-600 text-[24px]">alarm</span>
+<p class="font-label-lg text-label-lg text-amber-900">Tienes 72 horas para pagar</p>
+</div>
+<p class="font-body-md text-body-md text-amber-800 leading-relaxed">
+                Paga antes del <span class="font-bold">viernes 24 de julio, 10:00 de la mañana</span> para mantener tu cupo asegurado.
+            </p>
+</div>
+<!-- Success Illustration -->
+<div class="mt-stack-gap flex justify-center opacity-60">
+<img class="h-32 w-auto" data-alt="A clean, minimalist 3D illustration of a medical clipboard with a green checkmark, surrounded by soft blue bubbles and subtle geometric shapes. The style is modern, professional, and friendly, using a light medical palette of blues and soft whites to evoke a sense of order and security in a healthcare context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJFx6HSvw8TO5SKAKK3PBCZaiHeU2QjGqJJuJ9NjgbSOsmswbtNG2nxKp8uXpKt7C3QCW2sp83tttsaSEB0aJAcpuzdYqcOH-uAuKWlPJfV2_E4hb8FCwL8BP9nSB5b5MqCapz4eeQdEuQJ15pta2em9tsMZN0qXJbT-8f4E-DjVUF6zA6LMydvWvrZhH17aY-lhmVcPxQDixCHHRZjMHi8oJ5K645vsopf-9d_R84SLJYo1M3CSIEXRs_DqTI5iPr9aPzxODn21c"/>
+</div>
+</main>
+<!-- Sticky Bottom Primary Button -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-surface-container-lowest/80 backdrop-blur-md">
+<div class="max-w-lg mx-auto">
+<button class="w-full h-[64px] bg-primary text-on-primary rounded-full font-label-lg text-label-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3">
+                Confirmar cita
+                <span class="material-symbols-outlined">check_circle</span>
+</button>
+</div>
+</div>
+<script>
+        // Micro-interaction for inputs
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.querySelector('label').classList.add('text-primary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.querySelector('label').classList.remove('text-primary');
+            });
+        });
+
+        // Simple validation logic for feedback
+        const confirmBtn = document.querySelector('button');
+        confirmBtn.addEventListener('click', () => {
+            const dni = document.getElementById('dni').value;
+            if(dni.length < 8) {
+                alert('Por favor, ingresa un DNI válido de 8 dígitos.');
+            } else {
+                confirmBtn.innerHTML = 'Procesando...';
+                confirmBtn.classList.add('opacity-80');
+                setTimeout(() => {
+                    alert('¡Cita registrada con éxito! Te esperamos.');
+                    confirmBtn.innerHTML = 'Confirmar cita <span class="material-symbols-outlined">check_circle</span>';
+                    confirmBtn.classList.remove('opacity-80');
+                }, 1500);
+            }
+        });
+    </script>
+</body></html>

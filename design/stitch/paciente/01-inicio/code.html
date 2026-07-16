@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#d6e6ff",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#dee3e7",
+                    "error-container": "#ffdad6",
+                    "surface": "#f5fafe",
+                    "inverse-surface": "#2c3134",
+                    "on-primary": "#ffffff",
+                    "on-background": "#171c1f",
+                    "surface-container": "#e9eef2",
+                    "secondary-container": "#81f3e5",
+                    "on-tertiary-fixed-variant": "#2e4867",
+                    "primary-fixed": "#d6e3ff",
+                    "outline": "#727783",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "secondary": "#006a62",
+                    "outline-variant": "#c2c6d4",
+                    "surface-container-low": "#eff4f8",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f5fafe",
+                    "primary": "#004d99",
+                    "tertiary-fixed": "#d2e4ff",
+                    "inverse-on-surface": "#ecf1f5",
+                    "on-secondary-fixed": "#00201d",
+                    "on-surface": "#171c1f",
+                    "surface-container-highest": "#dee3e7",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-tertiary-fixed": "#001d37",
+                    "surface-tint": "#005db7",
+                    "tertiary-container": "#4e6888",
+                    "on-primary-fixed": "#001b3d",
+                    "surface-container-high": "#e4e9ed",
+                    "on-surface-variant": "#424752",
+                    "surface-dim": "#d5dbdf",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-container": "#1565c0",
+                    "secondary-fixed-dim": "#66d9cc",
+                    "tertiary-fixed-dim": "#aec9ed",
+                    "on-primary-container": "#dae5ff",
+                    "secondary-fixed": "#84f5e8",
+                    "tertiary": "#36506e",
+                    "on-secondary-container": "#006f66",
+                    "inverse-primary": "#a9c7ff",
+                    "background": "#f5fafe",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target-min": "48px",
+                    "button-height": "64px",
+                    "margin-mobile": "20px",
+                    "base": "8px",
+                    "stack-gap": "24px",
+                    "gutter-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Atkinson Hyperlegible Next"],
+                    "body-md": ["Atkinson Hyperlegible Next"],
+                    "display-code": ["JetBrains Mono"],
+                    "body-lg": ["Atkinson Hyperlegible Next"],
+                    "label-md": ["Atkinson Hyperlegible Next"],
+                    "headline-lg": ["Atkinson Hyperlegible Next"],
+                    "label-lg": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                    "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Atkinson Hyperlegible Next', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-indicator {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-card:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col items-center overflow-x-hidden">
+<!-- Top AppBar - Suppression Rule: Login/Onboarding context usually hides Shell, but since this is "Inicio" and defines the product name "Señal de Vida", we include it as the landing anchor. -->
+<header class="bg-surface fixed top-0 w-full z-50 flex items-center justify-between px-margin-mobile h-touch-target-min max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<main class="w-full max-w-md px-margin-mobile pt-24 pb-32 flex flex-col items-center">
+<!-- Illustration Section -->
+<div class="w-full aspect-[4/3] relative mb-stack-gap overflow-hidden rounded-xl bg-gradient-to-br from-primary-fixed-dim/20 to-surface-container">
+<img class="w-full h-full object-cover" data-alt="A friendly and professional Peruvian healthcare worker in a clean white coat smiling warmly while assisting an elderly male patient in a modern, sunlit clinic. The patient looks calm and reassured. The style is soft, digital illustration with a clean, medical-blue color palette, highlighting a trustworthy and inclusive atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXsCmad8te02qYIC6YvoeiiQA6_-9H_jhGT1GF6F8ymls8NU_lWiOTDbyEbul3rkEd3TymmWOlUs50nYyNPhD28dwYa1nmGJzLWfv5Zy3lf6GXZehkq2RFye7UFyWmoDl9EIPrQZCDbK84P078MxXIcPNtn8QsRjsYYUoQTUP_05sVJ6zsa7kcVD3GETx_Aa0rGvGYBZsDdxsnwfGV6kz1td9lNiQNgjOAsUH-X2uZZXJTtQOn6g2MvEdOq4R1qxjLW3dKlKAgaAE"/>
+</div>
+<!-- Hero Text -->
+<div class="text-center space-y-4 mb-10">
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight leading-tight px-2">
+                Reserva tu cita de manera fácil y rápida
+            </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                Te guiaremos paso a paso.
+            </p>
+</div>
+<!-- Action Cards Section (Bento-style single column) -->
+<div class="w-full space-y-6">
+<!-- Primary Action -->
+<button class="action-card w-full bg-primary text-on-primary h-button-height rounded-xl flex items-center px-6 gap-4 shadow-sm transition-transform duration-200 active:scale-95 group overflow-hidden relative">
+<div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-12 h-12 rounded-lg bg-on-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-3xl" data-icon="calendar_month">calendar_month</span>
+</div>
+<span class="font-label-lg text-label-lg flex-1 text-left">Sacar una cita</span>
+<span class="material-symbols-outlined opacity-50" data-icon="chevron_right">chevron_right</span>
+</button>
+<!-- Secondary Action -->
+<button class="action-card w-full bg-surface-container-lowest border border-outline-variant text-primary h-button-height rounded-xl flex items-center px-6 gap-4 shadow-sm transition-transform duration-200 active:scale-95 group">
+<div class="w-12 h-12 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-3xl" data-icon="description">description</span>
+</div>
+<span class="font-label-lg text-label-lg flex-1 text-left">Ver mi cita</span>
+<span class="material-symbols-outlined opacity-50" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<!-- Decorative Progress Indicator (5 segments as per Style Guidance) -->
+<div class="mt-12 w-full flex justify-center gap-2">
+<div class="h-1.5 w-8 rounded-full bg-primary"></div>
+<div class="h-1.5 w-8 rounded-full bg-surface-container-highest"></div>
+<div class="h-1.5 w-8 rounded-full bg-surface-container-highest"></div>
+<div class="h-1.5 w-8 rounded-full bg-surface-container-highest"></div>
+<div class="h-1.5 w-8 rounded-full bg-surface-container-highest"></div>
+</div>
+</main>
+<!-- Bottom Navigation Bar - From Shared Components JSON -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-surface-container-lowest dark:bg-surface-container shadow-[0_-4px_12px_rgba(0,77,153,0.04)] rounded-t-xl">
+<!-- Inicio (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2 scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Inicio</span>
+</a>
+<!-- Mis Citas -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all py-2 px-4 rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-label-md text-label-md">Mis Citas</span>
+</a>
+<!-- Notificaciones -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all py-2 px-4 rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-md text-label-md">Notificaciones</span>
+</a>
+<!-- Perfil -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all py-2 px-4 rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Perfil</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for feedback on click
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.96)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = 'scale(1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple Fade-in Animation for Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            const main = document.querySelector('main');
+            main.style.opacity = '0';
+            main.style.transform = 'translateY(10px)';
+            main.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            
+            setTimeout(() => {
+                main.style.opacity = '1';
+                main.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body></html>
