@@ -76,6 +76,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
+      # DATABASE_URL no la usa `migrate deploy`, pero la validación del
+      # schema de Prisma exige que el datasource resuelva `url` también.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: >-
         ${{
           (github.event_name == 'workflow_dispatch' && inputs.force_invalid_direct_url)
