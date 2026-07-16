@@ -1,0 +1,102 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+    inputs:
+      force_invalid_direct_url:
+        description: >-
+          Fuerza una DIRECT_URL inválida para probar el escenario negativo
+          de migración. No toca el secreto real DIRECT_URL.
+        type: boolean
+        default: false
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: senal_de_vida
+          POSTGRES_PASSWORD: senal_de_vida
+          POSTGRES_DB: senal_de_vida
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U senal_de_vida"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://senal_de_vida:senal_de_vida@localhost:5432/senal_de_vida?schema=public
+      DIRECT_URL: postgresql://senal_de_vida:senal_de_vida@localhost:5432/senal_de_vida?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Generar Prisma Client
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Aplicar la migración baseline contra el Postgres de servicio
+        working-directory: backend
+        run: npx prisma migrate deploy
+
+      - name: Compilar el backend (tsc)
+        working-directory: backend
+        run: npm run build
+
+      - name: Construir la imagen Docker real del backend
+        run: docker build -t senal-de-vida-api:ci ./backend
+
+      - name: Pruebas del backend (Vitest + Supertest contra Postgres real)
+        working-directory: backend
+        run: npx vitest run
+
+      - name: Instalar dependencias del frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build de producción del frontend
+        working-directory: frontend
+        run: npm run build
+
+  migrate:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      DIRECT_URL: >-
+        ${{
+          (github.event_name == 'workflow_dispatch' && inputs.force_invalid_direct_url)
+            && 'postgresql://invalid:invalid@127.0.0.1:1/invalid?connect_timeout=1'
+            || secrets.DIRECT_URL
+        }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Generar Prisma Client
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Migrar contra Neon (DIRECT_URL)
+        working-directory: backend
+        run: npx prisma migrate deploy
