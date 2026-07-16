@@ -1,0 +1,25 @@
+## 1. Provisión manual de infraestructura [HUMANO OBLIGATORIO] — bloquea las secciones 2-5
+
+- [ ] 1.1 [HUMANO OBLIGATORIO] Crear cuenta y proyecto en Neon; obtener connection string pooled y directa
+- [ ] 1.2 [HUMANO OBLIGATORIO] Crear cuenta y Web Service en Render; obtener deploy hook, API key y service ID
+- [ ] 1.3 [HUMANO OBLIGATORIO] Crear cuenta/proyecto en Vercel; obtener token, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`
+- [ ] 1.4 [HUMANO OBLIGATORIO] Guardar todas las credenciales anteriores como GitHub Secrets del repositorio
+
+## 2. CI: build, pruebas y gate de migración
+
+- [ ] 2.1 Workflow de build (ambos paquetes + imagen Docker del backend) y pruebas de integración contra Postgres real de servicio en CI, con un fixture que fuerza el fallo y confirma vía la API de GitHub Actions que el job de despliegue queda `skipped`; verifica los escenarios "Build y pruebas en verde" y "Fallo de build o pruebas bloquea el deploy" de `specs/deployment-pipeline/spec.md`
+- [ ] 2.2 Job de migración (`prisma migrate deploy` con `DIRECT_URL`) tras build/pruebas en verde, y prueba con `DIRECT_URL` inválida que confirma que la migración falla y no dispara el deploy de Render; verifica los escenarios "Migración exitosa habilita el despliegue de Render" y "URL directa inválida detiene el pipeline antes de desplegar" de `specs/deployment-pipeline/spec.md`
+
+## 3. Despliegue SHA-pinned y rollout preview-first
+
+- [ ] 3.1 Desactivar auto-deploys nativos de Render y Vercel; disparar Render vía API (`commitId: github.sha`) y Vercel vía CLI (`vercel deploy --prebuilt`) con el mismo commit, y hacer polling contra ambas APIs hasta confirmar el commit live, fallando si no coincide; verifica los escenarios "Commit de github.sha confirmado como live en ambos proveedores" y "Desajuste de commit detectado y bloqueado" de `specs/deployment-pipeline/spec.md`
+- [ ] 3.2 Deploy a preview de Vercel (mismo artefacto prebuilt) + smoke test y axe-core contra esa URL + promoción condicionada (`vercel promote`) + smoke ligero post-promoción, con un fixture de página deliberadamente inaccesible en preview que confirma que una violación bloquea la promoción; verifica los escenarios "Preview verificado se promueve a producción" y "Violación de accesibilidad en preview bloquea la promoción" de `specs/deployment-pipeline/spec.md`
+
+## 4. Smoke tests de runtime (directo y a través del proxy)
+
+- [ ] 4.1 Smoke test contra `<backend-url>/health` con reintentos tolerantes al cold start, y un entorno efímero con `DATABASE_URL` pooled inválida que confirma que el smoke test detecta el 503 sin tocar producción; verifica los escenarios "/health responde db:ok tras el despliegue" y "URL pooled inválida detectada en un entorno efímero de prueba" de `specs/deployment-pipeline/spec.md`
+- [ ] 4.2 Smoke test del recorrido completo `<frontend-url>/<ruta-proxy>/health` con reintentos dentro del límite de 120s de Vercel, distinguiendo explícitamente un timeout de proxy de un fallo real de base de datos en el reporte; verifica los escenarios "Recorrido completo a través del proxy responde dentro del límite de Vercel" y "Timeout de proxy distinguido de un fallo real de base de datos" de `specs/deployment-pipeline/spec.md`
+
+## 5. Verificación final del sprint
+
+- [ ] 5.1 Confirmar en producción real: `/live` responde 200 sin tocar la base de datos, `/health` responde `db: "ok"`, el recorrido completo a través del proxy responde dentro del límite de Vercel, axe-core reportó cero violaciones en preview antes de la promoción, y el pipeline completo (build → pruebas → migración → deploy SHA-pinned → preview + axe → promoción → smoke post-promoción) está en verde en GitHub Actions
