@@ -1,0 +1,67 @@
+schema: spec-driven
+
+context: |
+  Proyecto: sistema de reserva de citas de la clínica "Señal de Vida" (Ayacucho, Perú).
+  Contexto académico: curso de Pruebas y Aseguramiento de Calidad de Software.
+  Lo evaluado es la CALIDAD y TRAZABILIDAD de las pruebas, no la cantidad de features.
+  El proyecto debe quedar DESPLEGADO. Desarrollador: uno solo.
+
+  Estructura: monorepo con backend/ y frontend/ separados.
+  - frontend/: Next.js (App Router) + TypeScript + Tailwind + lucide-react + framer-motion
+  - backend/: Express + TypeScript + Prisma
+  - DB: PostgreSQL
+  Todo corre en Docker Compose (web, api, db). Nada depende de instalaciones locales.
+
+  Modelo de agendamiento (basado en HL7 FHIR: Schedule / Slot / Appointment):
+  - Turno: catálogo fijo de la clínica (mañana 9-13, tarde 15-19, noche 19-23).
+  - ProgramacionSemanal: el admin asigna médico + día de semana + turno + consultorio.
+    Un médico NO trabaja días completos; cubre turnos sueltos hasta sus horas semanales.
+  - Slot: unidad mínima reservable, MATERIALIZADA en tabla, generada desde la
+    programación hacia un horizonte de 4 semanas. Estado: LIBRE | RESERVADO | BLOQUEADO.
+    Su duración la define la especialidad.
+  - Bloqueo: anula slots concretos (falta del médico, feriado) sin tocar la programación.
+  - Cita: referencia un slot. Estados: RESERVADA -> PAGADA -> ATENDIDA | NO_ASISTIO |
+    CANCELADA. Una cita RESERVADA expira si no se paga en 72 horas.
+
+  Roles y acceso:
+  - Paciente: SIN contraseña. Se identifica con DNI + teléfono para reservar, y con
+    DNI + código de reserva para ver o cancelar. No accede a datos de terceros.
+  - Recepcionista, médico, admin: CON contraseña. Ven datos de terceros.
+  - Recepcionista: agenda del día, registra el pago, imprime la constancia,
+    envía recordatorios por WhatsApp.
+  - Médico: solo lee su agenda del día. No escribe nada.
+  - Admin: crea médicos y recepcionistas, y define la programación semanal.
+  - GET /disponibilidad es público y devuelve solo slots. Nunca datos de pacientes.
+
+  Flujo del paciente: especialidad -> médico -> fecha -> hora -> confirmar -> código.
+
+  Fuera de alcance, definitivamente: pagos en línea, historia clínica, teleconsulta,
+  app móvil nativa, API de WhatsApp (los recordatorios se envían con links wa.me).
+
+  Testing:
+  - Unitarias: Vitest, patrón AAA
+  - Integración: Supertest contra la API con Postgres real en Docker
+  - E2E: Playwright
+  - Accesibilidad: axe-core, automatizado
+  - Zona horaria: America/Lima (UTC-5, sin DST). Todo timestamp se guarda en UTC.
+
+  Usuario objetivo: adultos mayores con baja alfabetización digital.
+  WCAG 2.1 AA es requisito funcional, no una mejora opcional.
+
+rules:
+  proposal:
+    - Toda propuesta declara explícitamente qué queda FUERA de alcance.
+    - Si la propuesta necesita más de 15 tareas, divídela en dos cambios.
+  specs:
+    - Usar formato Given/When/Then para todos los escenarios.
+    - Todo requisito tiene al menos un escenario de camino feliz y uno de error.
+    - Todo requisito debe ser verificable por una prueba automatizada. Si no se puede
+      probar, está mal escrito.
+  design:
+    - Respetar el diseño aportado en /design. No inventar pantallas nuevas.
+    - Documentar la estrategia de concurrencia de toda operación sobre slots.
+    - Las reglas con estados se documentan como tabla de transición de estados.
+  tasks:
+    - Ninguna tarea se marca como hecha sin su prueba automatizada pasando.
+    - Cada tarea nombra explícitamente qué escenario de la spec verifica.
+    - Cobertura de líneas mínima 80% en la lógica de dominio.
