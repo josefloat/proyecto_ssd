@@ -103,3 +103,137 @@ jobs:
       - name: Migrar contra Neon (DIRECT_URL)
         working-directory: backend
         run: npx prisma migrate deploy
+
+  deploy-render:
+    needs: migrate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+    steps:
+      - name: Desactivar auto-deploy nativo de Render
+        run: |
+          curl -sf -X PATCH "https://api.render.com/v1/services/${RENDER_SERVICE_ID}" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"autoDeploy": "no"}' > /dev/null
+
+      - name: Disparar deploy anclado a github.sha
+        id: trigger
+        run: |
+          response="$(curl -sf -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"commitId\": \"${GITHUB_SHA}\"}")"
+          echo "$response"
+          deploy_id="$(echo "$response" | jq -r '.id')"
+          if [ -z "$deploy_id" ] || [ "$deploy_id" = "null" ]; then
+            echo "::error::La API de Render no devolvió un id de deploy"
+            exit 1
+          fi
+          echo "deploy_id=$deploy_id" >> "$GITHUB_OUTPUT"
+
+      - name: Esperar a que el deploy quede live y confirmar el commit
+        run: |
+          deploy_id="${{ steps.trigger.outputs.deploy_id }}"
+          for i in $(seq 1 60); do
+            deploy="$(curl -sf "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys/${deploy_id}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}")"
+            status="$(echo "$deploy" | jq -r '.status')"
+            commit_id="$(echo "$deploy" | jq -r '.commit.id // .commit.sha // empty')"
+            echo "intento $i: status=$status commit=$commit_id"
+            if [ "$status" = "live" ]; then
+              if [ -n "$commit_id" ] && [ "$commit_id" != "${GITHUB_SHA}" ]; then
+                echo "::error::Commit desplegado ($commit_id) no coincide con github.sha (${GITHUB_SHA})"
+                exit 1
+              fi
+              echo "Render desplegó exactamente github.sha y está live."
+              exit 0
+            fi
+            case "$status" in
+              build_failed|update_failed|canceled|deactivated|pre_deploy_failed)
+                echo "::error::Deploy de Render terminó en estado $status"
+                echo "$deploy"
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Timeout esperando que el deploy de Render quede live"
+          exit 1
+
+  deploy-vercel:
+    needs: migrate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar Vercel CLI y dependencias del frontend (para el smoke/axe)
+        run: npm install -g vercel@latest
+
+      - name: Instalar dependencias del frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Vincular proyecto y descargar configuración de Preview
+        working-directory: frontend
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build único del frontend
+        working-directory: frontend
+        run: vercel build --token="$VERCEL_TOKEN"
+
+      - name: Deploy del artefacto prebuilt a Preview
+        id: preview
+        working-directory: frontend
+        run: |
+          url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN" --meta commitSha="${GITHUB_SHA}")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview desplegado en $url"
+
+      - name: Smoke test contra el preview
+        run: |
+          status="$(curl -s -o /dev/null -w '%{http_code}' "${{ steps.preview.outputs.url }}/")"
+          echo "status=$status"
+          if [ "$status" != "200" ]; then
+            echo "::error::El preview respondió $status en vez de 200"
+            exit 1
+          fi
+
+      - name: Instalar navegadores de Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Escaneo de accesibilidad (axe-core) contra el preview
+        working-directory: frontend
+        env:
+          SMOKE_URL: ${{ steps.preview.outputs.url }}
+        run: npx playwright test e2e/deployed-smoke.spec.ts
+
+      - name: Promover el mismo deployment a producción
+        working-directory: frontend
+        run: vercel promote "${{ steps.preview.outputs.url }}" --token="$VERCEL_TOKEN" --yes
+
+      - name: Confirmar el mismo commit live en producción
+        working-directory: frontend
+        run: |
+          host="$(echo "${{ steps.preview.outputs.url }}" | sed 's#https://##')"
+          deployment="$(curl -s "https://api.vercel.com/v13/deployments/${host}?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}")"
+          echo "$deployment"
+          commit_sha="$(echo "$deployment" | jq -r '.meta.commitSha // empty')"
+          if [ "$commit_sha" != "${GITHUB_SHA}" ]; then
+            echo "::error::meta.commitSha ($commit_sha) no coincide con github.sha (${GITHUB_SHA})"
+            exit 1
+          fi
+          echo "Vercel promovió exactamente github.sha a producción."
