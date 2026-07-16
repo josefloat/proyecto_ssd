@@ -7,8 +7,8 @@
 
 ## 2. CI: build, pruebas y gate de migración
 
-- [ ] 2.1 Workflow de build (ambos paquetes + imagen Docker del backend) y pruebas de integración contra Postgres real de servicio en CI, con un fixture que fuerza el fallo y confirma vía la API de GitHub Actions que el job de despliegue queda `skipped`; verifica los escenarios "Build y pruebas en verde" y "Fallo de build o pruebas bloquea el deploy" de `specs/deployment-pipeline/spec.md`
-- [ ] 2.2 Job de migración (`prisma migrate deploy` con `DIRECT_URL`) tras build/pruebas en verde, y prueba con `DIRECT_URL` inválida que confirma que la migración falla y no dispara el deploy de Render; verifica los escenarios "Migración exitosa habilita el despliegue de Render" y "URL directa inválida detiene el pipeline antes de desplegar" de `specs/deployment-pipeline/spec.md`
+- [x] 2.1 Workflow de build (ambos paquetes + imagen Docker del backend) y pruebas de integración contra Postgres real de servicio en CI, con un fixture que fuerza el fallo y confirma vía la API de GitHub Actions que el job de despliegue queda `skipped`; verifica los escenarios "Build y pruebas en verde" y "Fallo de build o pruebas bloquea el deploy" de `specs/deployment-pipeline/spec.md`
+- [x] 2.2 Job de migración (`prisma migrate deploy` con `DIRECT_URL`) tras build/pruebas en verde, y prueba con `DIRECT_URL` inválida que confirma que la migración falla y no dispara el deploy de Render; verifica los escenarios "Migración exitosa habilita el despliegue de Render" y "URL directa inválida detiene el pipeline antes de desplegar" de `specs/deployment-pipeline/spec.md`
 
 ## 3. Despliegue SHA-pinned y rollout preview-first
 
