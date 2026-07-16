@@ -66,14 +66,14 @@ El pipeline SHALL verificar, tras el despliegue, que `/health` responde `200` co
 - **THEN** recibe `503` y el job de smoke test falla, confirmando que el smoke test detecta este fallo sin necesitar romper producción para probarlo
 
 ### Requirement: Verificación del recorrido completo a través del proxy
-El pipeline SHALL verificar, además del backend directo, que el recorrido completo `<frontend-url>/<ruta-proxy>/health` a través del proxy de Next.js responde correctamente, dado que Render (~1 min de cold start), Vercel (rewrites externos cortados a los 120s) y Neon (scale-to-zero) pueden acumular su latencia de arranque en la primera petición.
+El pipeline SHALL verificar, además del backend directo, que el recorrido completo `<frontend-url>/api/health` a través del Route Handler de Next.js responde correctamente. Cada intento upstream está limitado a 10s por el propio Route Handler; el smoke test SHALL reintentar durante una ventana global de hasta 120s para tolerar el despertar de Render y Neon, distinguiendo un `504` generado por el Route Handler de un `503` reenviado desde el backend.
 
-#### Scenario: Recorrido completo a través del proxy responde dentro del límite de Vercel
+#### Scenario: Recorrido completo a través del proxy responde dentro de la ventana global
 - **GIVEN** el frontend y el backend recién despertaron de inactividad (cold start acumulado de Render + Neon)
-- **WHEN** el smoke test consulta `<frontend-url>/<ruta-proxy>/health` a través del proxy, con reintentos
-- **THEN** la respuesta llega dentro del límite de 120s de los rewrites externos de Vercel y reporta `db: "ok"`
+- **WHEN** el smoke test consulta `<frontend-url>/api/health` con reintentos durante una ventana global máxima de 120s
+- **THEN** puede recibir `504` controlados en intentos intermedios, pero termina con `200` y `db: "ok"` antes de agotar la ventana
 
 #### Scenario: Timeout de proxy distinguido de un fallo real de base de datos
-- **GIVEN** el cold start acumulado de backend y base de datos se acerca o supera el límite de 120s de los rewrites externos de Vercel
-- **WHEN** el smoke test consulta la ruta proxied
-- **THEN** Vercel corta la petición antes de que el backend responda, y el reporte del smoke test distingue explícitamente ese timeout de proxy de un fallo de conexión a la base de datos, para que el diagnóstico no confunda ambas causas
+- **GIVEN** un intento upstream supera los 10s o el backend responde `503` porque no puede consultar la base de datos
+- **WHEN** el smoke test consulta `<frontend-url>/api/health`
+- **THEN** reporta `504` como timeout generado por el Route Handler y `503` como fallo real de base de datos, sin confundir ambas causas

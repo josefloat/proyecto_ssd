@@ -1,9 +1,9 @@
 ## 1. Provisión manual de infraestructura [HUMANO OBLIGATORIO] — bloquea las secciones 2-5
 
-- [ ] 1.1 [HUMANO OBLIGATORIO] Crear cuenta y proyecto en Neon; obtener connection string pooled y directa
-- [ ] 1.2 [HUMANO OBLIGATORIO] Crear cuenta y Web Service en Render; obtener deploy hook, API key y service ID
-- [ ] 1.3 [HUMANO OBLIGATORIO] Crear cuenta/proyecto en Vercel; obtener token, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`
-- [ ] 1.4 [HUMANO OBLIGATORIO] Guardar todas las credenciales anteriores como GitHub Secrets del repositorio
+- [x] 1.1 [HUMANO OBLIGATORIO] Crear cuenta y proyecto en Neon; obtener connection string pooled y directa
+- [x] 1.2 [HUMANO OBLIGATORIO] Crear cuenta y Web Service en Render; obtener deploy hook, API key y service ID
+- [x] 1.3 [HUMANO OBLIGATORIO] Crear cuenta/proyecto en Vercel; obtener token, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`
+- [x] 1.4 [HUMANO OBLIGATORIO] Guardar todas las credenciales anteriores como GitHub Secrets del repositorio
 
 ## 2. CI: build, pruebas y gate de migración
 
@@ -18,8 +18,8 @@
 ## 4. Smoke tests de runtime (directo y a través del proxy)
 
 - [ ] 4.1 Smoke test contra `<backend-url>/health` con reintentos tolerantes al cold start, y un entorno efímero con `DATABASE_URL` pooled inválida que confirma que el smoke test detecta el 503 sin tocar producción; verifica los escenarios "/health responde db:ok tras el despliegue" y "URL pooled inválida detectada en un entorno efímero de prueba" de `specs/deployment-pipeline/spec.md`
-- [ ] 4.2 Smoke test del recorrido completo `<frontend-url>/<ruta-proxy>/health` con reintentos dentro del límite de 120s de Vercel, distinguiendo explícitamente un timeout de proxy de un fallo real de base de datos en el reporte; verifica los escenarios "Recorrido completo a través del proxy responde dentro del límite de Vercel" y "Timeout de proxy distinguido de un fallo real de base de datos" de `specs/deployment-pipeline/spec.md`
+- [ ] 4.2 Smoke test del recorrido completo `<frontend-url>/api/health` con intentos upstream de hasta 10s y una ventana global de reintentos de hasta 120s, distinguiendo explícitamente `504` del Route Handler de `503` del backend; verifica los escenarios "Recorrido completo a través del proxy responde dentro de la ventana global" y "Timeout de proxy distinguido de un fallo real de base de datos" de `specs/deployment-pipeline/spec.md`
 
 ## 5. Verificación final del sprint
 
-- [ ] 5.1 Confirmar en producción real: `/live` responde 200 sin tocar la base de datos, `/health` responde `db: "ok"`, el recorrido completo a través del proxy responde dentro del límite de Vercel, axe-core reportó cero violaciones en preview antes de la promoción, y el pipeline completo (build → pruebas → migración → deploy SHA-pinned → preview + axe → promoción → smoke post-promoción) está en verde en GitHub Actions
+- [ ] 5.1 Confirmar en producción real: `/live` responde 200 sin tocar la base de datos, `/health` responde `db: "ok"`, el recorrido completo a través del Route Handler responde dentro de la ventana global de 120s, axe-core reportó cero violaciones en preview antes de la promoción, y el pipeline completo (build → pruebas → migración → deploy SHA-pinned → preview + axe → promoción → smoke post-promoción) está en verde en GitHub Actions

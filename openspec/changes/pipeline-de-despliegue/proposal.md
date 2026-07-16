@@ -1,6 +1,6 @@
 ## Why
 
-`cimientos-y-despliegue` deja el monorepo funcional y verificado en local: Docker Compose, Prisma con migración baseline, y los endpoints `/live`/`/health`. Pero un proyecto que debe quedar DESPLEGADO no lo está hasta que ese código corre en producción real y alguien (o algo) lo verifica contra las URLs en vivo, no contra `localhost`. Este cambio construye esa ruta: CI que bloquea código roto, una migración que corre donde Render Free lo permite, despliegues anclados al commit exacto, un rollout que verifica antes de exponer al público, y smoke tests que cubren tanto el backend directo como el recorrido completo a través del proxy del frontend.
+`cimientos-y-despliegue` deja el monorepo funcional y verificado en local: Docker Compose, Prisma con migración baseline, y los endpoints `/live`/`/health`. Pero un proyecto que debe quedar DESPLEGADO no lo está hasta que ese código corre en producción real y alguien (o algo) lo verifica contra las URLs en vivo, no contra `localhost`. Este cambio construye esa ruta: CI que bloquea código roto, una migración que corre donde Render Free lo permite, despliegues anclados al commit exacto, un rollout que verifica antes de exponer al público, y smoke tests que cubren tanto el backend directo como el recorrido completo a través del Route Handler del frontend.
 
 Se separa de `cimientos-y-despliegue` porque combinar ambos alcances en una sola propuesta excedía las 15 tareas permitidas por cambio, y porque son dos preocupaciones distintas: que el código funcione (el otro cambio) y que el código esté desplegado y verificado en vivo (este).
 
@@ -10,7 +10,7 @@ Se separa de `cimientos-y-despliegue` porque combinar ambos alcances en una sola
 - Job de migración (`prisma migrate deploy` con `DIRECT_URL`) ejecutado en GitHub Actions después del gate anterior, ya que Render Free no admite pre-deploy command ni jobs one-off.
 - Despliegue anclado al commit exacto (`github.sha`) a Render (vía API) y Vercel (vía CLI), con los auto-deploys nativos de ambos proveedores desactivados para evitar que desplieguen un commit distinto al verificado por el pipeline.
 - Rollout preview-first en Vercel: se despliega primero a un preview, se corre el smoke test y un escaneo axe-core contra esa URL, y solo se promueve a producción si ambos pasan; un smoke test más ligero se repite después de la promoción.
-- Smoke test de runtime contra `/health` (backend directo) y un smoke test separado del recorrido completo a través del proxy del frontend (`<frontend-url>/<ruta-proxy>/health`), dado el riesgo de que los cold starts de Render, Vercel y Neon se acumulen en la primera petición.
+- Smoke test de runtime contra `/health` (backend directo) y un smoke test separado del recorrido completo a través del Route Handler del frontend (`<frontend-url>/api/health`), dado el riesgo de que los cold starts de Render y Neon provoquen uno o más `504` controlados antes de que un reintento responda correctamente.
 - Provisión manual (humana) de cuentas y credenciales en Neon, Render y Vercel, y su almacenamiento como GitHub Secrets — declarada explícitamente como bloqueante del resto del pipeline.
 - **BREAKING**: N/A — no existe despliegue previo que romper.
 
@@ -18,7 +18,7 @@ Se separa de `cimientos-y-despliegue` porque combinar ambos alcances en una sola
 
 ### New Capabilities
 
-- `deployment-pipeline`: pipeline de CI/CD que construye, prueba con Postgres real, migra, despliega de forma anclada al commit y con rollout preview-first, y verifica automáticamente contra las URLs reales de producción — incluido el recorrido completo a través del proxy.
+- `deployment-pipeline`: pipeline de CI/CD que construye, prueba con Postgres real, migra, despliega de forma anclada al commit y con rollout preview-first, y verifica automáticamente contra las URLs reales de producción — incluido el recorrido completo a través del Route Handler `/api/[...path]`.
 
 ### Modified Capabilities
 
