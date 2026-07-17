@@ -1,7 +1,10 @@
 # deployment-pipeline Specification
 
 ## Purpose
-TBD - created by syncing change `pipeline-de-despliegue`. Update Purpose after archive.
+Definir y verificar el pipeline CI/CD que construye y prueba el monorepo,
+aplica migraciones en Neon, despliega el commit exacto en Render y Vercel,
+valida el frontend en un Preview protegido antes de promoverlo y confirma
+automáticamente la salud del sistema en producción.
 
 ## Requirements
 
