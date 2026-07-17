@@ -27,7 +27,6 @@ test("el preview protegido carga con bypass y no tiene violaciones de accesibili
       headers: {
         ...route.request().headers(),
         "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET!,
-        "x-vercel-set-bypass-cookie": "true",
       },
     });
   });

@@ -231,8 +231,7 @@ jobs:
       - name: Smoke test contra el preview con bypass
         run: |
           status="$(curl -sS -o /dev/null -w '%{http_code}' "${{ steps.preview.outputs.url }}/" \
-            -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" \
-            -H "x-vercel-set-bypass-cookie: true")"
+            -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}")"
           echo "status=$status"
           if [ "$status" != "200" ]; then
             echo "::error::El preview respondió $status en vez de 200 con el bypass de automatización"
