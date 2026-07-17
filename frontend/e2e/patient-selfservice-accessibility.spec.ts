@@ -12,7 +12,7 @@ const detalle = {
   estado: "RESERVADA",
   motivoCancelacion: null,
   reservadaEn: "2026-07-17T15:00:00.000Z",
-  venceEn: "2026-07-20T15:00:00.000Z",
+  venceEn: "2026-07-20T14:00:00.000Z",
   canceladaEn: null,
   paciente: { nombre: "Rosa Huamán Quispe" },
   slot: {
