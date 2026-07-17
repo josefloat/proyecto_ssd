@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Uso: vercel-wait-production-ready.sh <sha-esperado> [intentos] [segundos]
+# Uso: vercel-wait-production-ready.sh <sha-esperado> <dominio-canonico> [intentos] [segundos]
 #
 # Requiere VERCEL_TOKEN, VERCEL_PROJECT_ID y VERCEL_ORG_ID en el entorno.
 # Hace polling de GET /v9/projects/{id} hasta que targets.production esté
-# READY, y delega la validación (target=production, dominio, SHA) a
+# READY, y delega la validación (target=production, READY, dominio canónico,
+# SHA) a
 # vercel-parse-production-target.sh -en vez de volver a consultar la URL
 # de Preview, que es el defecto que corrige esta sección-. Imprime
 # "domain=<dominio>" en stdout si todo es válido.
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-expected_sha="${1:?Uso: vercel-wait-production-ready.sh <sha-esperado> [intentos] [segundos]}"
-max_attempts="${2:-18}"
-sleep_seconds="${3:-10}"
+expected_sha="${1:?Uso: vercel-wait-production-ready.sh <sha-esperado> <dominio-canonico> [intentos] [segundos]}"
+expected_domain="${2:?Uso: vercel-wait-production-ready.sh <sha-esperado> <dominio-canonico> [intentos] [segundos]}"
+max_attempts="${3:-18}"
+sleep_seconds="${4:-10}"
 
 : "${VERCEL_TOKEN:?falta VERCEL_TOKEN}"
 : "${VERCEL_PROJECT_ID:?falta VERCEL_PROJECT_ID}"
@@ -36,7 +38,8 @@ for attempt in $(seq 1 "$max_attempts"); do
   echo "intento ${attempt}/${max_attempts}: readyState=${ready_state:-"(sin targets.production)"}" >&2
 
   if [ "$ready_state" = "READY" ]; then
-    "$script_dir/vercel-parse-production-target.sh" "$tmp_file" "$expected_sha"
+    "$script_dir/vercel-parse-production-target.sh" \
+      "$tmp_file" "$expected_sha" "$expected_domain"
     exit 0
   fi
 
