@@ -16,13 +16,15 @@ test.afterAll(() => {
   server.kill();
 });
 
-test("la home carga con un h1 y sin violaciones de accesibilidad", async ({
+test("la home real carga con su h1 y sin violaciones de accesibilidad", async ({
   page,
 }) => {
   const response = await page.goto(BASE_URL);
 
   expect(response?.status()).toBe(200);
-  await expect(page.locator("h1")).toHaveText("Señal de Vida");
+  await expect(page.locator("h1")).toHaveText(
+    "Reserva tu cita de manera fácil y rápida",
+  );
   await expect(page.locator("main")).toBeVisible();
 
   const results = await new AxeBuilder({ page }).analyze();

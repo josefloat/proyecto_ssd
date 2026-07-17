@@ -31,6 +31,8 @@ async function proxy(request: NextRequest, path: string[]) {
       headers: {
         "content-type":
           upstreamResponse.headers.get("content-type") ?? "application/json",
+        "cache-control":
+          upstreamResponse.headers.get("cache-control") ?? "no-store",
       },
     });
   } catch (error) {

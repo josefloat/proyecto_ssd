@@ -54,8 +54,12 @@ export class MotorDisponibilidad {
           },
         });
 
-        let considerados = 0;
-        let insertados = 0;
+        const intervalosEsperados: Array<{
+          programacionSemanalId: string;
+          fechaLima: FechaCivil;
+          inicioUtc: Date;
+          finUtc: Date;
+        }> = [];
         for (let indice = 0; indice < DIAS_HORIZONTE; indice += 1) {
           const fechaLima = sumarDias(desde, indice);
           const programacionesDelDia = programaciones.filter(
@@ -68,21 +72,73 @@ export class MotorDisponibilidad {
               programacion.medico.especialidad.duracionCitaMinutos,
             );
             for (const intervalo of intervalos) {
-              considerados += 1;
-              insertados += await tx.$executeRaw`
-                INSERT INTO "Slot"
-                  ("id", "programacionSemanalId", "inicioUtc", "finUtc", "fechaLima", "estado")
-                VALUES
-                  (${randomUUID()}::uuid, ${programacion.id}::uuid,
-                   ${intervalo.inicioUtc}, ${intervalo.finUtc},
-                   CAST(${fechaLima} AS date), CAST(${EstadoSlot.LIBRE} AS "EstadoSlot"))
-                ON CONFLICT ("programacionSemanalId", "inicioUtc") DO NOTHING
-              `;
+              intervalosEsperados.push({
+                programacionSemanalId: programacion.id,
+                fechaLima,
+                inicioUtc: intervalo.inicioUtc,
+                finUtc: intervalo.finUtc,
+              });
             }
           }
         }
 
-        return { desde, hastaExclusiva, considerados, insertados };
+        if (intervalosEsperados.length === 0) {
+          return {
+            desde,
+            hastaExclusiva,
+            considerados: 0,
+            insertados: 0,
+          };
+        }
+
+        const clavesExistentes = await tx.slot.findMany({
+          where: {
+            programacionSemanalId: {
+              in: programaciones.map((programacion) => programacion.id),
+            },
+            fechaLima: {
+              gte: fechaCivilParaPrisma(desde),
+              lt: fechaCivilParaPrisma(hastaExclusiva),
+            },
+          },
+          select: {
+            programacionSemanalId: true,
+            inicioUtc: true,
+          },
+        });
+        const claveNatural = (programacionSemanalId: string, inicioUtc: Date) =>
+          `${programacionSemanalId}:${inicioUtc.toISOString()}`;
+        const clavesPresentes = new Set(
+          clavesExistentes.map((slot) =>
+            claveNatural(slot.programacionSemanalId, slot.inicioUtc),
+          ),
+        );
+        const intervalosFaltantes = intervalosEsperados.filter(
+          (intervalo) =>
+            !clavesPresentes.has(
+              claveNatural(intervalo.programacionSemanalId, intervalo.inicioUtc),
+            ),
+        );
+
+        let insertados = 0;
+        for (const intervalo of intervalosFaltantes) {
+          insertados += await tx.$executeRaw`
+                INSERT INTO "Slot"
+                  ("id", "programacionSemanalId", "inicioUtc", "finUtc", "fechaLima", "estado")
+                VALUES
+                  (${randomUUID()}::uuid, ${intervalo.programacionSemanalId}::uuid,
+                   ${intervalo.inicioUtc}, ${intervalo.finUtc},
+                   CAST(${intervalo.fechaLima} AS date), CAST(${EstadoSlot.LIBRE} AS "EstadoSlot"))
+                ON CONFLICT ("programacionSemanalId", "inicioUtc") DO NOTHING
+              `;
+        }
+
+        return {
+          desde,
+          hastaExclusiva,
+          considerados: intervalosEsperados.length,
+          insertados,
+        };
       },
       { maxWait: 15_000, timeout: 30_000 },
     );

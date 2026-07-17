@@ -1,11 +1,33 @@
 import express, { type Express } from "express";
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "./prisma";
+import {
+  registrarRutasPublicas,
+  responderErrorPublico,
+} from "./http/public-routes";
+import {
+  crearServiciosDisponibilidadPublica,
+  type ServiciosDisponibilidadPublica,
+} from "./services/disponibilidad-publica";
 
-type QueryableDatabase = Pick<PrismaClient, "$queryRaw">;
+export type AppOptions = Readonly<{
+  reloj?: () => Date;
+  publicApi?: Partial<ServiciosDisponibilidadPublica>;
+}>;
 
-export function createApp(database: QueryableDatabase = prisma): Express {
+export function createApp(
+  database: PrismaClient = prisma,
+  options: AppOptions = {},
+): Express {
   const app = express();
+  const serviciosBase = crearServiciosDisponibilidadPublica(
+    database,
+    options.reloj,
+  );
+  const serviciosPublicos: ServiciosDisponibilidadPublica = {
+    ...serviciosBase,
+    ...options.publicApi,
+  };
 
   // Liveness: nunca toca la base de datos. Es el Health Check Path que
   // usará el proveedor de hosting (ver pipeline-de-despliegue) para no
@@ -24,6 +46,9 @@ export function createApp(database: QueryableDatabase = prisma): Express {
       res.status(503).json({ status: "error", db: "unreachable" });
     }
   });
+
+  registrarRutasPublicas(app, serviciosPublicos);
+  app.use(responderErrorPublico);
 
   return app;
 }
