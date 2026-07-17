@@ -40,16 +40,21 @@ El pipeline SHALL desplegar el commit exacto de `github.sha` a Render y a Vercel
 - **THEN** detecta el desajuste y falla explícitamente, en vez de correr el smoke test contra un commit equivocado y reportar un falso verde
 
 ### Requirement: Rollout preview-first en Vercel antes de promover a producción
-El pipeline SHALL desplegar primero el frontend a un deployment de preview de Vercel (mismo artefacto prebuilt que luego se promueve), ejecutar el smoke test y el escaneo axe-core contra esa URL de preview, y solo promoverla a producción si ambos pasan; un smoke test más ligero se repite después de la promoción como chequeo secundario. El backend en Render no tiene un gate de preview equivalente y se verifica post-deploy directo (ver "Smoke test de runtime contra /health").
+El pipeline SHALL desplegar primero el frontend a un deployment de preview de Vercel protegido por Vercel Authentication (mismo artefacto prebuilt que luego se promueve), acceder mediante `x-vercel-protection-bypass` con un secreto exclusivo de automatización, ejecutar el smoke test y el escaneo axe-core contra esa URL de preview, y solo promoverla a producción si ambos pasan; un smoke test más ligero se repite después de la promoción como chequeo secundario. El backend en Render no tiene un gate de preview equivalente y se verifica post-deploy directo (ver "Smoke test de runtime contra /health").
 
 #### Scenario: Preview verificado se promueve a producción
-- **GIVEN** el commit pasó build, pruebas y migración
-- **WHEN** se despliega a un preview de Vercel y el smoke test más el escaneo axe-core pasan contra esa URL de preview
+- **GIVEN** el commit pasó build, pruebas y migración, y GitHub Actions dispone de `VERCEL_AUTOMATION_BYPASS_SECRET`
+- **WHEN** se despliega a un preview protegido de Vercel y el smoke test más el escaneo axe-core pasan contra esa URL enviando `x-vercel-protection-bypass`
 - **THEN** el pipeline promueve ese mismo deployment prebuilt a producción y repite un smoke test ligero post-promoción
+
+#### Scenario: Preview protegido solo permite el gate con bypass
+- **GIVEN** Vercel Authentication está activa para deployments de preview y existe un bypass exclusivo de automatización
+- **WHEN** el pipeline consulta la misma URL primero sin bypass y después con `x-vercel-protection-bypass`
+- **THEN** la solicitud sin bypass redirige al SSO de Vercel, la solicitud con bypass recibe la aplicación con 200, y el secreto nunca se imprime en los logs
 
 #### Scenario: Violación de accesibilidad en preview bloquea la promoción
 - **GIVEN** un fixture de preview incluye una página deliberadamente inaccesible (por ejemplo, un botón sin contraste suficiente o sin texto alternativo, añadido a propósito en una rama de prueba)
-- **WHEN** el escaneo axe-core corre contra esa URL de preview
+- **WHEN** el escaneo axe-core corre contra esa URL de preview usando el bypass de automatización
 - **THEN** detecta la violación, el pipeline NO promueve ese deployment a producción, y la regresión nunca llega a estar públicamente live
 
 ### Requirement: Smoke test de runtime contra /health, separado de la migración

@@ -9,9 +9,9 @@ Se separa de `cimientos-y-despliegue` porque combinar ambos alcances en una sola
 - Workflow de GitHub Actions con un gate de build + pruebas de integración (Postgres real de servicio en CI) que bloquea cualquier despliegue si falla.
 - Job de migración (`prisma migrate deploy` con `DIRECT_URL`) ejecutado en GitHub Actions después del gate anterior, ya que Render Free no admite pre-deploy command ni jobs one-off.
 - Despliegue anclado al commit exacto (`github.sha`) a Render (vía API) y Vercel (vía CLI), con los auto-deploys nativos de ambos proveedores desactivados para evitar que desplieguen un commit distinto al verificado por el pipeline.
-- Rollout preview-first en Vercel: se despliega primero a un preview, se corre el smoke test y un escaneo axe-core contra esa URL, y solo se promueve a producción si ambos pasan; un smoke test más ligero se repite después de la promoción.
+- Rollout preview-first en Vercel: se despliega primero a un preview protegido por Vercel Authentication, el pipeline accede mediante un bypass exclusivo para automatización, se corre el smoke test y un escaneo axe-core contra esa URL, y solo se promueve a producción si ambos pasan; un smoke test más ligero se repite después de la promoción.
 - Smoke test de runtime contra `/health` (backend directo) y un smoke test separado del recorrido completo a través del Route Handler del frontend (`<frontend-url>/api/health`), dado el riesgo de que los cold starts de Render y Neon provoquen uno o más `504` controlados antes de que un reintento responda correctamente.
-- Provisión manual (humana) de cuentas y credenciales en Neon, Render y Vercel, y su almacenamiento como GitHub Secrets — declarada explícitamente como bloqueante del resto del pipeline.
+- Provisión manual (humana) de cuentas y credenciales en Neon, Render y Vercel — incluido el secreto de Protection Bypass for Automation de Vercel — y su almacenamiento como GitHub Secrets, declarada explícitamente como bloqueante del resto del pipeline.
 - **BREAKING**: N/A — no existe despliegue previo que romper.
 
 ## Capabilities
@@ -26,7 +26,7 @@ _(Ninguna. `health-check` y `home-page` — definidos en `cimientos-y-despliegue
 
 ## Impact
 
-- **Infraestructura externa**: cuentas y proyectos en Vercel, Render y Neon (planes gratuitos), y sus credenciales como GitHub Secrets.
+- **Infraestructura externa**: cuentas y proyectos en Vercel, Render y Neon (planes gratuitos), sus credenciales y el bypass de automatización de Vercel como GitHub Secrets.
 - **CI/CD**: workflows de GitHub Actions (build, pruebas, migración, despliegue, smoke, accesibilidad).
 - **Datos**: primera aplicación real de la migración baseline (generada en `cimientos-y-despliegue`) contra Neon.
 - **Fuera de alcance**: dominio propio/DNS personalizado, monitoreo o alertas más allá del smoke test de CI, el Postgres gratuito de Render (no se usa; la base de datos es exclusivamente Neon), y cualquier lógica de negocio o pantalla real de `/design`.

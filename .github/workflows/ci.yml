@@ -188,6 +188,7 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -218,12 +219,23 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview desplegado en $url"
 
-      - name: Smoke test contra el preview
+      - name: Confirmar que el preview rechaza requests sin bypass
         run: |
-          status="$(curl -s -o /dev/null -w '%{http_code}' "${{ steps.preview.outputs.url }}/")"
+          status="$(curl -sS -D /tmp/preview-sin-bypass.headers -o /dev/null -w '%{http_code}' "${{ steps.preview.outputs.url }}/")"
+          echo "status=$status"
+          if [ "$status" != "302" ] || ! grep -qi '^location: https://vercel.com/sso-api' /tmp/preview-sin-bypass.headers; then
+            echo "::error::El preview no demostró la redirección esperada al SSO de Vercel sin bypass"
+            exit 1
+          fi
+
+      - name: Smoke test contra el preview con bypass
+        run: |
+          status="$(curl -sS -o /dev/null -w '%{http_code}' "${{ steps.preview.outputs.url }}/" \
+            -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" \
+            -H "x-vercel-set-bypass-cookie: true")"
           echo "status=$status"
           if [ "$status" != "200" ]; then
-            echo "::error::El preview respondió $status en vez de 200"
+            echo "::error::El preview respondió $status en vez de 200 con el bypass de automatización"
             exit 1
           fi
 
@@ -235,6 +247,7 @@ jobs:
         working-directory: frontend
         env:
           SMOKE_URL: ${{ steps.preview.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx playwright test e2e/deployed-smoke.spec.ts
 
       - name: Promover el mismo deployment a producción
