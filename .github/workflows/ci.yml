@@ -77,6 +77,18 @@ jobs:
       - name: 'Prueba: verificación del deployment de producción real de Vercel (fixture, sin tocar producción)'
         run: scripts/test-vercel-parse-production-target.sh
 
+      - name: 'Prueba: DATABASE_URL pooled inválida detectada por el smoke test (fixture, sin tocar producción)'
+        run: scripts/verify-smoke-health-negative.sh
+
+      - name: 'Prueba: deadline de reloj real del smoke test de /health (fixture, sin tocar producción)'
+        run: scripts/test-smoke-health-deadline.sh
+
+      - name: 'Prueba: recorrido completo del smoke test a través del proxy (fixture, sin tocar producción)'
+        run: scripts/test-smoke-proxy-health.sh
+
+      - name: 'Prueba: deadline de reloj real del smoke test a través del proxy (fixture, sin tocar producción)'
+        run: scripts/test-smoke-proxy-health-deadline.sh
+
   migrate:
     needs: build-and-test
     if: github.ref == 'refs/heads/main'
@@ -117,6 +129,8 @@ jobs:
     env:
       RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+    outputs:
+      backend_url: ${{ steps.backend.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -185,6 +199,24 @@ jobs:
           echo "::error::Timeout esperando que el deploy de Render quede live"
           exit 1
 
+      - name: Obtener la URL pública real del servicio de Render
+        id: backend
+        run: |
+          http_code="$(curl -s -o /tmp/render-service.json -w '%{http_code}' "https://api.render.com/v1/services/${RENDER_SERVICE_ID}" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}")"
+          echo "HTTP $http_code"
+          if [ "$http_code" -ge 300 ]; then
+            echo "::error::La API de Render devolvió $http_code al consultar el servicio"
+            exit 1
+          fi
+          url="$(jq -r '.serviceDetails.url // empty' /tmp/render-service.json)"
+          if [ -z "$url" ]; then
+            echo "::error::La API de Render no devolvió serviceDetails.url para el servicio"
+            exit 1
+          fi
+          echo "URL pública del backend: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
   deploy-vercel:
     needs: migrate
     if: github.ref == 'refs/heads/main'
@@ -194,6 +226,8 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    outputs:
+      frontend_domain: ${{ steps.production.outputs.domain }}
     steps:
       - uses: actions/checkout@v4
 
@@ -283,3 +317,16 @@ jobs:
             exit 1
           fi
           echo "Producción real (${domain}) responde 200 con exactamente github.sha."
+
+  runtime-smoke:
+    needs: [deploy-render, deploy-vercel]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 'Smoke test contra /health del backend real de Render (tolerante al cold start, ventana de 90s)'
+        run: scripts/smoke-health.sh "${{ needs.deploy-render.outputs.backend_url }}" 90 5
+
+      - name: 'Smoke test del recorrido completo a través del proxy contra producción real (ventana de 120s)'
+        run: scripts/smoke-proxy-health.sh "https://${{ needs.deploy-vercel.outputs.frontend_domain }}" 120 5
