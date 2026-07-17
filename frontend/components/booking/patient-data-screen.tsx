@@ -284,8 +284,8 @@ export function PatientDataScreen() {
           <aside className="payment-deadline-note">
             <TimerReset aria-hidden="true" size={26} />
             <div>
-              <strong>Tienes 72 horas para pagar</strong>
-              <span>Después de confirmar verás la fecha y hora exactas.</span>
+              <strong>Debes pagar antes de que inicie tu cita.</strong>
+              <span>El plazo máximo es de 72 horas.</span>
             </div>
           </aside>
 

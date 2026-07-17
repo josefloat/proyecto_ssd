@@ -4,7 +4,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
 import { createApp } from "../src/app";
 import { limpiarDominio, testPrisma } from "./helpers/database";
-import { crearFixtureSlots } from "./helpers/fixtures";
+import { crearFixtureProgramacion, crearFixtureSlots } from "./helpers/fixtures";
 
 const AHORA = new Date("2026-07-17T15:00:00.000Z");
 const reloj = () => AHORA;
@@ -16,6 +16,26 @@ const paciente = {
   telefono: "987654321",
   nombre: "Ana Quispe",
 };
+
+async function crearSlotsNoFuturos() {
+  const fixture = await crearFixtureProgramacion({ prefijo: "frontera-tiempo" });
+  return Promise.all(
+    [
+      new Date("2026-07-17T14:30:00.000Z"),
+      new Date("2026-07-17T15:00:00.000Z"),
+    ].map((inicioUtc) =>
+      testPrisma.slot.create({
+        data: {
+          programacionSemanalId: fixture.programacion.id,
+          inicioUtc,
+          finUtc: new Date(inicioUtc.getTime() + 30 * 60 * 1_000),
+          fechaLima: new Date("2026-07-17T00:00:00.000Z"),
+          estado: EstadoSlot.LIBRE,
+        },
+      }),
+    ),
+  );
+}
 
 function postReserva(
   app: ReturnType<typeof createApp>,
@@ -88,6 +108,17 @@ describe("reserva concurrente e idempotente", () => {
     for (const body of divergentes) {
       conflictos.push(await postReserva(app, key, body));
     }
+    const slotsNoFuturos = await crearSlotsNoFuturos();
+    const rechazosTemporales = await Promise.all(
+      slotsNoFuturos.map((slot, indice) =>
+        postReserva(app, randomUUID(), {
+          slotId: slot.id,
+          dni: `7777000${indice}`,
+          telefono: `97777000${indice}`,
+          nombre: `Paciente Frontera ${indice}`,
+        }),
+      ),
+    );
     const carrera = await Promise.all([
       postReserva(app, randomUUID(), {
         slotId: slots[2].id,
@@ -110,6 +141,20 @@ describe("reserva concurrente e idempotente", () => {
         ({ body }) => body.error.code === "IDEMPOTENCIA_EN_CONFLICTO",
       ),
     ).toBe(true);
+    expect(rechazosTemporales.map(({ status }) => status)).toEqual([409, 409]);
+    expect(
+      rechazosTemporales.every(
+        ({ body }) => body.error.code === "SLOT_NO_DISPONIBLE",
+      ),
+    ).toBe(true);
+    expect(
+      await testPrisma.slot.count({
+        where: {
+          id: { in: slotsNoFuturos.map(({ id }) => id) },
+          estado: EstadoSlot.LIBRE,
+        },
+      }),
+    ).toBe(2);
     expect({
       citas: await testPrisma.cita.count({ where: { slotId: slots[0].id } }),
       pacientes: await testPrisma.paciente.count({ where: { dni: paciente.dni } }),

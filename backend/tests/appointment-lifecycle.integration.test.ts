@@ -10,7 +10,7 @@ import { createApp } from "../src/app";
 import { validarCredencialesCita } from "../src/domain/citas";
 import { crearServiciosCitasPaciente } from "../src/services/citas-paciente";
 import { limpiarDominio, testPrisma } from "./helpers/database";
-import { crearFixtureSlots } from "./helpers/fixtures";
+import { crearFixtureProgramacion, crearFixtureSlots } from "./helpers/fixtures";
 
 const INICIO = new Date("2026-07-17T15:00:00.000Z");
 
@@ -63,7 +63,7 @@ describe("cancelación y expiración", () => {
     });
   });
 
-  it("respeta el límite, excluye estados y serializa la carrera (CITA-4.2)", async () => {
+  it("respeta el menor límite, excluye estados y serializa la carrera (CITA-4.2)", async () => {
     // Arrange: frontera exacta de 72 horas
     let ahora = INICIO;
     const frontera = await crearFixtureSlots({ cantidad: 1, prefijo: "frontera" });
@@ -73,6 +73,10 @@ describe("cancelación y expiración", () => {
     });
     const creada = await reservar(app, frontera.slots[0].id);
     const venceEn = new Date(creada.body.venceEn);
+    expect(venceEn.getTime() - INICIO.getTime()).toBe(72 * 60 * 60 * 1_000);
+    expect(venceEn.getTime()).toBeLessThan(
+      frontera.slots[0].inicioUtc.getTime(),
+    );
 
     // Act + Assert: un milisegundo antes no expira
     ahora = new Date(venceEn.getTime() - 1);
@@ -95,6 +99,57 @@ describe("cancelación y expiración", () => {
     expect(
       await testPrisma.slot.findUnique({ where: { id: frontera.slots[0].id } }),
     ).toMatchObject({ estado: EstadoSlot.LIBRE });
+
+    // Arrange + Assert: si la cita inicia antes, vence exactamente al inicio
+    ahora = INICIO;
+    const limiteInicio = await crearFixtureProgramacion({
+      prefijo: "limite-inicio",
+      diaSemana: 5,
+    });
+    const inicioCercano = new Date(INICIO.getTime() + 2 * 60 * 60 * 1_000);
+    const slotCercano = await testPrisma.slot.create({
+      data: {
+        programacionSemanalId: limiteInicio.programacion.id,
+        inicioUtc: inicioCercano,
+        finUtc: new Date(inicioCercano.getTime() + 30 * 60 * 1_000),
+        fechaLima: new Date("2026-07-17T00:00:00.000Z"),
+        estado: EstadoSlot.LIBRE,
+      },
+    });
+    const appLimiteInicio = createApp(testPrisma, {
+      reloj: () => ahora,
+      generarCodigoReserva: () => "SV-NNNNNNND",
+    });
+    const creadaCercana = await reservar(appLimiteInicio, slotCercano.id, {
+      dni: "22223333",
+      telefono: "922223333",
+      nombre: "Paciente Límite",
+    });
+    expect({ status: creadaCercana.status, body: creadaCercana.body }).toMatchObject({
+      status: 201,
+    });
+    expect(new Date(creadaCercana.body.venceEn)).toEqual(inicioCercano);
+    expect(new Date(creadaCercana.body.venceEn).getTime()).toBeGreaterThan(
+      new Date(creadaCercana.body.reservadaEn).getTime(),
+    );
+
+    ahora = new Date(inicioCercano.getTime() - 1);
+    const antesDelInicio = await request(appLimiteInicio)
+      .post("/citas/consulta")
+      .send({ dni: "22223333", codigoReserva: creadaCercana.body.codigoReserva });
+    expect(antesDelInicio.body.estado).toBe(EstadoCita.RESERVADA);
+
+    ahora = inicioCercano;
+    const enInicio = await request(appLimiteInicio)
+      .post("/citas/consulta")
+      .send({ dni: "22223333", codigoReserva: creadaCercana.body.codigoReserva });
+    expect(enInicio.body).toMatchObject({
+      estado: EstadoCita.CANCELADA,
+      motivoCancelacion: MotivoCancelacion.EXPIRACION,
+    });
+    expect(await testPrisma.slot.findUnique({ where: { id: slotCercano.id } })).toMatchObject({
+      estado: EstadoSlot.LIBRE,
+    });
 
     // Arrange + Act: estados no permitidos quedan intactos
     const estados = [EstadoCita.PAGADA, EstadoCita.ATENDIDA, EstadoCita.NO_ASISTIO];

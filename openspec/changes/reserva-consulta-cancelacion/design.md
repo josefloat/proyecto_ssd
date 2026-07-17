@@ -30,9 +30,9 @@ Se añadirán `Paciente`, `Cita`, `EstadoCita` y `MotivoCancelacion`:
 - `Paciente`: UUID, `dni` único, `telefono` no único y `nombre`; los tres valores se normalizan antes de comparar o guardar.
 - `Cita`: UUID, FK a paciente, FK a slot, `codigoReserva` único, `estado`, `motivoCancelacion` nullable, `reservadaEn`, `venceEn`, `canceladaEn` nullable, `idempotencyKey` único e `idempotencyFingerprint`.
 - El código usa `SV-` y ocho caracteres del alfabeto `23456789ABCDEFGHJKMNPQRSTUVWXYZ`; la entrada se normaliza a mayúsculas.
-- `venceEn` se fija al crear como `reservadaEn + 72 horas`; todos los instantes se guardan en UTC.
+- `venceEn` se fija al crear como `min(reservadaEn + 72 horas, slot.inicioUtc)`; el slot debe iniciar estrictamente después de `reservadaEn` y todos los instantes se guardan en UTC.
 - `slotId` no será único en toda la tabla porque un slot cancelado o expirado puede reservarse de nuevo y la cita histórica debe conservarse. Una migración SQL añadirá un índice único parcial para impedir más de una cita activa (`RESERVADA` o `PAGADA`) por slot.
-- Checks de base de datos exigirán DNI de ocho dígitos, teléfono de nueve dígitos, coherencia entre estado/motivo/fecha de cancelación y `venceEn = reservadaEn + interval '72 hours'`.
+- Checks de base de datos exigirán DNI de ocho dígitos, teléfono de nueve dígitos, coherencia entre estado/motivo/fecha de cancelación y `venceEn > reservadaEn AND venceEn <= reservadaEn + interval '72 hours'`.
 
 Se prefiere conservar citas canceladas frente a borrarlas porque permite distinguir cancelación del paciente y expiración, probar carreras y mantener trazabilidad. No se introduce `EXPIRADA`: el estado canónico sigue siendo `CANCELADA` con motivo `EXPIRACION`.
 
@@ -57,11 +57,13 @@ El `idempotencyFingerprint` es un hash de la representación canónica de `slotI
 1. abre una transacción y toma un advisory lock transaccional derivado de `Idempotency-Key`;
 2. busca una cita con esa clave antes de escribir paciente o slot;
 3. si existe y el fingerprint coincide, devuelve exactamente la misma cita y código; si difiere, responde `409 IDEMPOTENCIA_EN_CONFLICTO` sin writes;
-4. resuelve o valida el paciente;
-5. ejecuta `UPDATE Slot ... WHERE id = ? AND estado = 'LIBRE'`;
-6. solo si actualiza una fila, inserta la cita `RESERVADA` y confirma la transacción.
+4. lee el slot y exige `estado = 'LIBRE' AND inicioUtc > ahora`; si no cumple, responde `409 SLOT_NO_DISPONIBLE` antes de crear paciente;
+5. calcula dentro de la transacción `venceEn = min(ahora + 72 horas, slot.inicioUtc)`;
+6. resuelve o valida el paciente;
+7. ejecuta `UPDATE Slot ... WHERE id = ? AND estado = 'LIBRE' AND inicioUtc > ahora`;
+8. solo si actualiza una fila, inserta la cita `RESERVADA` y confirma la transacción.
 
-Solicitudes con claves distintas sobre el mismo slot compiten en el update condicional: una confirma y las demás reciben `409 SLOT_NO_DISPONIBLE`. El advisory lock evita que dos replays de la misma clave atraviesen simultáneamente el chequeo inicial.
+Solicitudes con claves distintas sobre el mismo slot futuro compiten en el update condicional: una confirma y las demás reciben `409 SLOT_NO_DISPONIBLE`. Un slot pasado o que inicia exactamente en `ahora` recibe el mismo `409` sin paciente, cita ni cambio de slot. El advisory lock evita que dos replays de la misma clave atraviesen simultáneamente el chequeo inicial.
 
 El código se genera criptográficamente antes de insertar. Si PostgreSQL reporta exclusivamente la unicidad de `Cita.codigoReserva`, se revierte el intento completo y el servicio reintenta toda la transacción con otro código hasta un límite pequeño; paciente, cita y slot no quedan parciales. Cualquier otra constraint se propaga como fallo controlado y nunca se trata como colisión inocua. Se descarta consultar el código antes de insertar porque una carrera seguiría siendo posible.
 
@@ -69,7 +71,7 @@ El código se genera criptográficamente antes de insertar. Si PostgreSQL report
 
 Cancelación y expiración bloquean primero la fila `Cita` y luego actualizan su `Slot`, siempre en ese orden. La cancelación requiere credenciales correctas, estado `RESERVADA` y reloj anterior a `slot.inicioUtc`. Un reintento sobre `CANCELADA/PACIENTE` es idempotente; cualquier otro estado o una cita ya iniciada recibe conflicto y no toca el slot.
 
-`aplicarExpiraciones(ahora)` selecciona citas `RESERVADA` con `venceEn <= ahora`, bloquea sus filas y cambia cada una a `CANCELADA/EXPIRACION` mientras libera su slot `RESERVADO` en la misma transacción. Se invoca antes de disponibilidad pública, reserva, consulta y cancelación. Así el corte lógico es exactamente `reservadaEn + 72 horas` sin depender de un proceso siempre encendido; una base ociosa se materializa al siguiente acceso antes de exponer estado o disponibilidad.
+`aplicarExpiraciones(ahora)` selecciona citas `RESERVADA` con `venceEn <= ahora`, bloquea sus filas y cambia cada una a `CANCELADA/EXPIRACION` mientras libera su slot `RESERVADO` en la misma transacción. Se invoca antes de disponibilidad pública, reserva, consulta y cancelación. Así el plazo llega hasta 72 horas pero nunca supera `slot.inicioUtc`; una base ociosa se materializa al siguiente acceso antes de exponer estado o disponibilidad.
 
 Si cancelación y expiración compiten, el lock de cita serializa la decisión: solo la primera transición desde `RESERVADA` gana, la segunda observa el resultado y no vuelve a liberar. La actualización del slot exige `RESERVADO`; un estado inesperado revierte la transacción completa.
 
@@ -78,9 +80,9 @@ Si cancelación y expiración compiten, el lock de cita serializa la decisión: 
 | Operación | Transacción y bloqueo | Predicado/constraint | Resultado ante carrera |
 | --- | --- | --- | --- |
 | Generar horizonte | Transacción con advisory lock global existente | Clave natural de slot + `ON CONFLICT` exacto | Converge sin alterar slots existentes |
-| Consultar disponibilidad | Aplica expiraciones y luego lee snapshot | `estado = LIBRE` | Nunca publica pacientes ni slots aún activos |
+| Consultar disponibilidad | Aplica expiraciones y luego lee snapshot con un único `ahora` | `estado = LIBRE` e `inicioUtc > ahora` | Nunca publica pacientes ni slots iniciados |
 | Bloquear | Update condicional existente | `LIBRE → BLOQUEADO` | Solo una transición gana |
-| Reservar | Advisory lock por idempotencia + update condicional | `LIBRE → RESERVADO`; índice parcial de cita activa | Una clave gana; replay idéntico converge |
+| Reservar | Advisory lock por idempotencia + lectura y update condicional | `LIBRE → RESERVADO`, `inicioUtc > ahora`; índice parcial de cita activa | Una clave gana; replay idéntico converge; frontera no futura no escribe |
 | Cancelar | Row lock de cita, luego update condicional del slot | `RESERVADO → LIBRE` | Una liberación; reintento propio idempotente |
 | Expirar | Row lock de cita, luego update condicional del slot | `venceEn <= ahora` y `RESERVADO → LIBRE` | Se serializa con cancelar/reservar |
 
@@ -91,7 +93,7 @@ Si cancelación y expiración compiten, el lock de cita serializa la decisión: 
 | Slot | `LIBRE` | reservar | `RESERVADO` | Cita `RESERVADA` creada en la misma transacción |
 | Slot | `RESERVADO` | cancelar cita | `LIBRE` | Cita pasa a `CANCELADA/PACIENTE` |
 | Slot | `RESERVADO` | expirar cita | `LIBRE` | Cita pasa a `CANCELADA/EXPIRACION` |
-| Cita | inexistente | confirmar | `RESERVADA` | `venceEn = reservadaEn + 72h` |
+| Cita | inexistente | confirmar slot futuro | `RESERVADA` | `venceEn = min(reservadaEn + 72h, slot.inicioUtc)` |
 | Cita | `RESERVADA` | cancelar antes del inicio | `CANCELADA` | Motivo `PACIENTE`, acción idempotente |
 | Cita | `RESERVADA` | alcanzar vencimiento sin pago | `CANCELADA` | Motivo `EXPIRACION` |
 | Cita | `PAGADA`, `ATENDIDA`, `NO_ASISTIO` | cancelar/expirar | sin cambio | Conflicto o exclusión; slot intacto |
@@ -115,6 +117,7 @@ La selección continúa a `/reservar/datos` conservando los parámetros ya reval
 ## Risks / Trade-offs
 
 - **[Expiración materializada al acceder]** La fila puede permanecer físicamente `RESERVADA` durante inactividad total → toda operación pública relevante aplica expiraciones antes de decidir y las pruebas congelan el reloj para verificar el corte lógico.
+- **[Reloj avanza durante la operación]** Disponibilidad y reserva podrían discrepar si toman instantes distintos → cada decisión captura un único `ahora`; la reserva repite `inicioUtc > ahora` en el update condicional dentro de la transacción.
 - **[Código transcribible sigue siendo un secreto corto]** DNI + código aporta dos datos, pero no sustituye autenticación fuerte → alfabeto de casi 40 bits, comparación conjunta, mensajes genéricos y credenciales fuera de URL; rate limiting queda como endurecimiento futuro.
 - **[Índice parcial no expresable completamente en Prisma]** Un `db push` no recrearía la constraint → la migración SQL versionada y una prueba de integración validan el índice real.
 - **[Reintento tras colisión]** Un retry demasiado amplio podría ocultar otros errores → se reconoce por nombre exacto de constraint y se limita el número de intentos.

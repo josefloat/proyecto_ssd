@@ -220,6 +220,24 @@ export function crearServiciosCitasPaciente(
                 return existente;
               }
 
+              const slot = await tx.slot.findFirst({
+                where: {
+                  id: solicitud.slotId,
+                  estado: EstadoSlot.LIBRE,
+                  inicioUtc: { gt: ahora },
+                },
+                select: { inicioUtc: true },
+              });
+              if (!slot) {
+                throw slotNoDisponible();
+              }
+              const venceEn = new Date(
+                Math.min(
+                  sumarHoras(ahora, HORAS_PARA_PAGAR).getTime(),
+                  slot.inicioUtc.getTime(),
+                ),
+              );
+
               await tx.$executeRaw`
                 INSERT INTO "Paciente" ("id", "dni", "telefono", "nombre")
                 VALUES (${randomUUID()}::uuid, ${solicitud.paciente.dni},
@@ -237,7 +255,11 @@ export function crearServiciosCitasPaciente(
               }
 
               const reservado = await tx.slot.updateMany({
-                where: { id: solicitud.slotId, estado: EstadoSlot.LIBRE },
+                where: {
+                  id: solicitud.slotId,
+                  estado: EstadoSlot.LIBRE,
+                  inicioUtc: { gt: ahora },
+                },
                 data: { estado: EstadoSlot.RESERVADO },
               });
               if (reservado.count !== 1) {
@@ -251,7 +273,7 @@ export function crearServiciosCitasPaciente(
                   codigoReserva,
                   estado: EstadoCita.RESERVADA,
                   reservadaEn: ahora,
-                  venceEn: sumarHoras(ahora, HORAS_PARA_PAGAR),
+                  venceEn,
                   idempotencyKey,
                   idempotencyFingerprint: fingerprint,
                 },

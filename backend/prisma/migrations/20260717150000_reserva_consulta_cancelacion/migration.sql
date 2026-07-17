@@ -37,7 +37,10 @@ CREATE TABLE "Cita" (
     CONSTRAINT "Cita_fingerprint_check"
         CHECK ("idempotencyFingerprint" ~ '^[0-9a-f]{64}$'),
     CONSTRAINT "Cita_venceEn_check"
-        CHECK ("venceEn" = "reservadaEn" + INTERVAL '72 hours'),
+        CHECK (
+            "venceEn" > "reservadaEn"
+            AND "venceEn" <= "reservadaEn" + INTERVAL '72 hours'
+        ),
     CONSTRAINT "Cita_cancelacion_check" CHECK (
         ("estado" = 'CANCELADA' AND "motivoCancelacion" IS NOT NULL AND "canceladaEn" IS NOT NULL)
         OR

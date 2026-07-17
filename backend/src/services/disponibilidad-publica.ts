@@ -133,12 +133,14 @@ export function crearServiciosDisponibilidadPublica(
         }
       }
 
-      const desde = hoyEnLima(reloj());
+      const ahora = reloj();
+      const desde = hoyEnLima(ahora);
       const hastaExclusiva = sumarDias(desde, 28);
       await motor.asegurarHorizonte(desde);
       const slots = await database.slot.findMany({
         where: {
           estado: EstadoSlot.LIBRE,
+          inicioUtc: { gt: ahora },
           fechaLima: {
             gte: fechaCivilParaPrisma(desde),
             lt: fechaCivilParaPrisma(hastaExclusiva),

@@ -44,6 +44,9 @@ test("slot → datos → confirmación muestra la reserva real (FLOW-4.1)", asyn
 
   await expect(page).toHaveURL(/\/reservar\/datos\?/);
   await expect(page).toHaveURL(new RegExp(`especialidadId=${CARDIOLOGIA_ID}`));
+  await expect(page.getByText("Debes pagar antes de que inicie tu cita.")).toBeVisible();
+  await expect(page.getByText("El plazo máximo es de 72 horas.")).toBeVisible();
+  await expect(page.getByText("Después de confirmar verás la fecha y hora exactas.")).toHaveCount(0);
   await page.getByLabel("DNI (8 números)").fill("12345678");
   await page.getByLabel("Nombre completo").fill("Ana Quispe Huamán");
   await page.getByLabel("Número de celular (9 dígitos)").fill("987654321");
