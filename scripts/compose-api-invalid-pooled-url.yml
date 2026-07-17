@@ -1,0 +1,4 @@
+services:
+  api:
+    environment:
+      DATABASE_URL: postgresql://invalid:invalid@127.0.0.1:1/invalid?connect_timeout=1
