@@ -11,6 +11,7 @@ Una auditoría (Codex) sobre la propuesta original combinada encontró varios me
 - La migración contra Neon corre en un lugar que realmente existe en el plan gratuito de Render (GitHub Actions, no Render mismo).
 - Lo que se despliega es exactamente el commit que pasó el pipeline, en ambos proveedores, sin que un auto-deploy nativo lo adelante o lo pise.
 - Una regresión de accesibilidad se detecta en preview, antes de ser pública, no después.
+- El preview permanece protegido por Vercel Authentication; solo GitHub Actions obtiene acceso mediante un bypass de automatización almacenado como secreto.
 - El smoke test cubre tanto el backend directo como el recorrido completo a través del proxy del frontend, porque los cold starts de los tres servicios gratuitos pueden acumularse.
 - Las tareas que requieren credenciales humanas están separadas y declaradas como bloqueantes.
 
@@ -50,6 +51,9 @@ El job de migración de este cambio depende de que el datasource siga aceptando 
 **9. Vercel Hobby es apto para este proyecto; no requiere mitigación.**
 Es un proyecto académico, no comercial, dentro de los términos de uso del plan Hobby. Se documenta como decisión cerrada, no como riesgo abierto.
 
+**10. El preview conserva Vercel Authentication y CI usa Protection Bypass for Automation.**
+Alternativa descartada: desactivar `Require Log In` para que `curl` y Playwright reciban 200 sin credenciales. Eso haría públicamente accesible el artefacto que todavía está bajo evaluación y contradice el objetivo de detectar una regresión antes de exponerla al público. Se crea un secreto de Protection Bypass for Automation en Vercel, se almacena como `VERCEL_AUTOMATION_BYPASS_SECRET` en GitHub Actions y el gate de preview envía `x-vercel-protection-bypass` tanto en el smoke HTTP como en el contexto de Playwright. Como prueba negativa del control de acceso, la misma URL sin el header debe redirigir al SSO de Vercel; con el header debe entregar la aplicación y permitir el smoke/axe. El secreto no se usa en producción después de la promoción.
+
 ## Risks / Trade-offs
 
 - [Render Free: cold start de ~1 min tras 15 min de inactividad] → Mitigación: smoke tests con reintentos tolerantes (hasta ~90s) en vez de fallar en el primer request frío.
@@ -57,12 +61,13 @@ Es un proyecto académico, no comercial, dentro de los términos de uso del plan
 - [Render Free no tiene un entorno de preview equivalente al de Vercel] → Mitigación: aceptado como limitación conocida; el backend se verifica solo post-deploy directo (Decisión 4), no preview-first.
 - [Auto-deploys nativos de Render/Vercel podrían competir con este pipeline si no se desactivan] → Mitigación: Decisión 2 — desactivarlos explícitamente es una tarea de este cambio, no una suposición.
 - [Secretos de Neon, Render y Vercel repartidos en tres dashboards, más GitHub Secrets] → Mitigación: tareas [HUMANO OBLIGATORIO] explícitas, separadas de los jobs automatizados y declaradas como bloqueantes del resto del pipeline.
+- [Vercel Authentication devuelve 302 al SSO en previews y bloquearía el smoke/axe] → Mitigación: Decisión 10 — bypass exclusivo para automatización enviado por header; no se hace público el preview.
 
 Descartado explícitamente: una advertencia sobre el Postgres gratuito de Render (que expira a los 30 días) no aplica — este proyecto nunca provisiona un Postgres de Render; la única base de datos es Neon.
 
 ## Migration Plan
 
-Primera vez que el pipeline toca Neon en producción. Orden: provisión humana de Neon/Render/Vercel y sus secretos → build + pruebas de integración en verde → job de migración (`prisma migrate deploy` con `DIRECT_URL`) → despliegue anclado a `github.sha` en Render y Vercel (auto-deploys nativos desactivados) → preview de Vercel + smoke + axe-core en preview → promoción a producción → smoke post-promoción (backend directo y recorrido vía proxy).
+Primera vez que el pipeline toca Neon en producción. Orden: provisión humana de Neon/Render/Vercel, bypass de automatización y sus secretos → build + pruebas de integración en verde → job de migración (`prisma migrate deploy` con `DIRECT_URL`) → despliegue anclado a `github.sha` en Render y Vercel (auto-deploys nativos desactivados) → preview protegido de Vercel + smoke + axe-core autenticados por bypass → promoción a producción → smoke post-promoción (backend directo y recorrido vía proxy).
 
 Rollback: Vercel permite volver instantáneamente al deployment anterior; Render permite redesplegar un commit previo vía la misma API usada para desplegar. La migración de este sprint es aditiva (baseline), por lo que no requiere rollback de datos.
 
