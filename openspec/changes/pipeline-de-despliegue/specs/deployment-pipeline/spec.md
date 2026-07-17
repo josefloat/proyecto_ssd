@@ -40,12 +40,12 @@ El pipeline SHALL desplegar el commit exacto de `github.sha` a Render y a Vercel
 - **THEN** detecta el desajuste y falla explícitamente, en vez de correr el smoke test contra un commit equivocado y reportar un falso verde
 
 ### Requirement: Rollout preview-first en Vercel antes de promover a producción
-El pipeline SHALL desplegar primero el frontend a un deployment de preview de Vercel protegido por Vercel Authentication (mismo artefacto prebuilt que luego se promueve), acceder mediante `x-vercel-protection-bypass` con un secreto exclusivo de automatización, ejecutar el smoke test y el escaneo axe-core contra esa URL de preview, y solo promoverla a producción si ambos pasan; un smoke test más ligero se repite después de la promoción como chequeo secundario. El backend en Render no tiene un gate de preview equivalente y se verifica post-deploy directo (ver "Smoke test de runtime contra /health").
+El pipeline SHALL desplegar primero el frontend a un deployment de preview de Vercel protegido por Vercel Authentication (build hecho con `vercel pull --environment=preview` + `vercel build` + `vercel deploy --prebuilt`), acceder mediante `x-vercel-protection-bypass` con un secreto exclusivo de automatización, ejecutar el smoke test y el escaneo axe-core contra esa URL de preview, y solo promoverla a producción si ambos pasan. Promover un deployment de Preview a producción SHALL disparar un rebuild completo con variables de entorno de Production (comportamiento documentado de Vercel, no evitable): lo que este requisito garantiza es que se reconstruye el mismo *source commit* que pasó el gate de preview, no que el binario sea idéntico. Por eso la verificación posterior a la promoción SHALL confirmar el deployment de producción real resultante (ver "Verificación del deployment de producción real tras la promoción"), no la URL de preview. El backend en Render no tiene un gate de preview equivalente y se verifica post-deploy directo (ver "Smoke test de runtime contra /health").
 
 #### Scenario: Preview verificado se promueve a producción
 - **GIVEN** el commit pasó build, pruebas y migración, y GitHub Actions dispone de `VERCEL_AUTOMATION_BYPASS_SECRET`
 - **WHEN** se despliega a un preview protegido de Vercel y el smoke test más el escaneo axe-core pasan contra esa URL enviando `x-vercel-protection-bypass`
-- **THEN** el pipeline promueve ese mismo deployment prebuilt a producción y repite un smoke test ligero post-promoción
+- **THEN** el pipeline promueve ese preview (mismo source commit, rebuild con variables de Production) y continúa con la verificación del deployment de producción real
 
 #### Scenario: Preview protegido solo permite el gate con bypass
 - **GIVEN** Vercel Authentication está activa para deployments de preview y existe un bypass exclusivo de automatización
@@ -56,6 +56,24 @@ El pipeline SHALL desplegar primero el frontend a un deployment de preview de Ve
 - **GIVEN** un fixture de preview incluye una página deliberadamente inaccesible (por ejemplo, un botón sin contraste suficiente o sin texto alternativo, añadido a propósito en una rama de prueba)
 - **WHEN** el escaneo axe-core corre contra esa URL de preview usando el bypass de automatización
 - **THEN** detecta la violación, el pipeline NO promueve ese deployment a producción, y la regresión nunca llega a estar públicamente live
+
+### Requirement: Verificación del deployment de producción real tras la promoción
+El pipeline SHALL identificar el deployment de producción real resultante de `vercel promote` consultando `targets.production` en `GET /v9/projects/{id}` de la API de Vercel — no la URL de Preview usada antes de promover. SHALL hacer polling de `targets.production.readyState` hasta `READY`, rechazar explícitamente un payload cuyo `target` no sea `"production"`, confirmar que `targets.production.alias` incluye al menos un dominio real, comparar el commit de origen (`targets.production.meta.commitSha`) contra `github.sha`, y solo entonces ejecutar un smoke HTTP `200` contra ese dominio real.
+
+#### Scenario: Deployment de producción real confirmado tras la promoción
+- **GIVEN** `vercel promote` se ejecutó sobre el preview verificado
+- **WHEN** el pipeline consulta `GET /v9/projects/{id}` hasta que `targets.production.readyState` es `READY`
+- **THEN** confirma `target: "production"`, al menos un dominio en `alias`, que `meta.commitSha` coincide con `github.sha`, y un smoke HTTP contra ese dominio responde `200`
+
+#### Scenario: Payload de Preview rechazado en la verificación de producción
+- **GIVEN** un fixture simula una respuesta de la API de Vercel donde el objeto bajo `targets.production` tiene `target: "preview"` en vez de `"production"`
+- **WHEN** el script de validación (`scripts/vercel-parse-production-target.sh`) procesa ese fixture
+- **THEN** falla explícitamente sin confirmar el deployment ni intentar el smoke HTTP, sin necesidad de tocar la API real de Vercel
+
+#### Scenario: SHA de producción vacío o distinto detectado y bloqueado
+- **GIVEN** un fixture simula `targets.production.meta.commitSha` vacío, y otro fixture simula un valor distinto a `github.sha`
+- **WHEN** el script de validación procesa cada fixture
+- **THEN** ambos fallan explícitamente (reutilizando `scripts/assert-commit-match.sh`), en vez de reportar un falso verde
 
 ### Requirement: Smoke test de runtime contra /health, separado de la migración
 El pipeline SHALL verificar, tras el despliegue, que `/health` responde `200` con `db: "ok"` usando la URL pooled en runtime. Un fallo aquí es independiente de si la migración (URL directa) tuvo éxito.

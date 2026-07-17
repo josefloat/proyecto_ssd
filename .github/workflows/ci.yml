@@ -74,6 +74,9 @@ jobs:
       - name: 'Prueba: desajuste de commit detectado y bloqueado (fixture, sin tocar producción)'
         run: scripts/test-assert-commit-match.sh
 
+      - name: 'Prueba: verificación del deployment de producción real de Vercel (fixture, sin tocar producción)'
+        run: scripts/test-vercel-parse-production-target.sh
+
   migrate:
     needs: build-and-test
     if: github.ref == 'refs/heads/main'
@@ -251,16 +254,32 @@ jobs:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx playwright test e2e/deployed-smoke.spec.ts
 
-      - name: Promover el mismo deployment a producción
+      - name: Promover el preview a producción (dispara un rebuild completo)
         working-directory: frontend
-        run: vercel promote "${{ steps.preview.outputs.url }}" --token="$VERCEL_TOKEN" --yes
+        # --timeout=0: solicita la promoción y retorna de inmediato; la
+        # confirmación real la hace el polling explícito del paso siguiente,
+        # no el timeout interno (ambiguo) de `vercel promote`.
+        run: vercel promote "${{ steps.preview.outputs.url }}" --token="$VERCEL_TOKEN" --yes --timeout=0
 
-      - name: Confirmar el mismo commit live en producción
+      - name: Esperar al deployment de producción real y confirmar su commit
+        id: production
         run: |
-          host="$(echo "${{ steps.preview.outputs.url }}" | sed 's#https://##')"
-          deployment="$(curl -s "https://api.vercel.com/v13/deployments/${host}?teamId=${VERCEL_ORG_ID}" \
-            -H "Authorization: Bearer ${VERCEL_TOKEN}")"
-          echo "$deployment"
-          commit_sha="$(echo "$deployment" | jq -r '.meta.commitSha // empty')"
-          scripts/assert-commit-match.sh "$commit_sha" "${GITHUB_SHA}"
-          echo "Vercel promovió exactamente github.sha a producción."
+          output="$(scripts/vercel-wait-production-ready.sh "${GITHUB_SHA}")"
+          echo "$output"
+          domain="$(echo "$output" | grep '^domain=' | cut -d= -f2-)"
+          if [ -z "$domain" ]; then
+            echo "::error::vercel-wait-production-ready.sh no devolvió un dominio"
+            exit 1
+          fi
+          echo "domain=$domain" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke HTTP contra el dominio real de producción
+        run: |
+          domain="${{ steps.production.outputs.domain }}"
+          status="$(curl -sS -o /dev/null -w '%{http_code}' "https://${domain}/")"
+          echo "status=$status"
+          if [ "$status" != "200" ]; then
+            echo "::error::El dominio real de producción (${domain}) respondió $status en vez de 200"
+            exit 1
+          fi
+          echo "Producción real (${domain}) responde 200 con exactamente github.sha."
