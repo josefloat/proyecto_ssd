@@ -5,9 +5,7 @@ Definir y verificar el pipeline CI/CD que construye y prueba el monorepo,
 aplica migraciones en Neon, despliega el commit exacto en Render y Vercel,
 valida el frontend en un Preview protegido antes de promoverlo y confirma
 automáticamente la salud del sistema en producción.
-
 ## Requirements
-
 ### Requirement: Build y pruebas de integración bloquean el despliegue
 El pipeline de CI SHALL construir la imagen Docker real del backend y el build de producción del frontend, y ejecutar las pruebas de integración (Supertest) contra un Postgres real de servicio en CI, antes de permitir cualquier despliegue a producción.
 
@@ -22,17 +20,25 @@ El pipeline de CI SHALL construir la imagen Docker real del backend y el build d
 - **THEN** el job de despliegue queda con `conclusion: "skipped"` según la API de GitHub Actions (`GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs`), confirmando que el gate bloquea el despliegue y no solo que el YAML lo declara
 
 ### Requirement: Migración con URL directa, aislada del runtime
-El pipeline SHALL ejecutar `prisma migrate deploy` en un job de GitHub Actions usando `DIRECT_URL`, después de que el build y las pruebas estén en verde y antes de disparar el despliegue de Render, ya que Render Free no admite pre-deploy command ni jobs one-off.
+El pipeline SHALL ejecutar `prisma migrate deploy` en un job de GitHub Actions usando `DIRECT_URL`, después de que el build y las pruebas estén en verde. En el mismo gate, inmediatamente después de una migración exitosa, SHALL ejecutar el seed idempotente mediante `prisma db seed`; solo si migración y seed terminan correctamente SHALL habilitar cualquier despliegue de Render o Vercel, ya que Render Free no admite pre-deploy command ni jobs one-off.
 
-#### Scenario: Migración exitosa habilita el despliegue de Render
-- **GIVEN** build y pruebas de integración están en verde
-- **WHEN** el job de migración corre con `DIRECT_URL` válida
-- **THEN** `prisma migrate deploy` aplica las migraciones pendientes contra Neon y el pipeline avanza al despliegue de Render
+#### Scenario: DP-1.1 Migración y seed exitosos habilitan los despliegues
+- **GIVEN** build y pruebas están en verde, `DIRECT_URL` es válida y el seed puede conectarse a PostgreSQL
+- **WHEN** el job previo al despliegue ejecuta `prisma migrate deploy` seguido de `prisma db seed`
+- **THEN** las migraciones se aplican, el seed idempotente termina correctamente y solo después quedan habilitados los jobs de Render y Vercel
+- **PRUEBA AUTOMATIZADA** `pipeline-seed-gate.test.ts` valida el orden y dependencias del workflow con fixture local, mientras `seed.integration.test.ts` ejecuta el seed dos veces contra PostgreSQL real
 
-#### Scenario: URL directa inválida detiene el pipeline antes de desplegar
+#### Scenario: DP-1.2 URL directa inválida detiene migración, seed y despliegues
 - **GIVEN** `DIRECT_URL` es inválida o Neon no es alcanzable para la conexión directa
-- **WHEN** el job de migración corre
-- **THEN** `prisma migrate deploy` falla, el pipeline se detiene, y NO se dispara el despliegue de Render — a diferencia de un fallo de `DATABASE_URL` (pooled) en runtime, que se detecta después, vía `/health`
+- **WHEN** el job ejecuta `prisma migrate deploy`
+- **THEN** la migración falla, `prisma db seed` no se ejecuta y los jobs de Render y Vercel quedan `skipped`
+- **PRUEBA AUTOMATIZADA** el mecanismo existente `workflow_dispatch.force_invalid_direct_url` inyecta una conexión local inalcanzable sin alterar el secreto real y la verificación de jobs confirma el fallo de `migrate` y la omisión de seed y despliegues
+
+#### Scenario: DP-1.3 Seed fallido después de migrar bloquea ambos despliegues
+- **GIVEN** `prisma migrate deploy` terminó correctamente y un fixture local fuerza un código de salida no cero en `prisma db seed`
+- **WHEN** el gate ejecuta el seed posterior a la migración
+- **THEN** el gate falla y los jobs de Render y Vercel quedan `skipped` sin llamar a Neon, Render ni Vercel
+- **PRUEBA AUTOMATIZADA** `pipeline-seed-gate.test.ts` ejecuta el fixture local de seed fallido, usa spies de despliegue y valida el DAG para confirmar que ninguno puede ejecutarse
 
 ### Requirement: Despliegue del commit exacto, sin auto-deploys duplicados
 El pipeline SHALL desplegar el commit exacto de `github.sha` a Render y a Vercel, con los auto-deploys nativos de ambos proveedores desactivados, y SHALL consultar la API de cada proveedor hasta confirmar que ese commit específico está live antes de correr el smoke test.

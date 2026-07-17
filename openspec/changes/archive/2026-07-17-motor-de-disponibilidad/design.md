@@ -183,6 +183,20 @@ Evidencia obtenida el 2026-07-17 en la rama `sprint-2-motor-disponibilidad`:
 - `actionlint .github/workflows/ci.yml` aprobó el workflow. `pipeline-seed-gate.test.ts` verificó el orden migrate → seed, preservó el mecanismo independiente de `DIRECT_URL` inválida y demostró el fallo de seed solo con spies/fixture local, sin llamadas a Neon, Render ni Vercel.
 - `openspec validate --all --strict` aprobó las specs canónicas y este change antes del cierre de la tarea 5.1.
 
+### Evidencia de producción posterior a la fusión
+
+La corrida de `main` [29580904166](https://github.com/josefloat/proyecto_ssd/actions/runs/29580904166) validó el commit fusionado `143d8a1da08e332a356d8ad4737533bca96799ca`. Los cinco jobs pertenecen a esa misma corrida y terminaron en `success`:
+
+| Job | Resultado y evidencia |
+| --- | --- |
+| `build-and-test` | `success`; compilación, imagen Docker y suites del backend/frontend aprobadas. |
+| `migrate` | `success`; ejecutó `prisma migrate deploy` y, después, `prisma db seed`. El seed idempotente informó `0/256 slots nuevos en [2026-07-17, 2026-08-14)` sin exponer secretos. |
+| `deploy-render` | `success`; Render alcanzó `live` y confirmó exactamente el SHA `143d8a1da08e332a356d8ad4737533bca96799ca`. |
+| `deploy-vercel` | `success`; el Preview conservó Deployment Protection (`302` sin bypass), el dominio canónico configurado `senal-de-vida-frontend.vercel.app` fue encontrado entre los aliases de producción, Vercel confirmó el mismo SHA y el smoke sin bypass respondió `200`. |
+| `runtime-smoke` | `success`; `/live` respondió `200` con `status:ok`, `/health` respondió `200` con `db:ok` y `/api/health` respondió `200` con `db:ok`. |
+
+La corrida previa había partido del supuesto falso de que `targets.production.alias[0]` siempre era el dominio público; el orden del array no ofrece esa garantía y se seleccionó un alias generado protegido. La corrección fusionada dejó de depender de la posición: recibe `VERCEL_PRODUCTION_DOMAIN`, exige que el dominio canónico aparezca en `targets.production.alias`, valida `target=production`, estado `READY` y SHA, y devuelve exclusivamente `senal-de-vida-frontend.vercel.app`. La protección de Preview permanece activa y el smoke del dominio productivo no usa bypass.
+
 ## Risks / Trade-offs
 
 - [El Route Handler aborta el upstream a los 10s y Render Free puede tardar aproximadamente 60s en despertar tras inactividad] → `disponibilidad-publica` deberá diseñar la recuperación que verá el usuario; pre-generar slots mejora la latencia de base de datos, pero no elimina el cold start.
