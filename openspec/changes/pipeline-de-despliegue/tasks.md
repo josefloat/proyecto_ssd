@@ -2,8 +2,8 @@
 
 - [x] 1.1 [HUMANO OBLIGATORIO] Crear cuenta y proyecto en Neon; obtener connection string pooled y directa
 - [x] 1.2 [HUMANO OBLIGATORIO] Crear cuenta y Web Service en Render; obtener deploy hook, API key y service ID
-- [ ] 1.3 [HUMANO OBLIGATORIO] Crear cuenta/proyecto en Vercel; obtener token, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` y un secreto de Protection Bypass for Automation manteniendo activo `Require Log In`
-- [ ] 1.4 [HUMANO OBLIGATORIO] Guardar todas las credenciales anteriores como GitHub Secrets del repositorio, incluido `VERCEL_AUTOMATION_BYPASS_SECRET`
+- [x] 1.3 [HUMANO OBLIGATORIO] Crear cuenta/proyecto en Vercel; obtener token, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` y un secreto de Protection Bypass for Automation manteniendo activo `Require Log In`
+- [x] 1.4 [HUMANO OBLIGATORIO] Guardar todas las credenciales anteriores como GitHub Secrets del repositorio, incluido `VERCEL_AUTOMATION_BYPASS_SECRET`
 
 ## 2. CI: build, pruebas y gate de migración
 
