@@ -17,8 +17,8 @@
 
 ## 4. Smoke tests de runtime (directo y a través del proxy)
 
-- [ ] 4.1 Smoke test contra `<backend-url>/health` con reintentos tolerantes al cold start, y un entorno efímero con `DATABASE_URL` pooled inválida que confirma que el smoke test detecta el 503 sin tocar producción; verifica los escenarios "/health responde db:ok tras el despliegue" y "URL pooled inválida detectada en un entorno efímero de prueba" de `specs/deployment-pipeline/spec.md`
-- [ ] 4.2 Smoke test del recorrido completo `<frontend-url>/api/health` con intentos upstream de hasta 10s y una ventana global de reintentos de hasta 120s, distinguiendo explícitamente `504` del Route Handler de `503` del backend; verifica los escenarios "Recorrido completo a través del proxy responde dentro de la ventana global" y "Timeout de proxy distinguido de un fallo real de base de datos" de `specs/deployment-pipeline/spec.md`
+- [x] 4.1 Smoke test contra `<backend-url>/health` con reintentos tolerantes al cold start, y un entorno efímero con `DATABASE_URL` pooled inválida que confirma que el smoke test detecta el 503 sin tocar producción; verifica los escenarios "/health responde db:ok tras el despliegue" y "URL pooled inválida detectada en un entorno efímero de prueba" de `specs/deployment-pipeline/spec.md`
+- [x] 4.2 Smoke test del recorrido completo `<frontend-url>/api/health` con intentos upstream de hasta 10s y una ventana global de reintentos de hasta 120s, distinguiendo explícitamente `504` del Route Handler de `503` del backend; verifica los escenarios "Recorrido completo a través del proxy responde dentro de la ventana global" y "Timeout de proxy distinguido de un fallo real de base de datos" de `specs/deployment-pipeline/spec.md`
 
 ## 5. Verificación final del sprint
 
