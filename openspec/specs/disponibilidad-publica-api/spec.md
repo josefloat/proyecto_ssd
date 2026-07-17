@@ -45,20 +45,20 @@ El sistema SHALL exponer `GET /especialidades/:especialidadId/medicos` sin auten
 - **THEN** el primero recibe `400 QUERY_INVALIDA`, el segundo `404 RECURSO_NO_ENCONTRADO` y ninguno filtra detalles internos
 - **PRUEBA AUTOMATIZADA** `public-doctors.integration.test.ts` recorre ambos casos con Supertest y verifica códigos, cuerpos y ausencia de consulta para el UUID malformado
 
-### Requirement: PUB-3 Disponibilidad pública cubre 28 fechas y solo slots libres
-El sistema SHALL exponer `GET /disponibilidad` sin autenticación, SHALL asegurar y devolver el intervalo semiabierto `[hoy Lima, hoy Lima + 28 días)`, SHALL incluir exactamente sus 28 fechas civiles, zona `America/Lima` y únicamente slots `LIBRE`, y SHALL fijar `Cache-Control: no-store`.
+### Requirement: PUB-3 Disponibilidad pública cubre 28 fechas y solo slots libres futuros
+El sistema SHALL exponer `GET /disponibilidad` sin autenticación, SHALL asegurar y devolver el intervalo semiabierto `[hoy Lima, hoy Lima + 28 días)`, SHALL incluir exactamente sus 28 fechas civiles, zona `America/Lima` y únicamente slots `LIBRE` cuyo `inicioUtc` sea estrictamente posterior a `ahora`, y SHALL fijar `Cache-Control: no-store`.
 
-#### Scenario: PUB-3.1 Horizonte completo con DTO mínimo y ordenado
-- **GIVEN** una fecha de reloj Lima fija, una especialidad con slots libres, reservados y bloqueados dentro y fuera del horizonte
+#### Scenario: PUB-3.1 Horizonte completo con DTO mínimo, futuro y ordenado
+- **GIVEN** una fecha y hora de reloj Lima fijas, una especialidad con slots libres pasados, con inicio exactamente en `ahora` y futuros, además de slots reservados y bloqueados dentro y fuera del horizonte
 - **WHEN** un cliente solicita `GET /disponibilidad?especialidadId=<uuid>`
-- **THEN** recibe `200`, `zonaHoraria: "America/Lima"`, las 28 fechas exactas, `desde` y `hastaExclusiva`, header `Cache-Control: no-store` e items libres ordenados con solo `id`, `fechaLima`, `inicioUtc`, `finUtc`, médico y consultorio
-- **PRUEBA AUTOMATIZADA** `public-availability.integration.test.ts` usa reloj inyectado, Supertest y PostgreSQL reales para comparar fronteras, las 28 fechas, orden, estados excluidos y allow-list del DTO
+- **THEN** recibe `200`, `zonaHoraria: "America/Lima"`, las 28 fechas exactas, `desde` y `hastaExclusiva`, header `Cache-Control: no-store` e items exclusivamente `LIBRE` con `inicioUtc > ahora`, ordenados y con solo `id`, `fechaLima`, `inicioUtc`, `finUtc`, médico y consultorio
+- **PRUEBA AUTOMATIZADA** `public-availability.integration.test.ts` usa reloj inyectado, Supertest y PostgreSQL reales para comparar fronteras, las 28 fechas, orden, estados y tiempos excluidos y allow-list del DTO
 
 #### Scenario: PUB-3.2 Horizonte válido sin slots disponibles
-- **GIVEN** una especialidad existente sin slots libres en las próximas 28 fechas
+- **GIVEN** una especialidad existente sin slots libres futuros en las próximas 28 fechas
 - **WHEN** un cliente consulta su disponibilidad
 - **THEN** recibe `200`, el horizonte con exactamente 28 fechas y `items: []`
-- **PRUEBA AUTOMATIZADA** `public-availability.integration.test.ts` carga únicamente slots bloqueados/reservados o ninguna programación y verifica horizonte y vacío contra PostgreSQL real
+- **PRUEBA AUTOMATIZADA** `public-availability.integration.test.ts` carga únicamente slots pasados, bloqueados, reservados o ninguna programación y verifica horizonte y vacío contra PostgreSQL real
 
 #### Scenario: PUB-3.3 Query ausente, repetida o malformada
 - **GIVEN** solicitudes sin `especialidadId`, con el parámetro repetido o con UUID malformado
