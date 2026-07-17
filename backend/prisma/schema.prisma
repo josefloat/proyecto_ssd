@@ -21,6 +21,19 @@ enum EstadoSlot {
   BLOQUEADO
 }
 
+enum EstadoCita {
+  RESERVADA
+  PAGADA
+  ATENDIDA
+  NO_ASISTIO
+  CANCELADA
+}
+
+enum MotivoCancelacion {
+  PACIENTE
+  EXPIRACION
+}
+
 // Tabla técnica de infraestructura, no de dominio: existe porque Prisma
 // se niega a generar un cliente o crear una migración con cero modelos
 // definidos. /health no depende de esta tabla; usa SELECT 1.
@@ -74,7 +87,35 @@ model Slot {
   fechaLima             DateTime             @db.Date
   estado                EstadoSlot           @default(LIBRE)
   programacionSemanal   ProgramacionSemanal  @relation(fields: [programacionSemanalId], references: [id])
+  citas                 Cita[]
 
   @@unique([programacionSemanalId, inicioUtc])
   @@index([fechaLima, estado, inicioUtc])
+}
+
+model Paciente {
+  id                    String  @id @default(uuid()) @db.Uuid
+  dni                   String  @unique
+  telefono              String
+  nombre                String
+  citas                 Cita[]
+}
+
+model Cita {
+  id                     String              @id @default(uuid()) @db.Uuid
+  pacienteId             String              @db.Uuid
+  slotId                 String              @db.Uuid
+  codigoReserva          String              @unique
+  estado                 EstadoCita          @default(RESERVADA)
+  motivoCancelacion      MotivoCancelacion?
+  reservadaEn            DateTime            @db.Timestamptz(3)
+  venceEn                DateTime            @db.Timestamptz(3)
+  canceladaEn            DateTime?           @db.Timestamptz(3)
+  idempotencyKey         String              @unique @db.Uuid
+  idempotencyFingerprint String
+  paciente               Paciente            @relation(fields: [pacienteId], references: [id])
+  slot                   Slot                @relation(fields: [slotId], references: [id])
+
+  @@index([slotId])
+  @@index([estado, venceEn])
 }

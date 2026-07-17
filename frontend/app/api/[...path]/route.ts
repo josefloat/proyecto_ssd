@@ -23,6 +23,18 @@ async function proxy(request: NextRequest, path: string[]) {
   try {
     const upstreamResponse = await fetch(target, {
       method: request.method,
+      headers: {
+        ...(request.headers.get("content-type")
+          ? { "content-type": request.headers.get("content-type")! }
+          : {}),
+        ...(request.headers.get("idempotency-key")
+          ? { "idempotency-key": request.headers.get("idempotency-key")! }
+          : {}),
+      },
+      body:
+        request.method === "GET" || request.method === "HEAD"
+          ? undefined
+          : await request.arrayBuffer(),
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
     const body = await upstreamResponse.text();
@@ -47,6 +59,11 @@ async function proxy(request: NextRequest, path: string[]) {
 type RouteContext = { params: Promise<{ path: string[] }> };
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
+  const { path } = await params;
+  return proxy(request, path);
+}
+
+export async function POST(request: NextRequest, { params }: RouteContext) {
   const { path } = await params;
   return proxy(request, path);
 }

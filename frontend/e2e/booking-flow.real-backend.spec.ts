@@ -59,7 +59,7 @@ test("flujo real conserva URL, recarga, atrás y nunca escribe (FLOW-1.1/FLOW-2.
   await primerSlot.click();
   await expect(page).toHaveURL(/slotId=/);
   const urlSeleccionada = page.url();
-  await expect(page.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Continuar" })).toBeEnabled();
   await expect(page.getByText("Este horario todavía no está reservado")).toBeVisible();
   await page.reload();
 

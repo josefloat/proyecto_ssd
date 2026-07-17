@@ -5,17 +5,10 @@ const SMOKE_URL = process.env.SMOKE_URL;
 const VERCEL_AUTOMATION_BYPASS_SECRET =
   process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
-test.beforeAll(() => {
-  if (!SMOKE_URL) {
-    throw new Error("SMOKE_URL debe estar configurada para este smoke test");
-  }
-
-  if (!VERCEL_AUTOMATION_BYPASS_SECRET) {
-    throw new Error(
-      "VERCEL_AUTOMATION_BYPASS_SECRET debe estar configurado para el preview protegido",
-    );
-  }
-});
+test.skip(
+  !SMOKE_URL || !VERCEL_AUTOMATION_BYPASS_SECRET,
+  "El smoke protegido se ejecuta en CI cuando existen URL y bypass de Vercel",
+);
 
 test("el preview protegido carga con bypass y no tiene violaciones de accesibilidad", async ({
   page,

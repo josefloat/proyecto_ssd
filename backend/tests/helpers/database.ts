@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 export const testPrisma = new PrismaClient();
 
 export async function limpiarDominio(): Promise<void> {
+  await testPrisma.cita.deleteMany();
+  await testPrisma.paciente.deleteMany();
   await testPrisma.slot.deleteMany();
   await testPrisma.programacionSemanal.deleteMany();
   await testPrisma.medico.deleteMany();

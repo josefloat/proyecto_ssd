@@ -13,10 +13,6 @@ import {
 } from "lucide-react";
 import { MotionPage } from "@/components/motion-page";
 
-function Proximamente() {
-  return <span className="soon-pill">Próximamente</span>;
-}
-
 export default function HomePaciente() {
   return (
     <div className="patient-home-shell">
@@ -67,16 +63,13 @@ export default function HomePaciente() {
               <ChevronRight className="action-arrow" aria-hidden="true" size={26} />
             </Link>
 
-            <button className="home-action home-action-disabled" type="button" disabled>
+            <Link className="home-action home-action-secondary" href="/mi-cita">
               <span className="action-icon" aria-hidden="true">
                 <FileText size={29} />
               </span>
-              <span className="disabled-action-copy">
-                <span>Ver mi cita</span>
-                <Proximamente />
-              </span>
+              <span>Ver mi cita</span>
               <ChevronRight className="action-arrow" aria-hidden="true" size={26} />
-            </button>
+            </Link>
           </div>
 
           <div className="home-progress" aria-hidden="true">

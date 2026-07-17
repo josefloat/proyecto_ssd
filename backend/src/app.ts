@@ -9,10 +9,17 @@ import {
   crearServiciosDisponibilidadPublica,
   type ServiciosDisponibilidadPublica,
 } from "./services/disponibilidad-publica";
+import {
+  crearServiciosCitasPaciente,
+  type GeneradorCodigoReserva,
+  type ServiciosCitasPaciente,
+} from "./services/citas-paciente";
 
 export type AppOptions = Readonly<{
   reloj?: () => Date;
   publicApi?: Partial<ServiciosDisponibilidadPublica>;
+  citasApi?: Partial<ServiciosCitasPaciente>;
+  generarCodigoReserva?: GeneradorCodigoReserva;
 }>;
 
 export function createApp(
@@ -20,14 +27,26 @@ export function createApp(
   options: AppOptions = {},
 ): Express {
   const app = express();
+  const citasBase = crearServiciosCitasPaciente(
+    database,
+    options.reloj,
+    options.generarCodigoReserva,
+  );
+  const serviciosCitas: ServiciosCitasPaciente = {
+    ...citasBase,
+    ...options.citasApi,
+  };
   const serviciosBase = crearServiciosDisponibilidadPublica(
     database,
     options.reloj,
+    serviciosCitas.aplicarExpiraciones,
   );
   const serviciosPublicos: ServiciosDisponibilidadPublica = {
     ...serviciosBase,
     ...options.publicApi,
   };
+
+  app.use(express.json({ limit: "16kb" }));
 
   // Liveness: nunca toca la base de datos. Es el Health Check Path que
   // usará el proveedor de hosting (ver pipeline-de-despliegue) para no
@@ -47,7 +66,7 @@ export function createApp(
     }
   });
 
-  registrarRutasPublicas(app, serviciosPublicos);
+  registrarRutasPublicas(app, serviciosPublicos, serviciosCitas);
   app.use(responderErrorPublico);
 
   return app;

@@ -105,11 +105,24 @@ export function rutaPrimerPasoIncompleto(
   if (pathname === "/reservar/medico" && !seleccion.especialidadId) {
     return "/reservar/especialidad";
   }
-  if (pathname === "/reservar/fecha-hora") {
+  if (pathname === "/reservar/fecha-hora" || pathname === "/reservar/datos") {
     if (!seleccion.especialidadId) return "/reservar/especialidad";
     if (!seleccion.medicoId) {
       return serializar("/reservar/medico", {
         especialidadId: seleccion.especialidadId,
+      });
+    }
+    if (pathname === "/reservar/datos" && !seleccion.fechaLima) {
+      return serializar("/reservar/fecha-hora", {
+        especialidadId: seleccion.especialidadId,
+        medicoId: seleccion.medicoId,
+      });
+    }
+    if (pathname === "/reservar/datos" && !seleccion.slotId) {
+      return serializar("/reservar/fecha-hora", {
+        especialidadId: seleccion.especialidadId,
+        medicoId: seleccion.medicoId,
+        fechaLima: seleccion.fechaLima,
       });
     }
   }
@@ -125,4 +138,8 @@ export function urlPasoFechaHora(seleccion: BookingSelection): string {
     especialidadId: seleccion.especialidadId,
     medicoId: seleccion.medicoId,
   });
+}
+
+export function urlPasoDatos(seleccion: BookingSelection): string {
+  return serializar("/reservar/datos", seleccion);
 }

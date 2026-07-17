@@ -8,11 +8,16 @@ const UUID =
 
 export class PublicApiError extends Error {
   constructor(
-    readonly status: 400 | 404 | 422 | 503,
+    readonly status: 400 | 404 | 409 | 422 | 503,
     readonly code:
       | "QUERY_INVALIDA"
       | "RECURSO_NO_ENCONTRADO"
       | "MEDICO_NO_PERTENECE_ESPECIALIDAD"
+      | "DATOS_PACIENTE_NO_COINCIDEN"
+      | "IDEMPOTENCIA_EN_CONFLICTO"
+      | "SLOT_NO_DISPONIBLE"
+      | "CITA_NO_ENCONTRADA"
+      | "CITA_NO_CANCELABLE"
       | "SERVICIO_NO_DISPONIBLE",
     readonly publicMessage: string,
   ) {
