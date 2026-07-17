@@ -202,6 +202,16 @@ En la home, “Sacar una cita” navega al primer paso. “Ver mi cita” y las 
 - Gates de repositorio: `actionlint` pasó sin hallazgos, `git diff --check` pasó y `openspec validate --all --strict` validó 8/8 ítems.
 - Stack dejado disponible para revisión: frontend `http://localhost:3000`, API `http://localhost:4001`, health `http://localhost:4001/health` y proxy `http://localhost:3000/api/health`.
 
+## Production Evidence — 2026-07-17
+
+- PR funcional fusionado: `#19`, squash SHA `17468409aa517c00c2f44ec06c39ae0d742610e8`.
+- Corrida de `main`: `https://github.com/josefloat/proyecto_ssd/actions/runs/29594994868`, conclusión `success` para ese mismo SHA.
+- `build-and-test`: `success` (`job/87933112080`).
+- `migrate`: `success` (`job/87933572598`), incluyendo `prisma migrate deploy` y `prisma db seed` antes de los despliegues.
+- `deploy-render`: `success` (`job/87933631904`).
+- `deploy-vercel`: `success` (`job/87933631898`).
+- `runtime-smoke`: `success` (`job/87934004756`).
+
 ## Risks / Trade-offs
 
 - [El primer GET puede materializar una base vacía y superar un intento de 10 s] → El seed prepara el horizonte, la reconciliación caliente evita INSERT y el coordinador mantiene una espera continua hasta 88 s.
@@ -210,7 +220,7 @@ En la home, “Sacar una cita” navega al primer paso. “Ver mi cita” y las 
 - [La lista plana exige agrupación de fechas en frontend] → `horizonte.fechas` es autoritativa y una función pura construye los grupos, incluidos los días vacíos.
 - [Los snapshots pueden variar por fuente, navegador o animación] → Fuente local, entorno congelado, contenedor de CI, reduced-motion real y espera explícita; se evita basar la aserción en tiempos arbitrarios.
 - [Los nombres del seed podrían interpretarse como profesionales reales] → Aviso académico persistente, ausencia de fotografías/ratings y lenguaje de demostración; no se presenta información clínica ni promesas de atención real.
-- [La validación local no sustituye el despliegue de producción] → Este apply termina en un PR sin fusionar; CI y los jobs normales de despliegue deberán validar el SHA fusionado antes de afirmar salud productiva.
+- [La validación local no sustituye el despliegue de producción] → La corrida `29594994868` validó el SHA fusionado mediante build, migración/seed, ambos despliegues y runtime smoke antes de archivar el change.
 
 ## Migration Plan
 
