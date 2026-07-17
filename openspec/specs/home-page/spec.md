@@ -2,22 +2,7 @@
 
 ## Purpose
 TBD - created by syncing change `cimientos-y-despliegue`. Update Purpose after archive.
-
 ## Requirements
-
-### Requirement: Home placeholder carga y cumple una línea base de accesibilidad
-El frontend SHALL servir una página de inicio placeholder en la ruta raíz (`/`) que renderiza sin errores en tiempo de ejecución y cumple una línea base de accesibilidad automatizada. Esta página es un placeholder de infraestructura, no la UI final del flujo de reserva representado por `design/base-ui-ux-reservas.png`, que se implementará en un cambio posterior. Este requisito es el dueño único del escaneo de accesibilidad de la home: la verificación en un entorno desplegado (en `pipeline-de-despliegue`) reutiliza este mismo criterio de cero violaciones, no define uno adicional.
-
-#### Scenario: Carga de la home
-- **GIVEN** el frontend corre localmente (Docker Compose o `next dev`)
-- **WHEN** un visitante solicita la ruta raíz (`/`)
-- **THEN** la página responde `200`, incluye un encabezado principal (`h1`) y al menos un landmark semántico, y un escaneo automatizado con axe-core no reporta violaciones
-
-#### Scenario: Regresión de accesibilidad detectada antes de integrar
-- **GIVEN** la home tiene una violación de accesibilidad (por ejemplo, contraste insuficiente o ausencia de landmark)
-- **WHEN** el escaneo axe-core corre como parte de la suite de pruebas
-- **THEN** la prueba automatizada falla, evitando que la regresión llegue a integrarse
-
 ### Requirement: Proxy same-origin del frontend hacia el backend
 El frontend SHALL exponer las rutas del backend bajo su propio origen mediante un Route Handler catch-all (`app/api/[...path]/route.ts`), de modo que el navegador nunca necesite conocer ni contactar directamente el origen del backend. La URL de destino del proxy se configura mediante una variable de entorno server-side (nunca `NEXT_PUBLIC_*`), para no hornearla en el bundle del cliente. Se usa un Route Handler en vez de `rewrites()` porque `rewrites()` con un destino externo delega el reenvío al mecanismo interno de Next.js, que ante un fallo de conexión responde con un `500` opaco sin permitir personalizar el código de estado ni el cuerpo del error — el Route Handler controla explícitamente ambos.
 
@@ -30,3 +15,24 @@ El frontend SHALL exponer las rutas del backend bajo su propio origen mediante u
 - **GIVEN** la variable de entorno con la URL del backend no está configurada o apunta a un backend inexistente
 - **WHEN** un cliente pide una ruta proxied
 - **THEN** el frontend responde con un error controlado (`502`/`504`) en vez de colgarse indefinidamente o filtrar la URL interna del backend en el mensaje de error
+
+### Requirement: HOME-1 Home real del paciente orienta sin prometer funciones futuras
+El frontend SHALL servir en `/` la home real de Señal de Vida — Ayacucho con ilustración original local, una acción activa “Sacar una cita” hacia `/reservar/especialidad`, acciones futuras realmente deshabilitadas con “Próximamente” y el aviso visible de demostración académica.
+
+#### Scenario: HOME-1.1 Entrada real inicia el flujo de disponibilidad
+- **GIVEN** la aplicación frontend está construida y dispone de la ilustración local original
+- **WHEN** un paciente abre `/` y activa “Sacar una cita”
+- **THEN** recibe `200`, ve la composición aprobada de Stitch, Señal de Vida — Ayacucho, la ilustración y el aviso de datos ficticios, y navega a `/reservar/especialidad`
+- **PRUEBA AUTOMATIZADA** `home-patient.spec.ts` usa Playwright para verificar status, landmarks, textos, asset local y navegación activa; `home-visual.spec.ts` compara móvil y escritorio
+
+#### Scenario: HOME-1.2 Función futura no crea una ruta falsa
+- **GIVEN** “Ver mi cita”, Mis citas, Notificaciones y Perfil todavía están fuera de alcance
+- **WHEN** el paciente intenta enfocarlos o activarlos con puntero y teclado
+- **THEN** aparecen deshabilitados con “Próximamente”, no cambian la URL y no ejecutan requests de dominio
+- **PRUEBA AUTOMATIZADA** `home-patient.spec.ts` verifica semántica disabled/aria-disabled, copy, foco permitido solo cuando aporta explicación, URL y red sin navegación
+
+#### Scenario: HOME-1.3 Asset remoto o copy geográfico falso se rechaza
+- **GIVEN** un fixture local intenta usar una ilustración remota o introduce “Lima”, “San Borja”, ratings o reseñas en la home
+- **WHEN** corren los contratos de assets y contenido
+- **THEN** la suite falla y la variante no puede integrarse
+- **PRUEBA AUTOMATIZADA** `ui-assets.contract.test.ts` y `ui-copy.contract.test.ts` inspeccionan imports/URLs y copias prohibidas mediante Vitest AAA
