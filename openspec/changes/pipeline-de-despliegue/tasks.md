@@ -22,4 +22,4 @@
 
 ## 5. Verificación final del sprint
 
-- [ ] 5.1 Confirmar en producción real: `/live` responde 200 sin tocar la base de datos, `/health` responde `db: "ok"`, el recorrido completo a través del Route Handler responde dentro de la ventana global de 120s, axe-core reportó cero violaciones en preview antes de la promoción, y el pipeline completo (build → pruebas → migración → deploy SHA-pinned → preview + axe → promoción → smoke post-promoción) está en verde en GitHub Actions
+- [x] 5.1 Confirmar en producción real: `/live` responde 200 sin tocar la base de datos, `/health` responde `db: "ok"`, el recorrido completo a través del Route Handler responde dentro de la ventana global de 120s, axe-core reportó cero violaciones en preview antes de la promoción, y el pipeline completo (build → pruebas → migración → deploy SHA-pinned → preview + axe → promoción → smoke post-promoción) está en verde en GitHub Actions
