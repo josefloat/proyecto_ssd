@@ -52,6 +52,12 @@ jobs:
         working-directory: backend
         run: npx prisma migrate deploy
 
+      - name: Sembrar catálogos, programación y horizonte de prueba
+        working-directory: backend
+        env:
+          SEED_ANCHOR_DATE: '2026-07-17'
+        run: npx prisma db seed
+
       - name: Compilar el backend (tsc)
         working-directory: backend
         run: npm run build
@@ -121,6 +127,10 @@ jobs:
       - name: Migrar contra Neon (DIRECT_URL)
         working-directory: backend
         run: npx prisma migrate deploy
+
+      - name: Sembrar catálogos, programación y horizonte
+        working-directory: backend
+        run: npx prisma db seed
 
   deploy-render:
     needs: migrate
