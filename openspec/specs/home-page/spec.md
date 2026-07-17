@@ -17,22 +17,16 @@ El frontend SHALL exponer las rutas del backend bajo su propio origen mediante u
 - **THEN** el frontend responde con un error controlado (`502`/`504`) en vez de colgarse indefinidamente o filtrar la URL interna del backend en el mensaje de error
 
 ### Requirement: HOME-1 Home real del paciente orienta sin prometer funciones futuras
-El frontend SHALL servir en `/` la home real de Señal de Vida — Ayacucho con ilustración original local, una acción activa “Sacar una cita” hacia `/reservar/especialidad`, acciones futuras realmente deshabilitadas con “Próximamente” y el aviso visible de demostración académica.
+El frontend SHALL servir en `/` la home real de Señal de Vida — Ayacucho con ilustración original local, una acción “Sacar una cita” hacia `/reservar/especialidad`, una acción “Ver mi cita” hacia `/mi-cita`, las demás funciones futuras realmente deshabilitadas con “Próximamente” y el aviso visible de demostración académica; SHALL evitar Lima, San Borja, ratings, reseñas y assets remotos.
 
-#### Scenario: HOME-1.1 Entrada real inicia el flujo de disponibilidad
-- **GIVEN** la aplicación frontend está construida y dispone de la ilustración local original
-- **WHEN** un paciente abre `/` y activa “Sacar una cita”
-- **THEN** recibe `200`, ve la composición aprobada de Stitch, Señal de Vida — Ayacucho, la ilustración y el aviso de datos ficticios, y navega a `/reservar/especialidad`
-- **PRUEBA AUTOMATIZADA** `home-patient.spec.ts` usa Playwright para verificar status, landmarks, textos, asset local y navegación activa; `home-visual.spec.ts` compara móvil y escritorio
+#### Scenario: HOME-1.1 Las dos entradas activas abren servicios reales
+- **GIVEN** la home construida con el backend disponible
+- **WHEN** el paciente activa “Sacar una cita” y, en otro recorrido, “Ver mi cita”
+- **THEN** la primera acción navega a `/reservar/especialidad`, la segunda a `/mi-cita`, ambas tienen nombre y foco accesibles y ninguna promete una función inexistente
+- **PRUEBA AUTOMATIZADA** `home-patient.spec.ts` amplía la prueba Playwright existente para verificar ambas navegaciones sin recorrer nuevamente sus flujos integrales
 
-#### Scenario: HOME-1.2 Función futura no crea una ruta falsa
-- **GIVEN** “Ver mi cita”, Mis citas, Notificaciones y Perfil todavía están fuera de alcance
-- **WHEN** el paciente intenta enfocarlos o activarlos con puntero y teclado
-- **THEN** aparecen deshabilitados con “Próximamente”, no cambian la URL y no ejecutan requests de dominio
-- **PRUEBA AUTOMATIZADA** `home-patient.spec.ts` verifica semántica disabled/aria-disabled, copy, foco permitido solo cuando aporta explicación, URL y red sin navegación
-
-#### Scenario: HOME-1.3 Asset remoto o copy geográfico falso se rechaza
-- **GIVEN** un fixture local intenta usar una ilustración remota o introduce “Lima”, “San Borja”, ratings o reseñas en la home
-- **WHEN** corren los contratos de assets y contenido
-- **THEN** la suite falla y la variante no puede integrarse
-- **PRUEBA AUTOMATIZADA** `ui-assets.contract.test.ts` y `ui-copy.contract.test.ts` inspeccionan imports/URLs y copias prohibidas mediante Vitest AAA
+#### Scenario: HOME-1.2 Funciones futuras o contenido prohibido permanecen fuera
+- **GIVEN** variantes parametrizadas que intentan activar Mis citas persistentes, Notificaciones o Perfil, o introducir assets remotos, Lima, San Borja, ratings o reseñas
+- **WHEN** corren los contratos de home y se inspeccionan sus controles
+- **THEN** las funciones futuras permanecen `disabled`/`aria-disabled` con “Próximamente”, no navegan ni escriben, y todo asset o copy prohibido hace fallar el contrato
+- **PRUEBA AUTOMATIZADA** `ui-home.contract.test.ts` usa Vitest parametrizado para verificar controles, destinos, imports locales y copias prohibidas sin duplicar el E2E
