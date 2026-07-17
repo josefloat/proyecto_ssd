@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { Turno } from "@prisma/client";
+import { EstadoSlot, Turno } from "@prisma/client";
 import { testPrisma } from "./database";
 
 export async function crearFixtureProgramacion(options?: {
@@ -38,4 +38,33 @@ export async function crearFixtureProgramacion(options?: {
     },
   });
   return { especialidad, medico, consultorio, programacion };
+}
+
+export async function crearFixtureSlots(options?: {
+  cantidad?: number;
+  inicioUtc?: Date;
+  estado?: EstadoSlot;
+  prefijo?: string;
+}) {
+  const base = await crearFixtureProgramacion({
+    prefijo: options?.prefijo,
+    diaSemana: 5,
+  });
+  const inicioBase = options?.inicioUtc ?? new Date("2026-07-24T14:00:00.000Z");
+  const slots = [];
+  for (let indice = 0; indice < (options?.cantidad ?? 1); indice += 1) {
+    const inicioUtc = new Date(inicioBase.getTime() + indice * 30 * 60 * 1_000);
+    slots.push(
+      await testPrisma.slot.create({
+        data: {
+          programacionSemanalId: base.programacion.id,
+          inicioUtc,
+          finUtc: new Date(inicioUtc.getTime() + 30 * 60 * 1_000),
+          fechaLima: new Date("2026-07-24T00:00:00.000Z"),
+          estado: options?.estado ?? EstadoSlot.LIBRE,
+        },
+      }),
+    );
+  }
+  return { ...base, slots };
 }

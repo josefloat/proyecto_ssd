@@ -10,16 +10,18 @@ export function BookingShell({
   description,
   children,
   footer,
+  inlineFooter = false,
 }: {
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4 | 5;
   title: string;
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  inlineFooter?: boolean;
 }) {
   const router = useRouter();
   return (
-    <div className="booking-shell">
+    <div className={`booking-shell ${inlineFooter ? "footer-inline" : ""}`}>
       <header className="booking-topbar">
         <button type="button" className="back-action" onClick={() => router.back()}>
           <ArrowLeft aria-hidden="true" size={26} />
@@ -66,14 +68,19 @@ export function PrimaryFlowButton({
   children,
   disabled,
   onClick,
+  type = "button",
+  form,
 }: {
   children: React.ReactNode;
   disabled?: boolean;
   onClick?: () => void;
+  type?: "button" | "submit";
+  form?: string;
 }) {
   return (
     <button
-      type="button"
+      type={type}
+      form={form}
       className="flow-primary-button"
       disabled={disabled}
       onClick={onClick}

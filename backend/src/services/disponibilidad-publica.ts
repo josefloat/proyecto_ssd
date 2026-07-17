@@ -65,6 +65,7 @@ function compararTexto(a: string, b: string): number {
 export function crearServiciosDisponibilidadPublica(
   database: PrismaClient,
   reloj: () => Date = () => new Date(),
+  aplicarExpiraciones: () => Promise<number> = async () => 0,
 ): ServiciosDisponibilidadPublica {
   const motor = new MotorDisponibilidad(database, reloj);
 
@@ -110,6 +111,7 @@ export function crearServiciosDisponibilidadPublica(
     },
 
     async consultarDisponibilidad(filtros) {
+      await aplicarExpiraciones();
       const especialidad = await database.especialidad.findUnique({
         where: { id: filtros.especialidadId },
         select: { id: true, nombre: true },
@@ -131,12 +133,14 @@ export function crearServiciosDisponibilidadPublica(
         }
       }
 
-      const desde = hoyEnLima(reloj());
+      const ahora = reloj();
+      const desde = hoyEnLima(ahora);
       const hastaExclusiva = sumarDias(desde, 28);
       await motor.asegurarHorizonte(desde);
       const slots = await database.slot.findMany({
         where: {
           estado: EstadoSlot.LIBRE,
+          inicioUtc: { gt: ahora },
           fechaLima: {
             gte: fechaCivilParaPrisma(desde),
             lt: fechaCivilParaPrisma(hastaExclusiva),

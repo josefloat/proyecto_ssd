@@ -4,7 +4,13 @@ import {
   validarQueryDisponibilidad,
   validarUuidPublico,
 } from "../domain/public-api";
+import {
+  validarCredencialesCita,
+  validarIdempotencyKey,
+  validarSolicitudReserva,
+} from "../domain/citas";
 import type { ServiciosDisponibilidadPublica } from "../services/disponibilidad-publica";
+import type { ServiciosCitasPaciente } from "../services/citas-paciente";
 
 type AsyncHandler = (
   request: Request,
@@ -29,6 +35,7 @@ export async function consultarDisponibilidadDesdeQuery(
 export function registrarRutasPublicas(
   router: Router,
   servicios: ServiciosDisponibilidadPublica,
+  citas: ServiciosCitasPaciente,
 ): void {
   router.get(
     "/especialidades",
@@ -57,6 +64,37 @@ export function registrarRutasPublicas(
             servicios.consultarDisponibilidad,
           ),
         );
+    }),
+  );
+
+  router.post(
+    "/citas",
+    asyncHandler(async (request, response) => {
+      const solicitud = validarSolicitudReserva(request.body);
+      const idempotencyKey = validarIdempotencyKey(
+        request.get("Idempotency-Key"),
+      );
+      response
+        .status(201)
+        .json(await citas.reservar(solicitud, idempotencyKey));
+    }),
+  );
+
+  router.post(
+    "/citas/consulta",
+    asyncHandler(async (request, response) => {
+      response
+        .status(200)
+        .json(await citas.consultar(validarCredencialesCita(request.body)));
+    }),
+  );
+
+  router.post(
+    "/citas/cancelacion",
+    asyncHandler(async (request, response) => {
+      response
+        .status(200)
+        .json(await citas.cancelar(validarCredencialesCita(request.body)));
     }),
   );
 }

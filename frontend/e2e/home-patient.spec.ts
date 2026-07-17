@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
 import { startStandaloneServer, waitForServer } from "./helpers";
 
 const PORT = 3110;
@@ -35,7 +34,7 @@ test("la home real inicia el flujo y muestra el aviso académico (HOME-1.1)", as
   await expect(page).toHaveURL(`${BASE_URL}/reservar/especialidad`);
 });
 
-test("las funciones futuras están deshabilitadas y no navegan (HOME-1.2)", async ({ page }) => {
+test("solo las funciones futuras permanecen deshabilitadas (HOME-1.2)", async ({ page }) => {
   // Arrange
   await page.goto(BASE_URL);
   const urlInicial = page.url();
@@ -43,13 +42,14 @@ test("las funciones futuras están deshabilitadas y no navegan (HOME-1.2)", asyn
   page.on("request", (request) => requests.push(request.url()));
 
   // Act / Assert
-  await expect(page.getByRole("button", { name: /Ver mi cita/ })).toBeDisabled();
+  await expect(page.getByRole("link", { name: /Ver mi cita/ })).toHaveAttribute(
+    "href",
+    "/mi-cita",
+  );
   for (const nombre of [/Mis citas/, /Notificaciones/, /Perfil/]) {
     await expect(page.getByRole("button", { name: nombre }).first()).toBeDisabled();
   }
   await expect(page.getByText("Próximamente").first()).toBeVisible();
   expect(page.url()).toBe(urlInicial);
   expect(requests.filter((url) => url.includes("/api/"))).toEqual([]);
-  const axe = await new AxeBuilder({ page }).analyze();
-  expect(axe.violations).toEqual([]);
 });

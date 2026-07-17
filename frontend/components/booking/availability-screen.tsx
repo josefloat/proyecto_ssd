@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clock3, Moon, Stethoscope, Sun, Sunset } from "lucide-react";
+import { ArrowRight, Check, Clock3, Moon, Stethoscope, Sun, Sunset } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookingShell, PrimaryFlowButton } from "./booking-shell";
@@ -17,6 +17,7 @@ import {
   rutaPrimerPasoIncompleto,
   seleccionarFecha,
   seleccionarSlot,
+  urlPasoDatos,
 } from "@/lib/booking-url";
 
 const emptyDisponibilidad = (data: DisponibilidadResponse) => data.items.length === 0;
@@ -148,7 +149,14 @@ export function AvailabilityScreen() {
       step={3}
       title="Elige la fecha y la hora"
       footer={
-        <PrimaryFlowButton disabled>Continuar</PrimaryFlowButton>
+        <PrimaryFlowButton
+          disabled={!selectedSlot}
+          onClick={() => {
+            if (selectedSlot) router.push(urlPasoDatos(seleccion));
+          }}
+        >
+          Continuar <ArrowRight aria-hidden="true" size={23} />
+        </PrimaryFlowButton>
       }
     >
       <p
@@ -298,7 +306,7 @@ export function AvailabilityScreen() {
                 </div>
               </section>
               <p className="reservation-warning">
-                Este horario todavía no está reservado. Podrás continuar cuando habilitemos el siguiente paso.
+                Este horario todavía no está reservado. Revisa tus datos y confirma en el siguiente paso.
               </p>
             </>
           ) : data ? (

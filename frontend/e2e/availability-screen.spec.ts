@@ -63,7 +63,7 @@ test("seleccionar fecha y slot termina sin reservar ni escribir (FLOW-4.1)", asy
   await page.getByRole("button", { name: /vie.*17.*jul/i }).click();
   await page.getByRole("button", { name: /9:00.*Consultorio 101/i }).click();
   await expect(page).toHaveURL(new RegExp(`fechaLima=2026-07-17.*slotId=${SLOT_ID}`));
-  await expect(page.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Continuar" })).toBeEnabled();
   await expect(page.getByText("Este horario todavía no está reservado")).toBeVisible();
   await expect(page.getByLabel("Horario seleccionado")).toContainText("Consultorio 101");
   expect(writes).toEqual([]);

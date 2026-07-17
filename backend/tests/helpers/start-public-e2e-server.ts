@@ -6,6 +6,8 @@ const database = new PrismaClient();
 const port = Number(process.env.PORT ?? 4010);
 
 async function limpiar() {
+  await database.cita.deleteMany();
+  await database.paciente.deleteMany();
   await database.slot.deleteMany();
   await database.programacionSemanal.deleteMany();
   await database.medico.deleteMany();

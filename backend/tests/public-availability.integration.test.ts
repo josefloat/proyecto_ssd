@@ -101,6 +101,17 @@ describe("GET /disponibilidad", () => {
         data: { estado: EstadoSlot.BLOQUEADO },
       }),
     ]);
+    const slotsNoFuturosLibres = await testPrisma.slot.findMany({
+      where: {
+        estado: EstadoSlot.LIBRE,
+        inicioUtc: { lte: AHORA_FIJO },
+        programacionSemanal: {
+          medico: { especialidadId: especialidad.id },
+        },
+      },
+      select: { id: true, inicioUtc: true },
+    });
+    expect(slotsNoFuturosLibres).toHaveLength(2);
     const app = createApp(testPrisma, { reloj: relojFijo });
 
     // Act
@@ -123,14 +134,21 @@ describe("GET /disponibilidad", () => {
         sumarDias("2026-07-17", indice),
       ),
     });
-    expect(response.body.items).toHaveLength(30);
+    expect(response.body.items).toHaveLength(28);
     expect(response.body.items.map((item: { id: string }) => item.id)).not.toContain(
       slotsMedico[0].id,
     );
     expect(response.body.items.map((item: { id: string }) => item.id)).not.toContain(
       slotsMedico[1].id,
     );
+    const idsPublicados = response.body.items.map((item: { id: string }) => item.id);
+    for (const { id } of slotsNoFuturosLibres) {
+      expect(idsPublicados).not.toContain(id);
+    }
     for (const item of response.body.items) {
+      expect(new Date(item.inicioUtc).getTime()).toBeGreaterThan(
+        AHORA_FIJO.getTime(),
+      );
       expect(Object.keys(item)).toEqual([
         "id",
         "fechaLima",
@@ -184,7 +202,7 @@ describe("GET /disponibilidad", () => {
     // Assert
     expect(response.status).toBe(200);
     expect(response.body.horizonte.fechas).toHaveLength(28);
-    expect(response.body.items).toHaveLength(16);
+    expect(response.body.items).toHaveLength(14);
     expect(
       response.body.items.every(
         (item: { medico: { id: string } }) => item.medico.id === medicoB.id,
