@@ -6,4 +6,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: "list",
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}{ext}",
+  use: {
+    locale: "es-PE",
+    timezoneId: "America/Lima",
+    colorScheme: "light",
+  },
 });
