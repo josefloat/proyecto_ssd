@@ -325,6 +325,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # /live nunca toca la base de datos (backend/tests/live.test.ts lo
+      # prueba mockeando $queryRaw), así que no hace falta romper Neon aquí
+      # para demostrar esa independencia -- solo confirmamos el contrato
+      # HTTP real contra el backend desplegado.
+      - name: 'Verificación de liveness (/live) del backend real de Render, independiente de la base de datos'
+        run: |
+          backend_url="${{ needs.deploy-render.outputs.backend_url }}"
+          status="$(curl -sS -o /tmp/render-live.json -w '%{http_code}' "${backend_url}/live")"
+          body="$(cat /tmp/render-live.json 2>/dev/null || echo '{}')"
+          echo "status=$status body=$body"
+          if [ "$status" != "200" ]; then
+            echo "::error::${backend_url}/live respondió $status en vez de 200"
+            exit 1
+          fi
+          if [ "$(echo "$body" | jq -r '.status // empty')" != "ok" ]; then
+            echo "::error::${backend_url}/live no devolvió el JSON de liveness esperado (status:\"ok\"); body=$body"
+            exit 1
+          fi
+          echo "OK: ${backend_url}/live respondió 200 con status:ok."
+
       - name: 'Smoke test contra /health del backend real de Render (tolerante al cold start, ventana de 90s)'
         run: scripts/smoke-health.sh "${{ needs.deploy-render.outputs.backend_url }}" 90 5
 
