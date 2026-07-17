@@ -71,6 +71,9 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: 'Prueba: desajuste de commit detectado y bloqueado (fixture, sin tocar producción)'
+        run: scripts/test-assert-commit-match.sh
+
   migrate:
     needs: build-and-test
     if: github.ref == 'refs/heads/main'
@@ -112,6 +115,8 @@ jobs:
       RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Desactivar auto-deploy nativo de Render
         run: |
           http_code="$(curl -s -o /tmp/render-response.json -w '%{http_code}' -X PATCH "https://api.render.com/v1/services/${RENDER_SERVICE_ID}" \
@@ -161,10 +166,7 @@ jobs:
             commit_id="$(echo "$deploy" | jq -r '.commit.id // .commit.sha // empty')"
             echo "intento $i: status=$status commit=$commit_id"
             if [ "$status" = "live" ]; then
-              if [ -n "$commit_id" ] && [ "$commit_id" != "${GITHUB_SHA}" ]; then
-                echo "::error::Commit desplegado ($commit_id) no coincide con github.sha (${GITHUB_SHA})"
-                exit 1
-              fi
+              scripts/assert-commit-match.sh "$commit_id" "${GITHUB_SHA}"
               echo "Render desplegó exactamente github.sha y está live."
               exit 0
             fi
@@ -254,15 +256,11 @@ jobs:
         run: vercel promote "${{ steps.preview.outputs.url }}" --token="$VERCEL_TOKEN" --yes
 
       - name: Confirmar el mismo commit live en producción
-        working-directory: frontend
         run: |
           host="$(echo "${{ steps.preview.outputs.url }}" | sed 's#https://##')"
           deployment="$(curl -s "https://api.vercel.com/v13/deployments/${host}?teamId=${VERCEL_ORG_ID}" \
             -H "Authorization: Bearer ${VERCEL_TOKEN}")"
           echo "$deployment"
           commit_sha="$(echo "$deployment" | jq -r '.meta.commitSha // empty')"
-          if [ "$commit_sha" != "${GITHUB_SHA}" ]; then
-            echo "::error::meta.commitSha ($commit_sha) no coincide con github.sha (${GITHUB_SHA})"
-            exit 1
-          fi
+          scripts/assert-commit-match.sh "$commit_sha" "${GITHUB_SHA}"
           echo "Vercel promovió exactamente github.sha a producción."
