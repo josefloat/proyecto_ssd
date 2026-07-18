@@ -147,6 +147,17 @@ model Slot {
   @@index([fechaLima, estado, inicioUtc])
 }
 
+// Imágenes gestionables del sitio (hero de la home, fondos y retratos de
+// médicos, con clave "medico:<uuid>"). Guardan URLs de Cloudinary para que
+// el ADMIN las reemplace desde el panel sin redesplegar.
+model ImagenSitio {
+  id            String   @id @default(uuid()) @db.Uuid
+  clave         String   @unique
+  url           String
+  alt           String   @default("")
+  actualizadaEn DateTime @default(now()) @updatedAt @db.Timestamptz(3)
+}
+
 model Paciente {
   id       String @id @default(uuid()) @db.Uuid
   dni      String @unique

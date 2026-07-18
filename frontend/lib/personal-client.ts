@@ -217,3 +217,42 @@ export function enlaceWhatsApp(
   const mensaje = `Hola ${cita.paciente.nombre}, le recordamos su cita en Señal de Vida (código ${cita.codigoReserva}).`;
   return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 }
+
+// --- Imágenes del sitio (gestión ADMIN + lectura pública) ---
+
+export async function listarImagenesSitio(): Promise<
+  import("./personal-types").ImagenSitioAdmin[]
+> {
+  const response = await fetch("/api/imagenes", { cache: "no-store" });
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "IMAGENES_FAILED");
+  return (body as { items: import("./personal-types").ImagenSitioAdmin[] }).items;
+}
+
+export async function guardarImagenAdmin(
+  clave: string,
+  datos: { url: string; alt?: string },
+): Promise<import("./personal-types").ImagenSitioAdmin> {
+  const response = await fetch(
+    `/api/personal/admin/imagenes/${encodeURIComponent(clave)}`,
+    {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(datos),
+    },
+  );
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "IMAGEN_SAVE_FAILED");
+  return (body as { imagen: import("./personal-types").ImagenSitioAdmin }).imagen;
+}
+
+export async function eliminarImagenAdmin(clave: string): Promise<void> {
+  const response = await fetch(
+    `/api/personal/admin/imagenes/${encodeURIComponent(clave)}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok && response.status !== 204) {
+    const body = await leerRespuesta(response);
+    throw errorApi(response, body, "IMAGEN_DELETE_FAILED");
+  }
+}

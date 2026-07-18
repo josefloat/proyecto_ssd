@@ -73,3 +73,9 @@ export type FiltrosAgenda = Readonly<{
   medicoId?: string;
   estado?: EstadoCita | "";
 }>;
+
+export type ImagenSitioAdmin = Readonly<{
+  clave: string;
+  url: string;
+  alt: string;
+}>;

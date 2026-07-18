@@ -56,7 +56,11 @@ function iconoTurno(grupo: GrupoTurno) {
   return Moon;
 }
 
-export function AvailabilityScreen() {
+export function AvailabilityScreen({
+  fotosMedicos = {},
+}: {
+  fotosMedicos?: Record<string, string>;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -171,12 +175,17 @@ export function AvailabilityScreen() {
       {medico && data ? (
         <section className="doctor-summary" aria-label="Selección actual">
           <span className="doctor-avatar" aria-hidden="true">
-            {medico.nombre
-              .replace(/^(Dr\.|Dra\.)\s*/i, "")
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((part) => part[0])
-              .join("")}
+            {fotosMedicos[medico.id] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={fotosMedicos[medico.id]} alt="" />
+            ) : (
+              medico.nombre
+                .replace(/^(Dr\.|Dra\.)\s*/i, "")
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join("")
+            )}
           </span>
           <span>
             <strong>{medico.nombre}</strong>

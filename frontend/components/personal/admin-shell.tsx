@@ -3,13 +3,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BriefcaseMedical, CalendarDays, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { BriefcaseMedical, CalendarDays, ImageIcon, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { cerrarSesion } from "@/lib/personal-client";
 
 const enlaces = [
   { href: "/personal/admin", label: "Panel", icono: LayoutDashboard },
   { href: "/personal/admin/usuarios", label: "Usuarios", icono: Users },
   { href: "/personal/admin/programacion", label: "Programación", icono: CalendarDays },
+  { href: "/personal/admin/imagenes", label: "Imágenes", icono: ImageIcon },
 ] as const;
 
 export function AdminShell({
@@ -19,7 +20,7 @@ export function AdminShell({
   children,
   acciones,
 }: Readonly<{
-  actual: "panel" | "usuarios" | "programacion";
+  actual: "panel" | "usuarios" | "programacion" | "imagenes";
   titulo: string;
   subtitulo: string;
   children: ReactNode;
@@ -39,7 +40,13 @@ export function AdminShell({
         </div>
         <nav className="personal-sidebar-nav" aria-label="Secciones administrativas">
           {enlaces.map(({ href, label, icono: Icono }) => {
-            const clave = href.endsWith("usuarios") ? "usuarios" : href.endsWith("programacion") ? "programacion" : "panel";
+            const clave = href.endsWith("usuarios")
+              ? "usuarios"
+              : href.endsWith("programacion")
+                ? "programacion"
+                : href.endsWith("imagenes")
+                  ? "imagenes"
+                  : "panel";
             return (
               <Link key={href} href={href} className={`personal-nav-item ${actual === clave ? "is-current" : ""}`} aria-current={actual === clave ? "page" : undefined}>
                 <Icono aria-hidden="true" size={22} /> {label}

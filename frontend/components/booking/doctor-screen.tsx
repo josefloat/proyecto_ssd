@@ -27,7 +27,13 @@ function iniciales(nombre: string): string {
     .join("");
 }
 
-export function DoctorScreen() {
+export function DoctorScreen({
+  fotosMedicos = {},
+}: {
+  // Retratos gestionados por el ADMIN (clave = id del médico). Si un médico
+  // no tiene foto, se mantienen las iniciales — nunca fotos inventadas.
+  fotosMedicos?: Record<string, string>;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -113,7 +119,14 @@ export function DoctorScreen() {
                   router.replace(seleccionarMedico(seleccion, medico.id, pathname), { scroll: false });
                 }}
               >
-                <span className="doctor-avatar" aria-hidden="true">{iniciales(medico.nombre)}</span>
+                <span className="doctor-avatar" aria-hidden="true">
+                  {fotosMedicos[medico.id] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={fotosMedicos[medico.id]} alt="" />
+                  ) : (
+                    iniciales(medico.nombre)
+                  )}
+                </span>
                 <span className="doctor-copy"><strong>{medico.nombre}</strong><small>{state.data.especialidad.nombre}</small></span>
                 {isSelected ? <span className="selected-badge"><Check aria-hidden="true" size={17} /> Seleccionado</span> : null}
               </button>

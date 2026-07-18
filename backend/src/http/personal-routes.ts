@@ -86,8 +86,9 @@ function limpiarCookieSesion(response: Response): void {
 }
 
 // Middleware con estado por request: guarda el usuario resuelto en res.locals
-// para que los handlers lo usen sin volver a consultar la sesión.
-function requireSesion(
+// para que los handlers lo usen sin volver a consultar la sesión. Se exporta
+// para que otras superficies autenticadas (imagenes-routes) lo reutilicen.
+export function requireSesion(
   auth: ServiciosAuthPersonal,
   rolesPermitidos: readonly RolUsuario[],
   permitirCambioPendiente = false,
