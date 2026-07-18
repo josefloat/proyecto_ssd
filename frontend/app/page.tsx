@@ -16,6 +16,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { ComoLlegar, DIRECCION_CLINICA } from "@/components/clinic-directions";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { MotionPage } from "@/components/motion-page";
 import { obtenerImagenesSitio } from "@/lib/site-images";
@@ -175,7 +176,8 @@ export default async function HomePaciente() {
               <MapPin aria-hidden="true" />
               <div>
                 <strong>Estamos en Ayacucho</strong>
-                <span>Atención presencial en nuestra sede central.</span>
+                <span>{DIRECCION_CLINICA}</span>
+                <ComoLlegar compacto />
               </div>
             </article>
             <article>

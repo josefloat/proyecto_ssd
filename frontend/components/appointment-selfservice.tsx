@@ -9,7 +9,6 @@ import {
   Copy,
   Info,
   Search,
-  ShieldCheck,
   Stethoscope,
   UserRound,
   XCircle,
@@ -17,6 +16,7 @@ import {
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { BrandMark } from "./brand-mark";
+import { ComoLlegar, DIRECCION_CLINICA } from "./clinic-directions";
 import { MotionPage } from "./motion-page";
 import type { DetalleCita } from "@/lib/api-types";
 import {
@@ -292,8 +292,8 @@ export function AppointmentSelfService() {
 
         <section className="clinic-location-card">
           <Stethoscope aria-hidden="true" size={30} />
-          <div><strong>Clínica Señal de Vida</strong><span>Ayacucho</span></div>
-          <ShieldCheck aria-hidden="true" size={28} />
+          <div><strong>Clínica Señal de Vida</strong><span>{DIRECCION_CLINICA}</span></div>
+          <ComoLlegar compacto />
         </section>
 
         {reservada ? (
