@@ -2,7 +2,8 @@
 
 import { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { BriefcaseMedical, CalendarClock, LogOut } from "lucide-react";
+import { CalendarClock, LogOut } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { cerrarSesion } from "@/lib/personal-client";
 
 type PersonalShellProps = Readonly<{
@@ -31,9 +32,7 @@ export function PersonalShell({
     <div className="personal-shell">
       <aside className="personal-sidebar" aria-label="Navegación del personal">
         <div className="personal-sidebar-brand">
-          <span aria-hidden="true">
-            <BriefcaseMedical size={26} />
-          </span>
+          <BrandMark size={46} />
           <div>
             <strong>Señal de Vida</strong>
             <small>Gestión médica</small>

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   Bell,
@@ -8,13 +7,13 @@ import {
   CreditCard,
   FileText,
   HandHeart,
-  HeartPulse,
   Home,
   Info,
-  ShieldCheck,
   Sparkles,
   UserRound,
 } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
+import { HeroCarousel } from "@/components/home/hero-carousel";
 import { MotionPage } from "@/components/motion-page";
 import { obtenerImagenesSitio } from "@/lib/site-images";
 
@@ -32,7 +31,7 @@ export default async function HomePaciente() {
     <div className="patient-home-shell">
       <header className="home-topbar">
         <div className="brand-lockup" aria-label="Señal de Vida — Ayacucho">
-          <HeartPulse aria-hidden="true" size={30} strokeWidth={2.2} />
+          <BrandMark size={46} />
           <div>
             <span className="brand-name">Señal de Vida</span>
             <span className="brand-place">Ayacucho</span>
@@ -54,20 +53,10 @@ export default async function HomePaciente() {
           <div className="home-hero-grid">
             <div className="hero-media">
               <div className="hero-glow" aria-hidden="true" />
-              <div className="hero-illustration">
-                <Image
-                  src={hero?.url ?? HERO_LOCAL}
-                  width={1448}
-                  height={1086}
-                  priority
-                  sizes="(max-width: 860px) calc(100vw - 40px), 520px"
-                  alt={hero?.alt || HERO_ALT}
-                />
-              </div>
-              <span className="hero-badge">
-                <ShieldCheck aria-hidden="true" size={22} />
-                <span>Atención cercana y segura</span>
-              </span>
+              <HeroCarousel
+                fotoUrl={hero?.url ?? HERO_LOCAL}
+                fotoAlt={hero?.alt || HERO_ALT}
+              />
             </div>
 
             <div className="hero-copy">
@@ -76,6 +65,11 @@ export default async function HomePaciente() {
                 Atención cercana en Ayacucho
               </p>
               <h1 id="home-title">Reserva tu cita de manera fácil y rápida</h1>
+              <span className="pulse-underline" aria-hidden="true">
+                <svg viewBox="0 0 220 26" focusable="false">
+                  <path d="M2 15h56l9-10 10 17 8-13 6 6h127" pathLength={100} />
+                </svg>
+              </span>
               <p>Te guiaremos paso a paso.</p>
 
               <div className="home-actions" aria-label="Acciones principales">

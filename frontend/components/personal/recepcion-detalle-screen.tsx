@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  BriefcaseMedical,
   CalendarDays,
   CreditCard,
   MessageCircle,
   Printer,
 } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { PersonalShell } from "./personal-shell";
 import {
   enlaceWhatsApp,
@@ -189,7 +189,7 @@ export function RecepcionDetalleScreen({ citaId }: { citaId: string }) {
       {mostrarConstancia ? (
         <section className="constancia" aria-label="Constancia imprimible">
           <div className="constancia-encabezado">
-            <span aria-hidden="true"><BriefcaseMedical size={30} /></span>
+            <BrandMark size={56} />
             <strong>Señal de Vida Ayacucho</strong>
             <small>Constancia de pago y reserva</small>
           </div>

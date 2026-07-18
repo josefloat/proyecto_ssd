@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BrandMark } from "@/components/brand-mark";
 import { MotionPage } from "@/components/motion-page";
 import type { DetalleCita } from "@/lib/api-types";
 import { CONFIRMATION_STORAGE } from "@/lib/appointment-client";
@@ -68,7 +69,7 @@ export function BookingConfirmationScreen() {
   return (
     <div className="confirmation-shell">
       <header className="confirmation-topbar">
-        <span>Señal de Vida</span>
+        <span><BrandMark size={32} /> Señal de Vida</span>
         <Link href="/" aria-label="Cerrar y volver al inicio">
           <X aria-hidden="true" size={28} />
         </Link>

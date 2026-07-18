@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   Clock3,
   Copy,
-  HeartPulse,
   Info,
   Search,
   ShieldCheck,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { BrandMark } from "./brand-mark";
 import { MotionPage } from "./motion-page";
 import type { DetalleCita } from "@/lib/api-types";
 import {
@@ -170,7 +170,7 @@ export function AppointmentSelfService() {
           <Link href="/" className="back-action">
             <ArrowLeft aria-hidden="true" size={26} /> Volver
           </Link>
-          <span><HeartPulse aria-hidden="true" size={25} /> Señal de Vida</span>
+          <span><BrandMark size={32} /> Señal de Vida</span>
           <i aria-hidden="true" />
         </header>
         <MotionPage className="lookup-main">
