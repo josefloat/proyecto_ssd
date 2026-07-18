@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Constancia de Pago - Señal de Vida</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#81f3e5",
+                    "background": "#f5fafe",
+                    "primary-fixed": "#d6e3ff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#e9eef2",
+                    "surface": "#f5fafe",
+                    "tertiary-fixed-dim": "#aec9ed",
+                    "surface-dim": "#d5dbdf",
+                    "on-background": "#171c1f",
+                    "surface-variant": "#dee3e7",
+                    "outline-variant": "#c2c6d4",
+                    "tertiary-fixed": "#d2e4ff",
+                    "on-tertiary-fixed": "#001d37",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "inverse-primary": "#a9c7ff",
+                    "secondary": "#006a62",
+                    "primary-container": "#1565c0",
+                    "on-primary-container": "#dae5ff",
+                    "outline": "#727783",
+                    "on-tertiary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-surface": "#171c1f",
+                    "secondary-fixed-dim": "#66d9cc",
+                    "surface-tint": "#005db7",
+                    "on-tertiary-container": "#d6e6ff",
+                    "on-secondary-container": "#006f66",
+                    "tertiary-container": "#4e6888",
+                    "on-tertiary-fixed-variant": "#2e4867",
+                    "surface-container-low": "#eff4f8",
+                    "surface-container-highest": "#dee3e7",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#36506e",
+                    "secondary-fixed": "#84f5e8",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e4e9ed",
+                    "on-primary-fixed": "#001b3d",
+                    "error": "#ba1a1a",
+                    "primary": "#004d99",
+                    "inverse-surface": "#2c3134",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "inverse-on-surface": "#ecf1f5",
+                    "on-secondary-fixed": "#00201d",
+                    "surface-bright": "#f5fafe",
+                    "on-surface-variant": "#424752"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "24px",
+                    "base": "8px",
+                    "gutter-mobile": "16px",
+                    "button-height": "64px",
+                    "margin-mobile": "20px",
+                    "touch-target-min": "48px"
+            },
+            "fontFamily": {
+                    "label-lg": ["Atkinson Hyperlegible Next"],
+                    "body-lg": ["Atkinson Hyperlegible Next"],
+                    "label-md": ["Atkinson Hyperlegible Next"],
+                    "headline-lg": ["Atkinson Hyperlegible Next"],
+                    "body-md": ["Atkinson Hyperlegible Next"],
+                    "display-code": ["JetBrains Mono"],
+                    "headline-md": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                    "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}],
+                    "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                    "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        @media print {
+            body { background: #ffffff !important; }
+            .no-print { display: none !important; }
+            .print-container { 
+                width: 148mm; 
+                height: 210mm; 
+                padding: 15mm; 
+                margin: 0 auto;
+                border: none !important;
+                box-shadow: none !important;
+            }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f5fafe;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .constancia-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 560px; /* Aprox A5 size for screen viewing */
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 77, 153, 0.05);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #dee3e7;
+        }
+        .stamp-effect {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            opacity: 0.03;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Main Container -->
+<main class="constancia-card print-container">
+<!-- Header: Logo & Title -->
+<header class="flex flex-col items-center justify-center mb-10 text-center">
+<div class="mb-4">
+<span class="material-symbols-outlined text-primary text-[64px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">Señal de Vida Ayacucho</h1>
+<p class="font-label-md text-label-md text-outline uppercase tracking-widest mt-1">Constancia de Pago y Reserva</p>
+</header>
+<!-- Divider -->
+<div class="w-full h-px bg-outline-variant mb-10"></div>
+<!-- Appointment Data Grid -->
+<section class="grid grid-cols-1 gap-y-6">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-outline">Paciente</span>
+<span class="font-body-lg text-body-lg text-on-surface font-bold">Alejandro Huamán Quispe</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-outline">DNI / Documento</span>
+<span class="font-body-md text-body-md text-on-surface">45829301</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-outline">Monto Pagado</span>
+<span class="font-body-lg text-body-lg text-primary font-bold">S/ 80.00</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-outline">Especialidad</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">cardiology</span>
+<span class="font-body-md text-body-md text-on-surface font-bold">Cardiología Integral</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-outline">Médico Asignado</span>
+<span class="font-body-md text-body-md text-on-surface">Dr. Ricardo Zevallos Prado</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-outline">Fecha y Hora</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xl">calendar_today</span>
+<span class="font-body-md text-body-md text-on-surface">14 de Octubre, 2024 — 10:30 AM</span>
+</div>
+</div>
+</section>
+<!-- QR Code / Barcode Section -->
+<section class="mt-12 flex flex-col items-center justify-center p-6 bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
+<div class="mb-3">
+<span class="material-symbols-outlined text-on-surface text-[80px]">qr_code_2</span>
+</div>
+<div class="text-center">
+<p class="font-label-md text-label-md text-on-surface-variant">Código de Reserva</p>
+<p class="font-display-code text-[24px] text-primary tracking-widest">SV-AY2024-X92</p>
+</div>
+</section>
+<!-- Footer / Print Action -->
+<footer class="mt-10 text-center">
+<p class="font-body-md text-body-md text-outline-variant mb-6 italic">
+                Favor de presentarse 15 minutos antes de su cita.
+            </p>
+<button class="no-print w-full bg-primary text-on-primary font-label-lg text-label-lg h-[64px] rounded-full flex items-center justify-center gap-3 hover:opacity-90 transition-all active:scale-95" onclick="window.print()">
+<span class="material-symbols-outlined">print</span>
+                Imprimir Constancia
+            </button>
+<div class="hidden print:block mt-8 text-[12px] text-outline text-center border-t pt-4">
+<p>Generado automáticamente por el Sistema de Gestión Médica Señal de Vida.</p>
+<p>Ayacucho, Perú - 2024</p>
+</div>
+</footer>
+<!-- Decorative Watermark (Invisible on print due to absolute/opacity) -->
+<div class="stamp-effect">
+<span class="material-symbols-outlined text-[300px]">verified</span>
+</div>
+</main>
+<!-- Floating Back Button (No Nav rule, but useful for digital escape) -->
+<nav class="fixed top-6 left-6 no-print">
+<a class="flex items-center gap-2 text-primary font-label-md hover:underline decoration-2 underline-offset-4" href="#">
+<span class="material-symbols-outlined">arrow_back</span>
+            Volver
+        </a>
+</nav>
+<script>
+        // Micro-interaction for the print button
+        document.querySelector('button').addEventListener('mouseenter', function() {
+            this.style.boxShadow = '0 8px 16px rgba(0, 77, 153, 0.2)';
+        });
+        document.querySelector('button').addEventListener('mouseleave', function() {
+            this.style.boxShadow = 'none';
+        });
+    </script>
+</body></html>

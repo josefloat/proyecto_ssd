@@ -130,6 +130,12 @@ jobs:
 
       - name: Sembrar catálogos, programación y horizonte
         working-directory: backend
+        # Estos secrets deben existir en el repositorio antes de fusionar; si
+        # faltan, el bootstrap del admin se omite (no falla el seed) y no queda
+        # ningún administrador utilizable. Nunca se imprimen en el log.
+        env:
+          SEED_ADMIN_EMAIL: ${{ secrets.SEED_ADMIN_EMAIL }}
+          SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
         run: npx prisma db seed
 
   deploy-render:

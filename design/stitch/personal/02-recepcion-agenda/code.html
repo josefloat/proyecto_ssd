@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Señal de Vida - Panel de Recepción</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#81f3e5",
+                    "background": "#f5fafe",
+                    "primary-fixed": "#d6e3ff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#e9eef2",
+                    "surface": "#f5fafe",
+                    "tertiary-fixed-dim": "#aec9ed",
+                    "surface-dim": "#d5dbdf",
+                    "on-background": "#171c1f",
+                    "surface-variant": "#dee3e7",
+                    "outline-variant": "#c2c6d4",
+                    "tertiary-fixed": "#d2e4ff",
+                    "on-tertiary-fixed": "#001d37",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "inverse-primary": "#a9c7ff",
+                    "secondary": "#006a62",
+                    "primary-container": "#1565c0",
+                    "on-primary-container": "#dae5ff",
+                    "outline": "#727783",
+                    "on-tertiary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-surface": "#171c1f",
+                    "secondary-fixed-dim": "#66d9cc",
+                    "surface-tint": "#005db7",
+                    "on-tertiary-container": "#d6e6ff",
+                    "on-secondary-container": "#006f66",
+                    "tertiary-container": "#4e6888",
+                    "on-tertiary-fixed-variant": "#2e4867",
+                    "surface-container-low": "#eff4f8",
+                    "surface-container-highest": "#dee3e7",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#36506e",
+                    "secondary-fixed": "#84f5e8",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e4e9ed",
+                    "on-primary-fixed": "#001b3d",
+                    "error": "#ba1a1a",
+                    "primary": "#004d99",
+                    "inverse-surface": "#2c3134",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "inverse-on-surface": "#ecf1f5",
+                    "on-secondary-fixed": "#00201d",
+                    "surface-bright": "#f5fafe",
+                    "on-surface-variant": "#424752"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "24px",
+                    "base": "8px",
+                    "gutter-mobile": "16px",
+                    "button-height": "64px",
+                    "margin-mobile": "20px",
+                    "touch-target-min": "48px"
+            },
+            "fontFamily": {
+                    "label-lg": ["Atkinson Hyperlegible Next"],
+                    "body-lg": ["Atkinson Hyperlegible Next"],
+                    "label-md": ["Atkinson Hyperlegible Next"],
+                    "headline-lg": ["Atkinson Hyperlegible Next"],
+                    "body-md": ["Atkinson Hyperlegible Next"],
+                    "display-code": ["JetBrains Mono"],
+                    "headline-md": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                    "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}],
+                    "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                    "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Atkinson Hyperlegible Next', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bento-card {
+            background-color: #ffffff;
+            border: 1px solid #dee3e7;
+            box-shadow: 0 4px 20px rgba(0, 77, 153, 0.04);
+            transition: all 0.3s ease;
+        }
+        .bento-card:hover {
+            border-color: #004d99;
+            box-shadow: 0 8px 30px rgba(0, 77, 153, 0.08);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c2c6d4; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside class="hidden lg:flex h-screen w-72 flex-col fixed left-0 top-0 bg-surface-container border-r border-outline-variant p-4 gap-base z-50">
+<div class="flex items-center gap-3 px-2 py-4">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Gestión Médica</p>
+</div>
+</div>
+<nav class="flex-1 mt-6 space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="font-label-md text-label-md">Panel Control</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">calendar_today</span>
+<span class="font-label-md text-label-md">Citas</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">medical_services</span>
+<span class="font-label-md text-label-md">Médicos</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">group</span>
+<span class="font-label-md text-label-md">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<span class="font-label-md text-label-md">Agenda</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">receipt_long</span>
+<span class="font-label-md text-label-md">Reportes</span>
+</a>
+</nav>
+<div class="mt-auto space-y-4 pt-4 border-t border-outline-variant">
+<button class="w-full bg-primary text-white font-label-lg py-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">add_circle</span>
+                Nueva Cita
+            </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Ajustes</span>
+</a>
+<a class="flex items-center gap-3 text-error px-4 py-3 transition-colors duration-200 rounded-lg hover:bg-error-container" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Cerrar Sesión</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="lg:pl-72 flex flex-col h-screen">
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center h-20 px-gutter-mobile lg:px-8 w-full z-40 bg-surface-container-lowest border-b border-outline-variant shrink-0">
+<div class="flex items-center flex-1 max-w-2xl">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full h-12 pl-12 pr-4 bg-surface-container-low border-none rounded-full font-body-md focus:ring-2 focus:ring-primary" placeholder="Buscar paciente, médico o cita..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-label-md text-on-surface">Recepcionista Principal</p>
+<p class="font-body-md text-[14px] text-on-surface-variant">Perfil</p>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-primary-fixed overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a friendly female Peruvian healthcare receptionist in her 30s, wearing a clean medical uniform. She has a warm, welcoming smile. The lighting is soft and high-key, emphasizing a clinical yet human atmosphere. The background is a blurred modern hospital lobby with a clean blue-grey color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlYRliOZtUV5_ZgY46powG9z-IeDQCOIhQxHYsfQVOsIB364f0CPHdjKoGtctAJ0TeS5_oeOEoxS8DwbPXPRpotMw5KSEmOC9k8HZAzEsAJP2anfC_W-L4RU56HA3_r1h74Hlb4rcuuNI2zV937xC42QuNscefTvSAfbWP3Tl21TM-CvdLJ8pTEZv3O7SeqZ0NMu8I_7IN7TZqyeR2MT61iMUnxE2_J51r2w-t1TOePT0mNIwyCKTuo0t2FOzPku6qT-yFQldZxhU"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto p-gutter-mobile lg:p-8">
+<div class="max-w-7xl mx-auto space-y-stack-gap">
+<!-- Page Header & Global Filters -->
+<section class="space-y-6">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Agenda del Día</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Martes, 24 de Octubre de 2023</p>
+</div>
+<div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-outline-variant shadow-sm">
+<button class="px-6 py-3 bg-primary text-white rounded-lg font-label-md transition-all">Hoy</button>
+<button class="px-6 py-3 hover:bg-surface-container text-on-surface-variant rounded-lg font-label-md transition-all">Semana</button>
+<button class="px-6 py-3 hover:bg-surface-container text-on-surface-variant rounded-lg font-label-md transition-all">Mes</button>
+</div>
+</div>
+<!-- Prominent Filters -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-surface-container-low p-6 rounded-2xl border border-outline-variant">
+<div class="space-y-2">
+<label class="font-label-md text-label-md block">Especialidad</label>
+<select class="w-full h-14 rounded-xl border-outline-variant bg-white focus:border-primary focus:ring-primary font-body-md">
+<option>Todas las especialidades</option>
+<option>Medicina General</option>
+<option>Cardiología</option>
+<option>Pediatría</option>
+<option>Ginecología</option>
+<option>Traumatología</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-label-md block">Médico</label>
+<select class="w-full h-14 rounded-xl border-outline-variant bg-white focus:border-primary focus:ring-primary font-body-md">
+<option>Todos los médicos</option>
+<option>Dr. Ricardo Palma</option>
+<option>Dra. Maria Reiche</option>
+<option>Dr. Jose Quiñones</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-label-md block">Estado de Cita</label>
+<select class="w-full h-14 rounded-xl border-outline-variant bg-white focus:border-primary focus:ring-primary font-body-md">
+<option>Todos los estados</option>
+<option>Pendiente</option>
+<option>Pagado</option>
+<option>Cancelado</option>
+<option>En Consulta</option>
+</select>
+</div>
+<div class="flex items-end">
+<button class="w-full h-14 bg-tertiary-container text-white rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all font-label-md">
+<span class="material-symbols-outlined">filter_list</span>
+                                Limpiar Filtros
+                            </button>
+</div>
+</div>
+</section>
+<!-- Appointments View -->
+<section class="space-y-4" id="appointments-container">
+<!-- Dynamic Content will be placed here via JS or kept static if required -->
+<!-- Table Header -->
+<div class="hidden lg:grid grid-cols-12 gap-4 px-6 py-4 bg-surface-container-highest rounded-t-xl font-label-md text-on-surface-variant">
+<div class="col-span-1">Hora</div>
+<div class="col-span-3">Paciente</div>
+<div class="col-span-3">Médico / Especialidad</div>
+<div class="col-span-2">Estado</div>
+<div class="col-span-2 text-right">Monto</div>
+<div class="col-span-1 text-center">Acciones</div>
+</div>
+<!-- Appointment Cards/Rows -->
+<div class="space-y-4">
+<!-- Card 1 -->
+<div class="bento-card rounded-2xl p-6 lg:p-0 lg:h-24 overflow-hidden lg:grid lg:grid-cols-12 lg:items-center lg:gap-4 lg:px-6">
+<div class="col-span-1 flex items-center gap-3 lg:gap-0 mb-4 lg:mb-0">
+<span class="lg:hidden font-label-md text-primary">Hora: </span>
+<span class="font-display-code text-[20px] text-primary">08:30</span>
+</div>
+<div class="col-span-3 flex items-center gap-4 mb-4 lg:mb-0">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">CP</div>
+<div>
+<h4 class="font-label-lg text-label-lg">Carlos Pizarro</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant">DNI: 45***890</p>
+</div>
+</div>
+<div class="col-span-3 mb-4 lg:mb-0">
+<h4 class="font-label-md text-label-md">Dr. Ricardo Palma</h4>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+<span class="font-body-md text-[16px]">Cardiología</span>
+</div>
+</div>
+<div class="col-span-2 mb-4 lg:mb-0">
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-fixed-variant font-label-md text-[14px]">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    Pagado
+                                </span>
+</div>
+<div class="col-span-2 text-right mb-4 lg:mb-0">
+<p class="font-label-lg text-label-lg">S/ 120.00</p>
+</div>
+<div class="col-span-1 flex justify-center gap-2">
+<button class="w-10 h-10 rounded-full hover:bg-surface-container text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bento-card rounded-2xl p-6 lg:p-0 lg:h-24 overflow-hidden lg:grid lg:grid-cols-12 lg:items-center lg:gap-4 lg:px-6">
+<div class="col-span-1 flex items-center gap-3 lg:gap-0 mb-4 lg:mb-0">
+<span class="lg:hidden font-label-md text-primary">Hora: </span>
+<span class="font-display-code text-[20px] text-primary">09:15</span>
+</div>
+<div class="col-span-3 flex items-center gap-4 mb-4 lg:mb-0">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold">AG</div>
+<div>
+<h4 class="font-label-lg text-label-lg">Ana García</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant">DNI: 09***123</p>
+</div>
+</div>
+<div class="col-span-3 mb-4 lg:mb-0">
+<h4 class="font-label-md text-label-md">Dra. Maria Reiche</h4>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">child_care</span>
+<span class="font-body-md text-[16px]">Pediatría</span>
+</div>
+</div>
+<div class="col-span-2 mb-4 lg:mb-0">
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-md text-[14px]">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                                    Pendiente
+                                </span>
+</div>
+<div class="col-span-2 text-right mb-4 lg:mb-0">
+<p class="font-label-lg text-label-lg">S/ 80.00</p>
+</div>
+<div class="col-span-1 flex justify-center gap-2">
+<button class="w-10 h-10 rounded-full hover:bg-surface-container text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bento-card rounded-2xl p-6 lg:p-0 lg:h-24 overflow-hidden lg:grid lg:grid-cols-12 lg:items-center lg:gap-4 lg:px-6">
+<div class="col-span-1 flex items-center gap-3 lg:gap-0 mb-4 lg:mb-0">
+<span class="lg:hidden font-label-md text-primary">Hora: </span>
+<span class="font-display-code text-[20px] text-primary">10:00</span>
+</div>
+<div class="col-span-3 flex items-center gap-4 mb-4 lg:mb-0">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed font-bold">LM</div>
+<div>
+<h4 class="font-label-lg text-label-lg">Luis Mendoza</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant">DNI: 70***555</p>
+</div>
+</div>
+<div class="col-span-3 mb-4 lg:mb-0">
+<h4 class="font-label-md text-label-md">Dr. Jose Quiñones</h4>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">medical_information</span>
+<span class="font-body-md text-[16px]">Medicina General</span>
+</div>
+</div>
+<div class="col-span-2 mb-4 lg:mb-0">
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-error-container text-on-error-container font-label-md text-[14px]">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                                    Cancelado
+                                </span>
+</div>
+<div class="col-span-2 text-right mb-4 lg:mb-0">
+<p class="font-label-lg text-label-lg">S/ 60.00</p>
+</div>
+<div class="col-span-1 flex justify-center gap-2">
+<button class="w-10 h-10 rounded-full hover:bg-surface-container text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden by default) -->
+<div class="hidden flex-col items-center justify-center py-24 text-center space-y-6" id="empty-state">
+<div class="w-64 h-64 mx-auto opacity-80">
+<img class="w-full h-full object-contain" data-alt="A clean, minimalist vector illustration in a clinical modern style. It shows a calendar with a stethoscope draped over it in soft pastel blues and whites. The style is professional and friendly, representing an empty schedule or no appointments found. High contrast elements ensure accessibility." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIVkjs3v-EZx5Cgf8xidRGJ46E903UKLPSV8Q4BseNsdJkQ980o3YAQXM9ALaCsF47YD3cO7kEx3jaPW2szn9oevgFbhe3_hUwVoMVT6mCzy6YcB8F5Evl_siM_yZ9OU76YCU8hYV1xeFf2OurzFYscdsqdd7rITS17fJi2Du7tbOtreorl-wA8mxSBRFfoZEwggNEfMoPimYf8yDmOk2FVTvED61V15R9yofLblWU0isKM4_2QPPJG5NPc4K0GYxZnxO8RBn9aMY"/>
+</div>
+<div class="max-w-md">
+<h3 class="font-headline-md text-headline-md text-on-surface">No hay citas programadas</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2">No hemos encontrado citas que coincidan con los filtros seleccionados para el día de hoy.</p>
+<button class="mt-8 px-8 py-4 bg-primary text-white rounded-xl font-label-lg hover:opacity-90 transition-all" onclick="resetFilters()">
+                                Ver todas las citas
+                            </button>
+</div>
+</div>
+</section>
+<!-- Statistics / Insights Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bento-card p-6 rounded-2xl flex flex-col justify-between h-40">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-primary bg-primary-fixed p-2 rounded-lg">event_available</span>
+<span class="text-secondary font-label-md">+12%</span>
+</div>
+<div>
+<p class="font-display-code text-[32px]">48</p>
+<p class="font-label-md text-on-surface-variant">Citas Totales</p>
+</div>
+</div>
+<div class="bento-card p-6 rounded-2xl flex flex-col justify-between h-40">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-secondary bg-secondary-container p-2 rounded-lg">payments</span>
+<span class="text-secondary font-label-md">85%</span>
+</div>
+<div>
+<p class="font-display-code text-[32px]">S/ 3,420</p>
+<p class="font-label-md text-on-surface-variant">Recaudación Hoy</p>
+</div>
+</div>
+<div class="bento-card p-6 rounded-2xl flex flex-col justify-between h-40">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-tertiary bg-tertiary-fixed p-2 rounded-lg">group_add</span>
+<span class="text-primary font-label-md">Nuevos</span>
+</div>
+<div>
+<p class="font-display-code text-[32px]">12</p>
+<p class="font-label-md text-on-surface-variant">Pacientes Nuevos</p>
+</div>
+</div>
+<div class="bento-card p-6 rounded-2xl flex flex-col justify-between h-40">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-error bg-error-container p-2 rounded-lg">cancel</span>
+<span class="text-error font-label-md">3%</span>
+</div>
+<div>
+<p class="font-display-code text-[32px]">2</p>
+<p class="font-label-md text-on-surface-variant">Cancelaciones</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- FAB for quick action (Mobile/Tablet focus) -->
+<button class="fixed bottom-8 right-8 w-16 h-16 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50 lg:hidden">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+<script>
+        // Micro-interaction: Filter Change Logic simulation
+        function resetFilters() {
+            const selects = document.querySelectorAll('select');
+            selects.forEach(s => s.selectedIndex = 0);
+            document.getElementById('empty-state').classList.add('hidden');
+            document.querySelectorAll('.bento-card').forEach(c => c.parentElement.classList.contains('space-y-4') ? c.classList.remove('hidden') : null);
+        }
+
+        // Simple script to toggle "empty state" for demonstration if filters were used
+        const filterSelects = document.querySelectorAll('select');
+        filterSelects.forEach(select => {
+            select.addEventListener('change', () => {
+                // In a real app, this would fetch data. Here we just show the visual polish.
+                console.log('Filtering appointments...');
+            });
+        });
+    </script>
+</body></html>

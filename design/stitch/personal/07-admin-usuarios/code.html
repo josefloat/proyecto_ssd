@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Señal de Vida - Gestión de Usuarios</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=JetBrains+Mono:wght@700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #eff4f8 25%, #e4e9ed 50%, #eff4f8 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .side-panel-open {
+            transform: translateX(0);
+        }
+        .side-panel-closed {
+            transform: translateX(100%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "secondary-container": "#81f3e5",
+                "background": "#f5fafe",
+                "primary-fixed": "#d6e3ff",
+                "surface-container-lowest": "#ffffff",
+                "surface-container": "#e9eef2",
+                "surface": "#f5fafe",
+                "tertiary-fixed-dim": "#aec9ed",
+                "surface-dim": "#d5dbdf",
+                "on-background": "#171c1f",
+                "surface-variant": "#dee3e7",
+                "outline-variant": "#c2c6d4",
+                "tertiary-fixed": "#d2e4ff",
+                "on-tertiary-fixed": "#001d37",
+                "error-container": "#ffdad6",
+                "on-secondary-fixed-variant": "#005049",
+                "inverse-primary": "#a9c7ff",
+                "secondary": "#006a62",
+                "primary-container": "#1565c0",
+                "on-primary-container": "#dae5ff",
+                "outline": "#727783",
+                "on-tertiary": "#ffffff",
+                "on-primary": "#ffffff",
+                "on-primary-fixed-variant": "#00468c",
+                "on-surface": "#171c1f",
+                "secondary-fixed-dim": "#66d9cc",
+                "surface-tint": "#005db7",
+                "on-tertiary-container": "#d6e6ff",
+                "on-secondary-container": "#006f66",
+                "tertiary-container": "#4e6888",
+                "on-tertiary-fixed-variant": "#2e4867",
+                "surface-container-low": "#eff4f8",
+                "surface-container-highest": "#dee3e7",
+                "on-secondary": "#ffffff",
+                "tertiary": "#36506e",
+                "secondary-fixed": "#84f5e8",
+                "on-error-container": "#93000a",
+                "on-error": "#ffffff",
+                "surface-container-high": "#e4e9ed",
+                "on-primary-fixed": "#001b3d",
+                "error": "#ba1a1a",
+                "primary": "#004d99",
+                "inverse-surface": "#2c3134",
+                "primary-fixed-dim": "#a9c7ff",
+                "inverse-on-surface": "#ecf1f5",
+                "on-secondary-fixed": "#00201d",
+                "surface-bright": "#f5fafe",
+                "on-surface-variant": "#424752"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "stack-gap": "24px",
+                "base": "8px",
+                "gutter-mobile": "16px",
+                "button-height": "64px",
+                "margin-mobile": "20px",
+                "touch-target-min": "48px"
+              },
+              "fontFamily": {
+                "label-lg": ["Atkinson Hyperlegible Next"],
+                "body-lg": ["Atkinson Hyperlegible Next"],
+                "label-md": ["Atkinson Hyperlegible Next"],
+                "headline-lg": ["Atkinson Hyperlegible Next"],
+                "body-md": ["Atkinson Hyperlegible Next"],
+                "display-code": ["JetBrains Mono"],
+                "headline-md": ["Atkinson Hyperlegible Next"]
+              },
+              "fontSize": {
+                "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}],
+                "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+<!-- Desktop Sidebar -->
+<aside class="hidden lg:flex h-screen w-72 flex-col fixed left-0 top-0 bg-surface-container border-r border-outline-variant p-4 gap-base z-50">
+<div class="mb-8 px-4">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Gestión Médica</p>
+</div>
+<nav class="flex-grow flex flex-col gap-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Panel Control</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-md">Citas</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-label-md">Médicos</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-bold transition-all opacity-90" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">schedule</span>
+<span class="font-label-md">Agenda</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-md">Reportes</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Ajustes</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center h-20 px-gutter-mobile lg:pl-80 w-full fixed top-0 bg-surface-container-lowest border-b border-outline-variant z-40">
+<div class="flex items-center gap-4 flex-grow">
+<div class="relative w-full max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary" placeholder="Buscar usuarios..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="flex items-center gap-3 ml-2 pl-4 border-l border-outline-variant">
+<span class="font-label-md text-primary hidden md:block">Perfil</span>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="A friendly portrait of a male healthcare administrator with silver glasses and a kind smile, set against a soft professional clinic background. The lighting is warm and welcoming, reinforcing a sense of trust and human connection in a modern Peruvian medical context. Professional medical attire in soft blue tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaX-OMH4K6rtFpGskinbb6pwk1huGLK0H6XPfBxShdHISVrPCCEbHb-xHZeMkJ1GEpu8cWk3xRcVJy_rlAvucYipFcBPd5Vk5UBfUF6kA_RncsU696kxJCz4UZ_PkYOkIJEEDGytSVRBAE-1TiGnApuA0eoLqIwsqKykQ3EkM_yaz1KM_j-1NIjktHUoJYg-8b70LMgt63t-vbm3AzLAcH6nA-8HAl_mITd-A4InSKIE0xgsFqg8n_Vc9ax0xjMxOZP20OsnCjLng"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 lg:pl-72 min-h-screen">
+<div class="max-w-7xl mx-auto p-gutter-mobile lg:p-8">
+<!-- Page Header with Action -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-gap">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Gestión de Usuarios</h2>
+<p class="text-on-surface-variant font-body-md">Administra el personal médico y administrativo de la clínica.</p>
+</div>
+<button class="bg-primary text-on-primary h-[64px] px-8 rounded-full flex items-center gap-2 font-label-lg shadow-lg hover:opacity-90 active:scale-95 transition-all w-full md:w-auto" onclick="toggleSidePanel(true)">
+<span class="material-symbols-outlined">person_add</span>
+                    Nuevo Usuario
+                </button>
+</div>
+<!-- Bento-style Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-stack-gap">
+<div class="glass-card p-6 rounded-xl flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">medical_services</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface-variant">Médicos Activos</p>
+<p class="font-headline-md text-primary">24</p>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">support_agent</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface-variant">Recepcionistas</p>
+<p class="font-headline-md text-primary">12</p>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">check_circle</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface-variant">Disponibles Hoy</p>
+<p class="font-headline-md text-primary">32</p>
+</div>
+</div>
+</div>
+<!-- Table Container -->
+<div class="glass-card rounded-xl overflow-hidden border border-outline-variant shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-6 py-4 font-label-lg text-on-surface-variant">Usuario</th>
+<th class="px-6 py-4 font-label-lg text-on-surface-variant">Rol</th>
+<th class="px-6 py-4 font-label-lg text-on-surface-variant">Especialidad / Dept.</th>
+<th class="px-6 py-4 font-label-lg text-on-surface-variant">Estado</th>
+<th class="px-6 py-4 font-label-lg text-on-surface-variant text-right">Acciones</th>
+</tr>
+</thead>
+<tbody id="user-table-body">
+<!-- Skeleton Loading States -->
+<tr class="animate-pulse">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full shimmer"></div>
+<div class="space-y-2">
+<div class="h-4 w-32 shimmer rounded"></div>
+<div class="h-3 w-24 shimmer rounded"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5"><div class="h-4 w-20 shimmer rounded"></div></td>
+<td class="px-6 py-5"><div class="h-4 w-28 shimmer rounded"></div></td>
+<td class="px-6 py-5"><div class="h-6 w-16 shimmer rounded-full"></div></td>
+<td class="px-6 py-5"><div class="h-8 w-8 ml-auto shimmer rounded"></div></td>
+</tr>
+<tr class="animate-pulse">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full shimmer"></div>
+<div class="space-y-2">
+<div class="h-4 w-40 shimmer rounded"></div>
+<div class="h-3 w-32 shimmer rounded"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5"><div class="h-4 w-20 shimmer rounded"></div></td>
+<td class="px-6 py-5"><div class="h-4 w-28 shimmer rounded"></div></td>
+<td class="px-6 py-5"><div class="h-6 w-16 shimmer rounded-full"></div></td>
+<td class="px-6 py-5"><div class="h-8 w-8 ml-auto shimmer rounded"></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="p-4 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+<span class="text-on-surface-variant font-label-md">Mostrando 1-8 de 36</span>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Slide-over Panel for New User -->
+<div class="fixed inset-0 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 z-[60]" id="backdrop" onclick="toggleSidePanel(false)"></div>
+<div class="fixed right-0 top-0 h-screen w-full max-w-md bg-surface-container-lowest shadow-2xl z-[70] side-panel-closed transition-transform duration-500 ease-in-out" id="side-panel">
+<div class="h-full flex flex-col p-8 overflow-y-auto">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline-md text-headline-md text-primary">Nuevo Usuario</h3>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors" onclick="toggleSidePanel(false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="space-y-6">
+<!-- Avatar Upload Preview -->
+<div class="flex flex-col items-center gap-4 py-4">
+<div class="w-32 h-32 rounded-full border-4 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline-variant hover:border-primary hover:text-primary cursor-pointer transition-colors overflow-hidden relative">
+<span class="material-symbols-outlined text-4xl">add_a_photo</span>
+<span class="font-label-md mt-2">Subir Foto</span>
+</div>
+<p class="text-sm text-on-surface-variant text-center">Formatos permitidos: JPG, PNG. Max 5MB.</p>
+</div>
+<div class="space-y-2">
+<label class="font-label-lg text-on-surface ml-1">Nombre Completo</label>
+<input class="w-full h-14 px-4 rounded-xl border border-outline focus:border-primary focus:ring-1 focus:ring-primary bg-surface transition-all" placeholder="Ej. Dr. Alejandro Torres" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-lg text-on-surface ml-1">Correo Electrónico</label>
+<input class="w-full h-14 px-4 rounded-xl border border-outline focus:border-primary focus:ring-1 focus:ring-primary bg-surface transition-all" placeholder="ejemplo@clinicaseñal.com" type="email"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="font-label-lg text-on-surface ml-1">Rol</label>
+<select class="w-full h-14 px-4 rounded-xl border border-outline focus:border-primary focus:ring-1 focus:ring-primary bg-surface appearance-none">
+<option value="medico">Médico</option>
+<option value="recepcionista">Recepcionista</option>
+<option value="administrador">Administrador</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-lg text-on-surface ml-1">Departamento</label>
+<select class="w-full h-14 px-4 rounded-xl border border-outline focus:border-primary focus:ring-1 focus:ring-primary bg-surface">
+<option value="cardio">Cardiología</option>
+<option value="pedia">Pediatría</option>
+<option value="front">Recepción</option>
+</select>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-lg text-on-surface ml-1">ID Nacional (DNI)</label>
+<input class="w-full h-14 px-4 rounded-xl border border-outline focus:border-primary focus:ring-1 focus:ring-primary bg-surface" type="text"/>
+</div>
+<div class="pt-8 space-y-4">
+<button class="w-full bg-primary text-on-primary h-[64px] rounded-full font-label-lg shadow-lg hover:opacity-90 transition-all" type="submit">
+                        Crear Cuenta de Usuario
+                    </button>
+<button class="w-full h-[64px] rounded-full font-label-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="toggleSidePanel(false)" type="button">
+                        Cancelar
+                    </button>
+</div>
+</form>
+</div>
+</div>
+<script>
+        function toggleSidePanel(show) {
+            const panel = document.getElementById('side-panel');
+            const backdrop = document.getElementById('backdrop');
+            if (show) {
+                panel.classList.remove('side-panel-closed');
+                panel.classList.add('side-panel-open');
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                backdrop.classList.add('opacity-100');
+            } else {
+                panel.classList.remove('side-panel-open');
+                panel.classList.add('side-panel-closed');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+                backdrop.classList.remove('opacity-100');
+            }
+        }
+
+        // Simulate data loading
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const tbody = document.getElementById('user-table-body');
+                const users = [
+                    { name: 'Dra. Elena Ruiz', email: 'eruiz@clinica.pe', role: 'Médico', dept: 'Cardiología', status: 'Activo', img: 'placeholder', prompt: 'A highly professional portrait of a Hispanic female doctor with soft dark hair tied back, wearing a crisp white lab coat and a stethoscope. She has a friendly, authoritative gaze and a gentle smile, conveying warmth and expertise. Modern clinic lighting with soft teal and white tones in the background.' },
+                    { name: 'Santiago Mendoza', email: 'smendoza@clinica.pe', role: 'Recepcionista', dept: 'Atención al Cliente', status: 'Activo', img: 'placeholder', prompt: 'A friendly and energetic portrait of a young Peruvian man working as a receptionist. He is wearing a professional light blue shirt, with a headset around his neck and a bright, helpful expression. The setting is a clean, modern medical reception area with soft, high-key lighting and a welcoming atmosphere.' },
+                    { name: 'Dr. Marco Varela', email: 'mvarela@clinica.pe', role: 'Médico', dept: 'Pediatría', status: 'Ausente', img: 'placeholder', prompt: 'A compassionate portrait of an older Hispanic male doctor with kind eyes and graying hair. He is dressed in medical scrubs with a friendly pediatric pin, standing in a brightly lit pediatric ward. The lighting is soft and cheerful, featuring a palette of soft blues and gentle warm tones.' },
+                    { name: 'Lucía Pardo', email: 'lpardo@clinica.pe', role: 'Recepcionista', dept: 'Urgencias', status: 'Activo', img: 'placeholder', prompt: 'A professional and composed portrait of a Peruvian woman with glasses and her hair in a neat bun. She is wearing a professional navy blue vest over a white shirt. Her expression is focused yet approachable. The background is a modern clinical setting with soft depth-of-field effects.' },
+                    { name: 'Dra. Sofía Castro', email: 'scastro@clinica.pe', role: 'Médico', dept: 'Dermatología', status: 'Activo', img: 'placeholder', prompt: 'A clean and bright portrait of a stylish female doctor in her late 30s. She is wearing a modern white clinical coat and minimal jewelry. The lighting is exceptionally clear and professional, highlighting a pristine, bright medical environment. High-contrast, clean aesthetic with soft shadows.' }
+                ];
+
+                let html = '';
+                users.forEach(user => {
+                    const statusClass = user.status === 'Activo' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-variant text-on-surface-variant';
+                    html += `
+                        <tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant shadow-sm">
+                                        <img src="${user.img}" data-alt="${user.prompt}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div>
+                                        <p class="font-label-lg text-on-surface">${user.name}</p>
+                                        <p class="text-sm text-on-surface-variant">${user.email}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-body-md text-on-surface">${user.role}</td>
+                            <td class="px-6 py-4 font-body-md text-on-surface-variant">${user.dept}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${statusClass}">
+                                    ${user.status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="w-8 h-8 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors inline-flex items-center justify-center text-outline">
+                                    <span class="material-symbols-outlined">more_vert</span>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            }, 1800); // Simulated delay for loading state
+        });
+    </script>
+</body></html>

@@ -8,6 +8,37 @@ import { NextRequest, NextResponse } from "next/server";
 const backendUrl = process.env.BACKEND_URL;
 const UPSTREAM_TIMEOUT_MS = 10_000;
 
+// Única cookie que el proxy transporta en ambos sentidos. No se reenvía el
+// header Cookie completo, ni Authorization, ni cualquier otra cookie: así un
+// detalle ajeno del navegador o del backend nunca cruza el proxy.
+const COOKIE_SESION = "sdv_personal_session";
+
+function extraerCookieSesion(cookieHeader: string | null): string | null {
+  if (!cookieHeader) {
+    return null;
+  }
+  for (const parte of cookieHeader.split(";")) {
+    const separador = parte.indexOf("=");
+    if (separador === -1) {
+      continue;
+    }
+    const nombre = parte.slice(0, separador).trim();
+    if (nombre === COOKIE_SESION) {
+      return parte.slice(separador + 1).trim();
+    }
+  }
+  return null;
+}
+
+function leerSetCookies(headers: Headers): string[] {
+  const conGetter = headers as Headers & { getSetCookie?: () => string[] };
+  if (typeof conGetter.getSetCookie === "function") {
+    return conGetter.getSetCookie();
+  }
+  const unica = headers.get("set-cookie");
+  return unica ? [unica] : [];
+}
+
 async function proxy(request: NextRequest, path: string[]) {
   if (!backendUrl) {
     return NextResponse.json(
@@ -20,6 +51,16 @@ async function proxy(request: NextRequest, path: string[]) {
   const target = new URL(path.join("/"), base);
   target.search = request.nextUrl.search;
 
+  const tokenSesion = extraerCookieSesion(request.headers.get("cookie"));
+
+  // Un cuerpo vacío (por ejemplo, un DELETE sin payload) se reenvía como
+  // undefined: pasar un ArrayBuffer de 0 bytes rompe el fetch upstream.
+  let cuerpoPeticion: ArrayBuffer | undefined;
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    const buffer = await request.arrayBuffer();
+    cuerpoPeticion = buffer.byteLength > 0 ? buffer : undefined;
+  }
+
   try {
     const upstreamResponse = await fetch(target, {
       method: request.method,
@@ -30,15 +71,18 @@ async function proxy(request: NextRequest, path: string[]) {
         ...(request.headers.get("idempotency-key")
           ? { "idempotency-key": request.headers.get("idempotency-key")! }
           : {}),
+        // Reenvía exclusivamente la cookie de sesión, reconstruida, nunca el
+        // header Cookie original tal cual.
+        ...(tokenSesion ? { cookie: `${COOKIE_SESION}=${tokenSesion}` } : {}),
       },
-      body:
-        request.method === "GET" || request.method === "HEAD"
-          ? undefined
-          : await request.arrayBuffer(),
+      body: cuerpoPeticion,
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
-    const body = await upstreamResponse.text();
-    return new NextResponse(body, {
+    const texto = await upstreamResponse.text();
+    // 204/205/304 no pueden llevar cuerpo: el constructor de Response lanza si
+    // se le pasa uno (incluso vacío).
+    const sinCuerpo = [204, 205, 304].includes(upstreamResponse.status);
+    const response = new NextResponse(sinCuerpo ? null : texto, {
       status: upstreamResponse.status,
       headers: {
         "content-type":
@@ -47,6 +91,14 @@ async function proxy(request: NextRequest, path: string[]) {
           upstreamResponse.headers.get("cache-control") ?? "no-store",
       },
     });
+    // Propaga hacia el navegador solo el Set-Cookie de sdv_personal_session
+    // (creación en login o eliminación en logout); descarta cualquier otro.
+    for (const setCookie of leerSetCookies(upstreamResponse.headers)) {
+      if (setCookie.startsWith(`${COOKIE_SESION}=`)) {
+        response.headers.append("set-cookie", setCookie);
+      }
+    }
+    return response;
   } catch (error) {
     const isTimeout = error instanceof Error && error.name === "TimeoutError";
     return NextResponse.json(
@@ -64,6 +116,11 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 }
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
+  const { path } = await params;
+  return proxy(request, path);
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const { path } = await params;
   return proxy(request, path);
 }

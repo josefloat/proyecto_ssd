@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acceso Personal - Señal de Vida Ayacucho</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#81f3e5",
+                    "background": "#f5fafe",
+                    "primary-fixed": "#d6e3ff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#e9eef2",
+                    "surface": "#f5fafe",
+                    "tertiary-fixed-dim": "#aec9ed",
+                    "surface-dim": "#d5dbdf",
+                    "on-background": "#171c1f",
+                    "surface-variant": "#dee3e7",
+                    "outline-variant": "#c2c6d4",
+                    "tertiary-fixed": "#d2e4ff",
+                    "on-tertiary-fixed": "#001d37",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "inverse-primary": "#a9c7ff",
+                    "secondary": "#006a62",
+                    "primary-container": "#1565c0",
+                    "on-primary-container": "#dae5ff",
+                    "outline": "#727783",
+                    "on-tertiary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-surface": "#171c1f",
+                    "secondary-fixed-dim": "#66d9cc",
+                    "surface-tint": "#005db7",
+                    "on-tertiary-container": "#d6e6ff",
+                    "on-secondary-container": "#006f66",
+                    "tertiary-container": "#4e6888",
+                    "on-tertiary-fixed-variant": "#2e4867",
+                    "surface-container-low": "#eff4f8",
+                    "surface-container-highest": "#dee3e7",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#36506e",
+                    "secondary-fixed": "#84f5e8",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e4e9ed",
+                    "on-primary-fixed": "#001b3d",
+                    "error": "#ba1a1a",
+                    "primary": "#004d99",
+                    "inverse-surface": "#2c3134",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "inverse-on-surface": "#ecf1f5",
+                    "on-secondary-fixed": "#00201d",
+                    "surface-bright": "#f5fafe",
+                    "on-surface-variant": "#424752"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "24px",
+                    "base": "8px",
+                    "gutter-mobile": "16px",
+                    "button-height": "64px",
+                    "margin-mobile": "20px",
+                    "touch-target-min": "48px"
+            },
+            "fontFamily": {
+                    "label-lg": ["Atkinson Hyperlegible Next"],
+                    "body-lg": ["Atkinson Hyperlegible Next"],
+                    "label-md": ["Atkinson Hyperlegible Next"],
+                    "headline-lg": ["Atkinson Hyperlegible Next"],
+                    "body-md": ["Atkinson Hyperlegible Next"],
+                    "display-code": ["JetBrains Mono"],
+                    "headline-md": ["Atkinson Hyperlegible Next"]
+            },
+            "fontSize": {
+                    "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}],
+                    "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                    "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Atkinson Hyperlegible Next', sans-serif;
+            background-color: #f5fafe;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .login-card {
+            box-shadow: 0 4px 20px rgba(0, 77, 153, 0.04);
+        }
+        input:focus {
+            outline: none;
+            border-color: #004d99;
+            box-shadow: 0 0 0 2px rgba(0, 77, 153, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface p-gutter-mobile">
+<!-- Container for centered content -->
+<main class="w-full max-w-[480px] flex flex-col items-center">
+<!-- Header / Logo Area -->
+<div class="mb-stack-gap text-center flex flex-col items-center gap-4">
+<div class="w-20 h-20 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-5xl" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Señal de Vida</h1>
+<p class="font-label-lg text-label-lg text-on-surface-variant">Portal Administrativo - Ayacucho</p>
+</div>
+</div>
+<!-- Login Form Card -->
+<div class="w-full bg-surface-container-lowest rounded-[24px] p-8 md:p-10 border border-outline-variant login-card">
+<form class="flex flex-col gap-6" id="loginForm" onsubmit="return handleLogin(event)">
+<!-- Welcome text -->
+<div class="mb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">Iniciar Sesión</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Ingrese sus credenciales de personal autorizado.</p>
+</div>
+<!-- Error Message (Hidden by default) -->
+<div class="hidden flex items-center gap-3 p-4 bg-error-container text-on-error-container rounded-lg border border-error/20" id="errorMessage">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+<span class="font-body-md text-body-md">Correo o contraseña incorrectos. Intente de nuevo.</span>
+</div>
+<!-- Email Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface" for="email">Correo Electrónico</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">mail</span>
+<input class="w-full h-[60px] pl-12 pr-4 bg-surface-container-low border border-outline-variant rounded-[16px] font-body-md text-body-md transition-all focus:ring-0" id="email" placeholder="ejemplo@senaldelvida.pe" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<label class="font-label-lg text-label-lg text-on-surface" for="password">Contraseña</label>
+<a class="font-label-md text-label-md text-primary hover:underline" href="#">¿Olvidó su clave?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+<input class="w-full h-[60px] pl-12 pr-12 bg-surface-container-low border border-outline-variant rounded-[16px] font-body-md text-body-md transition-all focus:ring-0" id="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" id="eyeIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Security Checkbox -->
+<div class="flex items-center gap-3">
+<input class="w-6 h-6 rounded border-outline-variant text-primary focus:ring-primary" id="remember" type="checkbox"/>
+<label class="font-body-md text-body-md text-on-surface-variant" for="remember">Mantener sesión iniciada</label>
+</div>
+<!-- Action Button -->
+<button class="w-full h-button-height bg-primary text-on-primary font-label-lg text-label-lg rounded-full shadow-md hover:bg-surface-tint active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4" type="submit">
+<span>Acceder al Sistema</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</form>
+</div>
+<!-- Footer Help -->
+<footer class="mt-stack-gap text-center">
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">¿Problemas con su acceso?</p>
+<div class="flex flex-wrap justify-center gap-6">
+<a class="flex items-center gap-2 font-label-md text-label-md text-primary hover:text-surface-tint transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+                    Soporte IT
+                </a>
+<a class="flex items-center gap-2 font-label-md text-label-md text-primary hover:text-surface-tint transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">info</span>
+                    Protocolo de Seguridad
+                </a>
+</div>
+<p class="mt-8 font-label-md text-label-md text-outline opacity-70">© 2024 Señal de Vida Ayacucho. Todos los derechos reservados.</p>
+</footer>
+</main>
+<script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.innerText = 'visibility';
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const errorDiv = document.getElementById('errorMessage');
+            const button = event.target.querySelector('button[type="submit"]');
+            
+            // Visual feedback for interaction
+            button.disabled = true;
+            button.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Validando...';
+            
+            // Simulating a brief validation delay
+            setTimeout(() => {
+                // For demonstration, always show error unless specific value used
+                const email = document.getElementById('email').value;
+                if (email === "admin@hospital.com") {
+                    window.location.reload(); // Simulate success
+                } else {
+                    errorDiv.classList.remove('hidden');
+                    button.disabled = false;
+                    button.innerHTML = '<span>Acceder al Sistema</span><span class="material-symbols-outlined">arrow_forward</span>';
+                }
+            }, 800);
+
+            return false;
+        }
+    </script>
+</body></html>
