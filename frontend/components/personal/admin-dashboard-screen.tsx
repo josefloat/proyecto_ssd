@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Stethoscope, UserRoundCheck, Users } from "lucide-react";
+import { CalendarDays, ImageIcon, Stethoscope, UserRoundCheck, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { listarUsuariosAdmin } from "@/lib/personal-client";
 import type { UsuarioAdmin } from "@/lib/personal-types";
@@ -33,6 +33,7 @@ export function AdminDashboardScreen() {
           <section className="admin-access-grid" aria-label="Accesos administrativos">
             <Link href="/personal/admin/usuarios"><Users aria-hidden="true" size={34} /><div><h2>Administrar usuarios</h2><p>Crea médicos y recepcionistas, controla acceso y reinicia credenciales.</p></div></Link>
             <Link href="/personal/admin/programacion"><CalendarDays aria-hidden="true" size={34} /><div><h2>Programación semanal</h2><p>Asigna días, turnos canónicos y consultorios con vigencia futura.</p></div></Link>
+            <Link href="/personal/admin/imagenes"><ImageIcon aria-hidden="true" size={34} /><div><h2>Imágenes del sitio</h2><p>Cambia la portada, los fondos y los retratos de los médicos.</p></div></Link>
           </section>
         </>
       ) : null}

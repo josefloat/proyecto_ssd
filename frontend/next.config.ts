@@ -6,6 +6,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  images: {
+    // Únicamente el CDN de Cloudinary: las imágenes gestionables del sitio
+    // (hero, fondos, retratos) se sirven desde ahí.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

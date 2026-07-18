@@ -27,11 +27,19 @@ export type SeedProgramacion = Readonly<{
   turno: Turno;
 }>;
 
+export type SeedImagenSitio = Readonly<{
+  clave: string;
+  url: string;
+  alt: string;
+}>;
+
 export type FixtureSeed = Readonly<{
   especialidades: readonly SeedEspecialidad[];
   medicos: readonly SeedMedico[];
   consultorios: readonly SeedConsultorio[];
   programaciones: readonly SeedProgramacion[];
+  // Opcional para que las pruebas con fixtures propios no deban declararlo.
+  imagenes?: readonly SeedImagenSitio[];
 }>;
 
 export const FIXTURE_SEED: FixtureSeed = {
@@ -120,6 +128,16 @@ export const FIXTURE_SEED: FixtureSeed = {
       id: "30000000-0000-4000-8000-000000000003",
       codigo: "C-103",
       nombre: "Consultorio 103",
+    },
+  ],
+  // URLs de entrega de Cloudinary (tipo fetch sobre el asset publicado del
+  // frontend). Solo se crean si faltan: el seed nunca pisa los reemplazos
+  // que el ADMIN haga desde el panel.
+  imagenes: [
+    {
+      clave: "hero-home",
+      url: "https://res.cloudinary.com/wkaqwmgy/image/fetch/f_auto,q_auto,w_1448/https://senal-de-vida-frontend.vercel.app/images/profesionales-ayacucho.png",
+      alt: "Una médica y un enfermero peruanos acompañan con calidez a un adulto mayor en un centro de salud de Ayacucho.",
     },
   ],
   programaciones: [

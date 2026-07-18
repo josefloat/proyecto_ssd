@@ -139,6 +139,15 @@ export async function ejecutarSeed(
           update: {},
         });
       }
+      for (const imagen of fixture.imagenes ?? []) {
+        // update: {} — crear solo si falta, para no pisar los reemplazos
+        // que el ADMIN haya hecho desde el panel de imágenes.
+        await tx.imagenSitio.upsert({
+          where: { clave: imagen.clave },
+          create: imagen,
+          update: {},
+        });
+      }
     },
     // Neon añade latencia de red por cada upsert. El límite predeterminado de
     // 5 s es insuficiente para el fixture completo, aunque la transacción siga

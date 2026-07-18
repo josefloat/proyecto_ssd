@@ -14,9 +14,9 @@ export function MotionPage({
   return (
     <motion.main
       className={className}
-      initial={shouldReduceMotion ? false : { y: 8 }}
+      initial={shouldReduceMotion ? false : { y: 12 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.main>

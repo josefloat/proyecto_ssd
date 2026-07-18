@@ -34,6 +34,8 @@ import {
   crearServiciosAdministracionProgramacion,
   type ServiciosAdministracionProgramacion,
 } from "./services/administracion-programacion";
+import { registrarRutasImagenes } from "./http/imagenes-routes";
+import { crearServiciosImagenesSitio } from "./services/imagenes-sitio";
 
 export type AppOptions = Readonly<{
   reloj?: () => Date;
@@ -117,6 +119,7 @@ export function createApp(
   });
 
   registrarRutasPublicas(app, serviciosPublicos, serviciosCitas);
+  registrarRutasImagenes(app, crearServiciosImagenesSitio(database), serviciosAuth);
   registrarRutasPersonal(
     app,
     serviciosAuth,

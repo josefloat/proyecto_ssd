@@ -2,7 +2,15 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BriefcaseMedical, Lock, Mail } from "lucide-react";
+import {
+  BriefcaseMedical,
+  CalendarClock,
+  CircleCheck,
+  HeartPulse,
+  Lock,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
 import { MotionPage } from "@/components/motion-page";
 import { cambiarPassword, iniciarSesion } from "@/lib/personal-client";
 import type { RolPersonal } from "@/lib/personal-types";
@@ -13,7 +21,57 @@ const DESTINO_POR_ROL: Record<RolPersonal, string> = {
   MEDICO: "/personal/medico/agenda",
 };
 
-export function PersonalLoginScreen() {
+// Escenario compartido del login: panel visual (con fondo gestionable desde
+// el panel de imágenes del ADMIN) + tarjeta del formulario.
+function LoginStage({
+  fondoUrl,
+  children,
+}: {
+  fondoUrl?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="personal-login-shell">
+      <div className="login-stage">
+        <aside
+          className="login-aside"
+          style={fondoUrl ? { backgroundImage: `url(${fondoUrl})` } : undefined}
+        >
+          <div className="login-aside-art" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className="login-aside-content">
+            <HeartPulse aria-hidden="true" />
+            <strong>El cuidado empieza con una buena organización.</strong>
+            <p>
+              Agenda, pagos y programación del equipo de salud de Señal de Vida,
+              en un solo lugar.
+            </p>
+            <ul className="login-points">
+              <li>
+                <CalendarClock aria-hidden="true" size={20} />
+                <span>Agenda del día siempre actualizada</span>
+              </li>
+              <li>
+                <CircleCheck aria-hidden="true" size={20} />
+                <span>Registro de pagos en recepción</span>
+              </li>
+              <li>
+                <ShieldCheck aria-hidden="true" size={20} />
+                <span>Acceso según tu rol y sesión segura</span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function PersonalLoginScreen({ fondoUrl }: { fondoUrl?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,7 +128,7 @@ export function PersonalLoginScreen() {
 
   if (rolPendiente) {
     return (
-      <div className="personal-login-shell">
+      <LoginStage fondoUrl={fondoUrl}>
         <MotionPage className="personal-login-card">
           <div className="personal-brand">
             <span className="personal-brand-badge" aria-hidden="true">
@@ -102,12 +160,12 @@ export function PersonalLoginScreen() {
             </button>
           </form>
         </MotionPage>
-      </div>
+      </LoginStage>
     );
   }
 
   return (
-    <div className="personal-login-shell">
+    <LoginStage fondoUrl={fondoUrl}>
       <MotionPage className="personal-login-card">
         <div className="personal-brand">
           <span className="personal-brand-badge" aria-hidden="true">
@@ -163,6 +221,6 @@ export function PersonalLoginScreen() {
           </button>
         </form>
       </MotionPage>
-    </div>
+    </LoginStage>
   );
 }
