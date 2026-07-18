@@ -20,6 +20,5 @@ describe("contrato de entradas de la home", () => {
       );
     }
     expect(home).toContain("Ayacucho");
-    expect(home).toContain("Demostración académica");
   });
 });

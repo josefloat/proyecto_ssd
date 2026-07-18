@@ -1150,13 +1150,38 @@ button.patient-nav-item:disabled {
   transform: translateY(-3px) rotate(-3deg) scale(1.05);
 }
 
-.tone-amber .specialty-icon { color: #9c6000; background: #fff2b3; }
-.tone-rose .specialty-icon { color: #b04553; background: #ffe3e7; }
-.tone-cyan .specialty-icon { color: #007a8a; background: #d3f4f8; }
-.tone-violet .specialty-icon { color: #7f2ea4; background: #f0dcf6; }
-.tone-blue .specialty-icon { color: #0a66b5; background: #d9ecff; }
-.tone-orange .specialty-icon { color: #ab5600; background: #ffeed6; }
-.tone-neutral .specialty-icon { color: #4c5a72; background: #e9edf6; }
+/* Tarjetas de especialidad a color pleno (patrón de la referencia):
+   todo el cuadro toma el tono, sin borde duro, y el icono vive en un
+   chip blanco con sombra suave. */
+.choice-card.specialty-card {
+  border: 0;
+  box-shadow: 0 16px 36px -16px rgba(23, 32, 64, 0.2);
+}
+
+.choice-card.specialty-card.is-selected {
+  border: 0;
+  box-shadow: 0 0 0 3px var(--primary), var(--shadow-soft);
+}
+
+.specialty-card .specialty-icon {
+  background: white;
+  box-shadow: 0 6px 16px -6px rgba(23, 32, 64, 0.22);
+}
+
+.tone-amber { background: linear-gradient(160deg, #ffedbd, #ffdf94); }
+.tone-amber .specialty-icon { color: #8a5600; }
+.tone-rose { background: linear-gradient(160deg, #ffdde3, #ffc4cf); }
+.tone-rose .specialty-icon { color: #b04553; }
+.tone-cyan { background: linear-gradient(160deg, #cdeffa, #a8e2f2); }
+.tone-cyan .specialty-icon { color: #00708a; }
+.tone-violet { background: linear-gradient(160deg, #ecdcfa, #d9bff2); }
+.tone-violet .specialty-icon { color: #7f2ea4; }
+.tone-blue { background: linear-gradient(160deg, #d6e4fd, #b8cdfb); }
+.tone-blue .specialty-icon { color: #2456d0; }
+.tone-orange { background: linear-gradient(160deg, #ffe5c8, #ffd2a2); }
+.tone-orange .specialty-icon { color: #a04f00; }
+.tone-neutral { background: linear-gradient(160deg, #e9edf6, #d7deed); }
+.tone-neutral .specialty-icon { color: #46536e; }
 
 .selected-badge {
   position: absolute;
@@ -3487,7 +3512,7 @@ button.patient-nav-item:disabled {
 
 .schedule-controls {
   display: grid;
-  grid-template-columns: minmax(260px, 2fr) minmax(190px, 1fr) auto;
+  grid-template-columns: minmax(260px, 2fr) minmax(190px, 1fr) auto auto;
   align-items: end;
   gap: 18px;
   margin-bottom: 18px;
@@ -4265,6 +4290,366 @@ h2 {
 .time-group > div > .time-slot:nth-child(5) { animation-delay: 0.19s; }
 .time-group > div > .time-slot:nth-child(6) { animation-delay: 0.23s; }
 .time-group > div > .time-slot:nth-child(n + 7) { animation-delay: 0.27s; }
+
+/* ============================================================
+   Médicos con personalidad: avatar en gradiente rotativo y chip
+   de especialidad; tarjetas sin borde duro.
+   ============================================================ */
+
+.choice-card.doctor-card {
+  border: 0;
+  box-shadow: 0 14px 32px -14px rgba(23, 32, 64, 0.18);
+}
+
+.choice-card.doctor-card.is-selected {
+  border: 0;
+  box-shadow: 0 0 0 3px var(--primary), var(--shadow-soft);
+}
+
+.doctor-avatar {
+  color: white;
+  background: linear-gradient(145deg, #4f7bff, #2447cf);
+  border: 0;
+  box-shadow:
+    0 10px 22px -10px rgba(28, 52, 140, 0.55),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+  transition: transform 220ms var(--ease-spring);
+}
+
+.doctor-list .doctor-card:nth-child(3n + 2) .doctor-avatar {
+  background: linear-gradient(145deg, #22b8d4, #0e7d99);
+  box-shadow:
+    0 10px 22px -10px rgba(12, 90, 110, 0.5),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+.doctor-list .doctor-card:nth-child(3n) .doctor-avatar {
+  background: linear-gradient(145deg, #a78bfa, #7c3aed);
+  box-shadow:
+    0 10px 22px -10px rgba(90, 40, 170, 0.5),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+.doctor-card:hover .doctor-avatar {
+  transform: scale(1.05) rotate(-2deg);
+}
+
+.doctor-card small {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 2px;
+  padding: 4px 13px;
+  color: var(--primary-deep);
+  background: var(--primary-ghost);
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ============================================================
+   Vista calendario del horizonte (28 días agrupados por mes).
+   ============================================================ */
+
+.date-section .section-title-row {
+  flex-wrap: wrap;
+}
+
+.date-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.cal-toggle {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  color: var(--primary);
+  background: var(--surface-card);
+  border: 1px solid rgba(47, 95, 232, 0.25);
+  border-radius: 999px;
+  box-shadow: var(--shadow-card);
+  font-size: 18px;
+  font-weight: 740;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms var(--ease-out);
+}
+
+.cal-toggle:hover {
+  background: var(--primary-ghost);
+  transform: translateY(-2px);
+}
+
+.cal-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+  margin-top: 16px;
+  padding: 22px;
+  background: var(--surface-card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  animation: rise 0.4s var(--ease-out) both;
+}
+
+.cal-mes-titulo {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--on-surface);
+  font-size: 20px;
+  text-transform: capitalize;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cal-dow {
+  display: grid;
+  min-height: 30px;
+  place-items: center;
+  color: var(--on-surface-variant);
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.cal-void {
+  min-height: 48px;
+}
+
+.cal-day {
+  position: relative;
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  padding-bottom: 12px;
+  color: var(--on-surface);
+  background: var(--surface);
+  border: 0;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 740;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms var(--ease-out), box-shadow 150ms ease;
+}
+
+.cal-day:hover {
+  background: var(--primary-ghost);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.cal-day i {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: #d3d8e6;
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+.cal-day.has-slots i {
+  background: var(--primary-bright);
+}
+
+.cal-day.is-selected {
+  color: white;
+  background: var(--grad-primary);
+  box-shadow: 0 10px 22px -8px rgba(28, 52, 140, 0.55);
+}
+
+.cal-day.is-selected i {
+  background: #9be1ff;
+}
+
+/* Chip de horas del plan en programación (clase propia: el spec de
+   programación localiza .schedule-version en modo estricto). */
+.schedule-hours {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--primary-ghost);
+  border: 1px solid rgba(47, 95, 232, 0.2);
+  border-radius: 999px;
+}
+
+.schedule-hours span {
+  color: var(--on-surface-variant);
+}
+
+.schedule-hours strong {
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.schedule-hours.is-over {
+  color: var(--error);
+  background: #ffefec;
+  border-color: #ecb0a9;
+}
+
+.schedule-hours.is-over strong {
+  color: var(--error);
+}
+
+/* ============================================================
+   Home: "Conoce la clínica" (fotos gestionables) e info de la sede.
+   ============================================================ */
+
+.home-clinic {
+  width: 100%;
+  margin-top: 44px;
+}
+
+.home-section-head h2 {
+  margin: 0;
+  color: var(--on-surface);
+  font-size: clamp(27px, 3vw, 33px);
+  letter-spacing: -0.01em;
+}
+
+.home-section-head p {
+  margin: 8px 0 0;
+  color: var(--on-surface-variant);
+  font-size: 19px;
+}
+
+.clinic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.clinic-card {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms ease;
+}
+
+.clinic-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-soft);
+}
+
+.clinic-card img,
+.clinic-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.clinic-placeholder {
+  display: grid;
+  place-items: center;
+}
+
+.clinic-placeholder i {
+  display: grid;
+  width: 74px;
+  height: 74px;
+  place-items: center;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 10px 24px -10px rgba(23, 32, 64, 0.3);
+}
+
+.ph-periwinkle { background: linear-gradient(160deg, #c9d4fb, #a4b5f2); }
+.ph-periwinkle i { color: var(--primary); }
+.ph-cyan { background: linear-gradient(160deg, #c3ecf7, #93d9ec); }
+.ph-cyan i { color: var(--accent-deep); }
+.ph-pink { background: linear-gradient(160deg, #f8cfeb, #eda9db); }
+.ph-pink i { color: #b0367f; }
+
+.clinic-card figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 18px 18px;
+}
+
+.clinic-card strong {
+  color: var(--on-surface);
+  font-size: 20px;
+}
+
+.clinic-card figcaption span {
+  color: var(--on-surface-variant);
+  font-size: 18px;
+}
+
+.home-info {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.home-info article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--surface-card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.home-info svg {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  padding: 10px;
+  color: var(--primary);
+  background: var(--primary-ghost);
+  border-radius: 14px;
+}
+
+.home-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-info strong {
+  color: var(--on-surface);
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.home-info span {
+  color: var(--on-surface-variant);
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+@media (max-width: 860px) {
+  .clinic-grid,
+  .home-info {
+    grid-template-columns: 1fr;
+  }
+
+  .home-clinic {
+    margin-top: 34px;
+  }
+}
 
 /* --------- Reduced motion: sin animaciones ni transiciones --------- */
 

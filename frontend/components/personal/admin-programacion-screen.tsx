@@ -6,9 +6,14 @@ import { useRouter } from "next/navigation";
 import {
   guardarProgramacionAdmin,
   obtenerCatalogosAdmin,
+  obtenerOcupacionAdmin,
   obtenerProgramacionAdmin,
 } from "@/lib/personal-client";
-import type { CatalogosAdmin, ItemProgramacionAdmin } from "@/lib/personal-types";
+import type {
+  CatalogosAdmin,
+  ItemProgramacionAdmin,
+  OcupacionConsultorioAdmin,
+} from "@/lib/personal-types";
 import { AdminShell } from "./admin-shell";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -43,6 +48,7 @@ export function AdminProgramacionScreen() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+  const [ocupacion, setOcupacion] = useState<ReadonlyArray<OcupacionConsultorioAdmin>>([]);
 
   useEffect(() => {
     obtenerCatalogosAdmin().then((datos) => {
@@ -70,6 +76,25 @@ export function AdminProgramacionScreen() {
       else setError("No pudimos cargar la programación del médico.");
     }).finally(() => setCargando(false));
   }, [medicoId, router]);
+
+  // Ocupación global de consultorios en la vigencia elegida (se refresca
+  // también tras guardar, porque la versión cambia).
+  useEffect(() => {
+    obtenerOcupacionAdmin(vigenteDesde)
+      .then((datos) => setOcupacion(datos.items))
+      .catch(() => setOcupacion([]));
+  }, [vigenteDesde, version]);
+
+  const medicoActual = catalogos?.medicos.find((item) => item.id === medicoId) ?? null;
+  // Cada turno canónico dura 4 horas (HORAS_POR_TURNO del backend).
+  const horasPlan = Object.values(celdas).filter(Boolean).length * 4;
+  const capacidad = medicoActual?.horasSemanales ?? 0;
+  const excedeHoras = Boolean(medicoActual) && horasPlan > capacidad;
+  const ocupadoPor = new Map<string, string>();
+  for (const item of ocupacion) {
+    if (item.medico.id === medicoId) continue;
+    ocupadoPor.set(`${item.diaSemana}:${item.turno}:${item.consultorioId}`, item.medico.nombre);
+  }
 
   async function guardar() {
     if (!medicoId) return;
@@ -104,13 +129,22 @@ export function AdminProgramacionScreen() {
       actual="programacion"
       titulo="Programación semanal"
       subtitulo="Días ISO, turnos canónicos y consultorios"
-      acciones={<button className="admin-primary-action" type="button" disabled={guardando || cargando || !medicoId} onClick={guardar}><Save aria-hidden="true" /> {guardando ? "Guardando…" : "Guardar plan"}</button>}
+      acciones={<button className="admin-primary-action" type="button" disabled={guardando || cargando || !medicoId || excedeHoras} onClick={guardar}><Save aria-hidden="true" /> {guardando ? "Guardando…" : "Guardar plan"}</button>}
     >
       <section className="schedule-controls" aria-label="Parámetros de programación">
         <label htmlFor="schedule-medico">Médico<select id="schedule-medico" value={medicoId} onChange={(event) => { setCargando(true); setMedicoId(event.target.value); }}><option value="">Selecciona un médico</option>{catalogos?.medicos.map((item) => <option key={item.id} value={item.id}>{item.nombre} — {item.especialidad.nombre}</option>)}</select></label>
         <label htmlFor="schedule-vigencia">Vigente desde<input id="schedule-vigencia" type="date" min={proximoLunes()} value={vigenteDesde} onChange={(event) => setVigenteDesde(event.target.value)} /></label>
         <div className="schedule-version"><span>Versión leída</span><strong>{version}</strong></div>
+        <div className={`schedule-hours${excedeHoras ? " is-over" : ""}`} role="status">
+          <span>Horas del plan</span>
+          <strong>{horasPlan} / {capacidad} h</strong>
+        </div>
       </section>
+      {excedeHoras ? (
+        <p className="schedule-warning" role="alert">
+          <AlertTriangle aria-hidden="true" /> El plan supera las {capacidad} horas semanales del médico: quita turnos antes de guardar.
+        </p>
+      ) : null}
       <p className="schedule-warning"><AlertTriangle aria-hidden="true" /> Guardar reemplaza solo slots libres desde la vigencia. Reservas y bloqueos se conservan.</p>
       {error ? <div className="admin-state admin-error" role="alert">{error}</div> : null}
       {mensaje ? <div className="admin-state admin-success" role="status">{mensaje}</div> : null}
@@ -124,7 +158,15 @@ export function AdminProgramacionScreen() {
                 <label className="sr-only" htmlFor={`celda-${turno.id}-${indice + 1}`}>{dia}, turno {turno.label}</label>
                 <select id={`celda-${turno.id}-${indice + 1}`} value={celdas[clave(indice + 1, turno.id)] ?? ""} onChange={(event) => setCeldas({ ...celdas, [clave(indice + 1, turno.id)]: event.target.value })}>
                   <option value="">Sin turno</option>
-                  {catalogos?.consultorios.map((item) => <option key={item.id} value={item.id}>{item.codigo}</option>)}
+                  {catalogos?.consultorios.map((item) => {
+                    const dueno = ocupadoPor.get(`${indice + 1}:${turno.id}:${item.id}`);
+                    const valorCelda = celdas[clave(indice + 1, turno.id)] ?? "";
+                    return (
+                      <option key={item.id} value={item.id} disabled={Boolean(dueno) && valorCelda !== item.id}>
+                        {dueno ? `${item.codigo} · ${dueno}` : item.codigo}
+                      </option>
+                    );
+                  })}
                 </select>
               </td>)}
             </tr>)}</tbody>

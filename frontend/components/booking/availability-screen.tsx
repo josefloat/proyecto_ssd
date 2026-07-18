@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Clock3, Moon, Stethoscope, Sun, Sunset } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, Clock3, Moon, Stethoscope, Sun, Sunset } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookingShell, PrimaryFlowButton } from "./booking-shell";
@@ -40,6 +40,56 @@ const hora24Formatter = new Intl.DateTimeFormat("en-GB", {
   hourCycle: "h23",
   timeZone: "America/Lima",
 });
+const mesFormatter = new Intl.DateTimeFormat("es-PE", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const fechaLargaFormatter = new Intl.DateTimeFormat("es-PE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+
+type CeldaCalendario = Readonly<{
+  fecha: string;
+  dia: number;
+  etiqueta: string;
+}>;
+
+type MesCalendario = Readonly<{
+  clave: string;
+  titulo: string;
+  vaciasIniciales: number;
+  celdas: readonly CeldaCalendario[];
+}>;
+
+// Agrupa el horizonte de 28 días por mes y alinea cada mes por día de la
+// semana ISO (lunes primero) para dibujar una grilla de calendario real.
+function mesesCalendario(fechas: readonly string[]): MesCalendario[] {
+  const meses = new Map<string, string[]>();
+  for (const fecha of fechas) {
+    const claveMes = fecha.slice(0, 7);
+    const lista = meses.get(claveMes) ?? [];
+    lista.push(fecha);
+    meses.set(claveMes, lista);
+  }
+  return [...meses.entries()].map(([claveMes, dias]) => {
+    const primera = new Date(`${dias[0]}T12:00:00.000Z`);
+    const diaIso = primera.getUTCDay() === 0 ? 7 : primera.getUTCDay();
+    return {
+      clave: claveMes,
+      titulo: mesFormatter.format(primera),
+      vaciasIniciales: diaIso - 1,
+      celdas: dias.map((fecha) => ({
+        fecha,
+        dia: Number(fecha.slice(8, 10)),
+        etiqueta: fechaLargaFormatter.format(new Date(`${fecha}T12:00:00.000Z`)),
+      })),
+    };
+  });
+}
 
 type GrupoTurno = "Mañana" | "Tarde" | "Noche";
 
@@ -70,6 +120,7 @@ export function AvailabilityScreen({
   );
   const redirect = rutaPrimerPasoIncompleto(pathname, seleccion);
   const [announcement, setAnnouncement] = useState("");
+  const [verCalendario, setVerCalendario] = useState(false);
   const announcementRef = useRef<HTMLParagraphElement>(null);
   const availabilityUrl =
     seleccion.especialidadId && seleccion.medicoId
@@ -220,8 +271,56 @@ export function AvailabilityScreen({
           <section className="date-section" aria-labelledby="date-title">
             <div className="section-title-row">
               <h2 id="date-title">Próximos 28 días</h2>
-              <span>Hora local de Ayacucho</span>
+              <div className="date-tools">
+                <span>Hora local de Ayacucho</span>
+                <button
+                  type="button"
+                  className="cal-toggle"
+                  aria-expanded={verCalendario}
+                  onClick={() => setVerCalendario((visible) => !visible)}
+                >
+                  <CalendarDays aria-hidden="true" size={22} />
+                  {verCalendario ? "Ocultar calendario" : "Ver calendario"}
+                </button>
+              </div>
             </div>
+            {verCalendario ? (
+              <div className="cal-panel" role="group" aria-label="Calendario de fechas del horizonte">
+                {mesesCalendario(data.horizonte.fechas).map((mes) => (
+                  <div key={mes.clave} className="cal-mes">
+                    <strong className="cal-mes-titulo">{mes.titulo}</strong>
+                    <div className="cal-grid">
+                      {["L", "M", "X", "J", "V", "S", "D"].map((letra, indice) => (
+                        <span key={`${letra}-${indice}`} className="cal-dow" aria-hidden="true">{letra}</span>
+                      ))}
+                      {Array.from({ length: mes.vaciasIniciales }, (_, indice) => (
+                        <span key={`vacia-${indice}`} className="cal-void" aria-hidden="true" />
+                      ))}
+                      {mes.celdas.map((celda) => {
+                        const isSelected = seleccion.fechaLima === celda.fecha;
+                        const hasSlots = data.items.some((slot) => slot.fechaLima === celda.fecha);
+                        return (
+                          <button
+                            type="button"
+                            key={celda.fecha}
+                            className={`cal-day${isSelected ? " is-selected" : ""}${hasSlots ? " has-slots" : ""}`}
+                            aria-pressed={isSelected}
+                            aria-label={`${celda.etiqueta}${hasSlots ? ", con horarios" : ", sin horarios"}`}
+                            onClick={() => {
+                              setAnnouncement("");
+                              router.replace(seleccionarFecha(seleccion, celda.fecha, pathname), { scroll: false });
+                            }}
+                          >
+                            {celda.dia}
+                            <i aria-hidden="true" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <div className="date-rail" aria-label="Fechas disponibles">
               {data.horizonte.fechas.map((fecha) => {
                 const [weekday, day, month] = fechaFormatter

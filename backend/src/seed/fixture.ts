@@ -11,6 +11,9 @@ export type SeedMedico = Readonly<{
   nombre: string;
   horasSemanales: number;
   especialidadId: string;
+  // Correo institucional: si está presente, el seed crea (solo una vez) una
+  // cuenta MEDICO gestionable desde el panel de usuarios del ADMIN.
+  email?: string;
 }>;
 
 export type SeedConsultorio = Readonly<{
@@ -79,36 +82,42 @@ export const FIXTURE_SEED: FixtureSeed = {
     {
       id: "20000000-0000-4000-8000-000000000001",
       nombre: "Dra. Elena Vargas",
+      email: "elena.vargas@senaldevida.pe",
       horasSemanales: 4,
       especialidadId: "10000000-0000-4000-8000-000000000001",
     },
     {
       id: "20000000-0000-4000-8000-000000000002",
       nombre: "Dr. Carlos Rojas",
+      email: "carlos.rojas@senaldevida.pe",
       horasSemanales: 4,
       especialidadId: "10000000-0000-4000-8000-000000000002",
     },
     {
       id: "20000000-0000-4000-8000-000000000003",
       nombre: "Dra. Lucía Salazar",
+      email: "lucia.salazar@senaldevida.pe",
       horasSemanales: 4,
       especialidadId: "10000000-0000-4000-8000-000000000003",
     },
     {
       id: "20000000-0000-4000-8000-000000000004",
       nombre: "Dr. Miguel Torres",
+      email: "miguel.torres@senaldevida.pe",
       horasSemanales: 4,
       especialidadId: "10000000-0000-4000-8000-000000000004",
     },
     {
       id: "20000000-0000-4000-8000-000000000005",
       nombre: "Dra. Patricia León",
+      email: "patricia.leon@senaldevida.pe",
       horasSemanales: 4,
       especialidadId: "10000000-0000-4000-8000-000000000005",
     },
     {
       id: "20000000-0000-4000-8000-000000000006",
       nombre: "Dr. Andrés Medina",
+      email: "andres.medina@senaldevida.pe",
       horasSemanales: 4,
       especialidadId: "10000000-0000-4000-8000-000000000006",
     },

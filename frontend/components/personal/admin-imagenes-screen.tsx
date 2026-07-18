@@ -22,6 +22,21 @@ const IMAGENES_SITIO = [
     descripcion: "Foto principal que ven los pacientes al entrar al sitio.",
   },
   {
+    clave: "clinica-recepcion",
+    titulo: "Recepción y admisión",
+    descripcion: "Primera foto de la sección \"Conoce la clínica\" en la home.",
+  },
+  {
+    clave: "clinica-consultorios",
+    titulo: "Consultorios",
+    descripcion: "Segunda foto de la sección \"Conoce la clínica\" en la home.",
+  },
+  {
+    clave: "clinica-laboratorio",
+    titulo: "Laboratorio y apoyo",
+    descripcion: "Tercera foto de la sección \"Conoce la clínica\" en la home.",
+  },
+  {
     clave: "fondo-login",
     titulo: "Fondo del acceso del personal",
     descripcion: "Panel visual de la pantalla de inicio de sesión.",

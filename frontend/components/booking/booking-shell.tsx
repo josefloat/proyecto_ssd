@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { useRouter } from "next/navigation";
 import { MotionPage } from "@/components/motion-page";
@@ -51,13 +51,6 @@ export function BookingShell({
         </div>
 
         {children}
-
-        <aside className="booking-demo-note" aria-label="Aviso de demostración">
-          <Info aria-hidden="true" size={21} />
-          <span>
-            Demostración académica: profesionales y horarios son datos ficticios.
-          </span>
-        </aside>
       </MotionPage>
 
       {footer ? <footer className="booking-footer">{footer}</footer> : null}

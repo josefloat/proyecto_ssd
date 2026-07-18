@@ -6,6 +6,7 @@ import type {
   LoginResponse,
   CatalogosAdmin,
   ItemProgramacionAdmin,
+  OcupacionConsultorioAdmin,
   ProgramacionAdmin,
   RevisionProgramacionAdmin,
   UsuarioAdmin,
@@ -255,4 +256,20 @@ export async function eliminarImagenAdmin(clave: string): Promise<void> {
     const body = await leerRespuesta(response);
     throw errorApi(response, body, "IMAGEN_DELETE_FAILED");
   }
+}
+
+export async function obtenerOcupacionAdmin(
+  vigenteDesde: string,
+): Promise<{ items: ReadonlyArray<OcupacionConsultorioAdmin> }> {
+  const response = await fetch(
+    `/api/personal/admin/ocupacion-consultorios?vigenteDesde=${encodeURIComponent(vigenteDesde)}`,
+  );
+  if (!response.ok) {
+    throw Object.assign(new Error("OCUPACION_FALLIDA"), {
+      status: response.status,
+    });
+  }
+  return (await response.json()) as {
+    items: ReadonlyArray<OcupacionConsultorioAdmin>;
+  };
 }

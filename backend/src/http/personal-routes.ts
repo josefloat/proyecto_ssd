@@ -149,6 +149,22 @@ export function registrarRutasPersonal(
   );
 
   router.get(
+    "/personal/admin/ocupacion-consultorios",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, response) => {
+      const hoy = hoyEnLima(reloj());
+      const resultado = await programacion.ocupacion(
+        validarFechaConsultaProgramacion(
+          (request.query as Record<string, unknown>).vigenteDesde,
+          hoy,
+        ),
+      );
+      response.set("Cache-Control", "no-store");
+      response.status(200).json(resultado);
+    }),
+  );
+
+  router.get(
     "/personal/admin/programacion/:medicoId",
     requireSesion(auth, [RolUsuario.ADMIN]),
     asyncHandler(async (request, response) => {
