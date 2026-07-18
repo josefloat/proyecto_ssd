@@ -14,11 +14,25 @@ import {
   type GeneradorCodigoReserva,
   type ServiciosCitasPaciente,
 } from "./services/citas-paciente";
+import {
+  crearServiciosAuthPersonal,
+  type ServiciosAuthPersonal,
+} from "./services/auth-personal";
+import {
+  crearServiciosAgendaPersonal,
+  type ServiciosAgendaPersonal,
+} from "./services/agenda-personal";
+import {
+  registrarRutasPersonal,
+  responderErrorPersonal,
+} from "./http/personal-routes";
 
 export type AppOptions = Readonly<{
   reloj?: () => Date;
   publicApi?: Partial<ServiciosDisponibilidadPublica>;
   citasApi?: Partial<ServiciosCitasPaciente>;
+  authPersonal?: Partial<ServiciosAuthPersonal>;
+  agendaPersonal?: Partial<ServiciosAgendaPersonal>;
   generarCodigoReserva?: GeneradorCodigoReserva;
 }>;
 
@@ -45,6 +59,16 @@ export function createApp(
     ...serviciosBase,
     ...options.publicApi,
   };
+  const authBase = crearServiciosAuthPersonal(database, options.reloj);
+  const serviciosAuth: ServiciosAuthPersonal = {
+    ...authBase,
+    ...options.authPersonal,
+  };
+  const agendaBase = crearServiciosAgendaPersonal(database);
+  const serviciosAgenda: ServiciosAgendaPersonal = {
+    ...agendaBase,
+    ...options.agendaPersonal,
+  };
 
   app.use(express.json({ limit: "16kb" }));
 
@@ -67,6 +91,10 @@ export function createApp(
   });
 
   registrarRutasPublicas(app, serviciosPublicos, serviciosCitas);
+  registrarRutasPersonal(app, serviciosAuth, serviciosAgenda, options.reloj);
+  // El handler de errores del personal corre primero y delega al público
+  // cualquier error que no sea PersonalApiError.
+  app.use(responderErrorPersonal);
   app.use(responderErrorPublico);
 
   return app;

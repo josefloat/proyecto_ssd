@@ -49,6 +49,27 @@ export function startRealBackendServer(port: number) {
   );
 }
 
+export function startPersonalBackendServer(port: number) {
+  return spawn(
+    "npx",
+    ["tsx", "tests/helpers/start-personal-e2e-server.ts"],
+    {
+      cwd: path.join(__dirname, "..", "..", "backend"),
+      env: {
+        ...process.env,
+        PORT: String(port),
+        DATABASE_URL:
+          process.env.DATABASE_URL ??
+          "postgresql://senal_de_vida:senal_de_vida@localhost:5432/senal_de_vida?schema=public",
+        DIRECT_URL:
+          process.env.DIRECT_URL ??
+          "postgresql://senal_de_vida:senal_de_vida@localhost:5432/senal_de_vida?schema=public",
+      },
+      stdio: "pipe",
+    },
+  );
+}
+
 export async function waitForServer(url: string, timeoutMs = 10_000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {

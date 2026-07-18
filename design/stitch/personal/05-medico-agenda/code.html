@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#81f3e5",
+                        "background": "#f5fafe",
+                        "primary-fixed": "#d6e3ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#e9eef2",
+                        "surface": "#f5fafe",
+                        "tertiary-fixed-dim": "#aec9ed",
+                        "surface-dim": "#d5dbdf",
+                        "on-background": "#171c1f",
+                        "surface-variant": "#dee3e7",
+                        "outline-variant": "#c2c6d4",
+                        "tertiary-fixed": "#d2e4ff",
+                        "on-tertiary-fixed": "#001d37",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#005049",
+                        "inverse-primary": "#a9c7ff",
+                        "secondary": "#006a62",
+                        "primary-container": "#1565c0",
+                        "on-primary-container": "#dae5ff",
+                        "outline": "#727783",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#00468c",
+                        "on-surface": "#171c1f",
+                        "secondary-fixed-dim": "#66d9cc",
+                        "surface-tint": "#005db7",
+                        "on-tertiary-container": "#d6e6ff",
+                        "on-secondary-container": "#006f66",
+                        "tertiary-container": "#4e6888",
+                        "on-tertiary-fixed-variant": "#2e4867",
+                        "surface-container-low": "#eff4f8",
+                        "surface-container-highest": "#dee3e7",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#36506e",
+                        "secondary-fixed": "#84f5e8",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e4e9ed",
+                        "on-primary-fixed": "#001b3d",
+                        "error": "#ba1a1a",
+                        "primary": "#004d99",
+                        "inverse-surface": "#2c3134",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "inverse-on-surface": "#ecf1f5",
+                        "on-secondary-fixed": "#00201d",
+                        "surface-bright": "#f5fafe",
+                        "on-surface-variant": "#424752"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap": "24px",
+                        "base": "8px",
+                        "gutter-mobile": "16px",
+                        "button-height": "64px",
+                        "margin-mobile": "20px",
+                        "touch-target-min": "48px"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Atkinson Hyperlegible Next"],
+                        "body-lg": ["Atkinson Hyperlegible Next"],
+                        "label-md": ["Atkinson Hyperlegible Next"],
+                        "headline-lg": ["Atkinson Hyperlegible Next"],
+                        "body-md": ["Atkinson Hyperlegible Next"],
+                        "display-code": ["JetBrains Mono"],
+                        "headline-md": ["Atkinson Hyperlegible Next"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["20px", {"lineHeight": "24px", "fontWeight": "700"}],
+                        "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}],
+                        "label-md": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-code": ["48px", {"lineHeight": "56px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="hidden lg:flex h-screen w-72 flex-col fixed left-0 top-0 bg-surface-container border-r border-outline-variant p-4 gap-base z-50">
+<div class="flex flex-col gap-1 mb-8 px-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">Señal de Vida</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Gestión Médica</span>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Panel Control</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-md">Citas</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-label-md">Médicos</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-bold" href="#">
+<span class="material-symbols-outlined">schedule</span>
+<span class="font-label-md">Agenda</span>
+</a>
+<!-- Restriction Link -->
+<button class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors duration-200 w-full text-left" onclick="showAccessDenied()">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-md">Reportes</span>
+</button>
+</nav>
+<div class="mt-auto flex flex-col gap-2 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Ajustes</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high px-4 py-3 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="lg:pl-72 min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="flex justify-between items-center h-20 px-gutter-mobile lg:px-12 w-full z-40 bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<div class="lg:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Mi Agenda</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-2 px-4 py-2 bg-surface-container rounded-full">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-64" placeholder="Buscar en mi agenda..." readonly="" type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">help_outline</span>
+<div class="flex items-center gap-3 ml-2">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-on-surface">Dr. Ricardo Palma</p>
+<p class="text-xs text-on-surface-variant">Cardiología</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="Close-up professional portrait of a friendly Hispanic male doctor in his 40s wearing a white lab coat and a stethoscope. He has a warm, confident expression and short dark hair. The lighting is soft and professional, set against a clean, blurred medical office background with hints of blue and white medical equipment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbjYk1xJuNDwgfHDFYbiezOo-gBdFNqJFoZZuu3ESR9LdT7gWmi-0cKqf7So6vz0YTh-TLNXaBg51gowxUIptpfqZRupC2sqIXCaJE2vzhYzeGhCVv_4k70WLQUYeSqhzvOwiRn9dcwM0wWBe5OidyIk33L0voNIZJ4WFeGTjVFAnMoQT1bpJGcOwJhHoZVWO6cBNdftecYbNb616rld__V2aZQznQsv8FnIftGMLn6B_Ed2WVQhX2CPO_cZ7QlJv2pCvhx-rDdwU"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-gutter-mobile lg:p-12 flex flex-col gap-stack-gap overflow-y-auto h-[calc(100vh-80px)] custom-scrollbar">
+<!-- Date & Summary Bar -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">Hoy, 24 de Mayo</h2>
+<p class="font-body-md text-on-surface-variant">Usted tiene <span class="font-bold text-primary">8 citas</span> programadas para hoy.</p>
+</div>
+<div class="flex gap-2">
+<div class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">event_available</span>
+<span class="font-label-md">Solo Lectura</span>
+</div>
+</div>
+</div>
+<!-- Agenda Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-stack-gap">
+<!-- Main Schedule List -->
+<div class="xl:col-span-2 space-y-4">
+<h3 class="font-label-lg text-label-lg text-on-surface px-2">Próximas Citas</h3>
+<div class="space-y-3">
+<!-- Patient Row 1 -->
+<div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<div class="w-20 text-center border-r border-outline-variant pr-4">
+<p class="font-display-code text-2xl text-primary leading-none">08:00</p>
+<p class="text-xs font-bold text-outline uppercase tracking-wider mt-1">AM</p>
+</div>
+<div class="flex-grow flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant font-bold">
+                                    MS
+                                </div>
+<div>
+<p class="font-label-lg text-on-surface">Mateo Salazar</p>
+<p class="text-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">fingerprint</span> 44238812 • Consulta de Control
+                                    </p>
+</div>
+</div>
+<button class="px-6 py-2 rounded-full border border-primary text-primary font-label-md hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2" onclick="simulatedLoad(this)">
+<span class="material-symbols-outlined text-sm">history</span>
+                                Ver Historial
+                            </button>
+</div>
+<!-- Patient Row 2 -->
+<div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<div class="w-20 text-center border-r border-outline-variant pr-4">
+<p class="font-display-code text-2xl text-primary leading-none">09:15</p>
+<p class="text-xs font-bold text-outline uppercase tracking-wider mt-1">AM</p>
+</div>
+<div class="flex-grow flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed-dim flex items-center justify-center text-on-secondary-fixed font-bold">
+                                    AV
+                                </div>
+<div>
+<p class="font-label-lg text-on-surface">Alessandra Valdivia</p>
+<p class="text-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">fingerprint</span> 70123499 • Evaluación Cardiológica
+                                    </p>
+</div>
+</div>
+<button class="px-6 py-2 rounded-full border border-primary text-primary font-label-md hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2" onclick="simulatedLoad(this)">
+<span class="material-symbols-outlined text-sm">history</span>
+                                Ver Historial
+                            </button>
+</div>
+<!-- Patient Row 3 (Current/Active) -->
+<div class="flex items-center gap-4 p-5 bg-primary-container text-on-primary-container rounded-xl shadow-md transform scale-[1.02] border-2 border-primary relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="px-2 py-1 bg-white/20 rounded text-[10px] font-bold uppercase tracking-widest">En Curso</span>
+</div>
+<div class="w-20 text-center border-r border-white/20 pr-4">
+<p class="font-display-code text-2xl leading-none">10:30</p>
+<p class="text-xs font-bold uppercase tracking-wider mt-1 opacity-80">AM</p>
+</div>
+<div class="flex-grow flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-white text-primary flex items-center justify-center text-xl font-bold">
+                                    RG
+                                </div>
+<div>
+<p class="font-label-lg text-xl">Raúl Guevara</p>
+<p class="text-sm opacity-90 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">fingerprint</span> 09882311 • Seguimiento Post-Op
+                                    </p>
+</div>
+</div>
+<button class="px-6 py-3 rounded-full bg-white text-primary font-bold shadow-lg hover:bg-surface-container-lowest transition-all flex items-center gap-2" onclick="simulatedLoad(this)">
+<span class="material-symbols-outlined text-sm">history</span>
+                                Ver Historial
+                            </button>
+</div>
+<!-- Patient Row 4 -->
+<div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<div class="w-20 text-center border-r border-outline-variant pr-4">
+<p class="font-display-code text-2xl text-primary leading-none">11:45</p>
+<p class="text-xs font-bold text-outline uppercase tracking-wider mt-1">AM</p>
+</div>
+<div class="flex-grow flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed font-bold">
+                                    CM
+                                </div>
+<div>
+<p class="font-label-lg text-on-surface">Carmen Mendoza</p>
+<p class="text-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">fingerprint</span> 41002233 • Primera Consulta
+                                    </p>
+</div>
+</div>
+<button class="px-6 py-2 rounded-full border border-primary text-primary font-label-md hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2" onclick="simulatedLoad(this)">
+<span class="material-symbols-outlined text-sm">history</span>
+                                Ver Historial
+                            </button>
+</div>
+</div>
+</div>
+<!-- Right Column: Stats & Notes -->
+<div class="space-y-stack-gap">
+<!-- Daily Progress Card -->
+<div class="bg-surface-container-high rounded-3xl p-6 border border-outline-variant">
+<h4 class="font-label-lg text-on-surface mb-4">Progreso del Día</h4>
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm text-on-surface-variant">Completado</span>
+<span class="font-bold text-primary">3 / 8</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-4">
+<div class="bg-primary h-4 rounded-full" style="width: 37.5%"></div>
+</div>
+<div class="mt-6 grid grid-cols-2 gap-4">
+<div class="bg-white p-4 rounded-xl shadow-sm text-center">
+<p class="text-xs text-on-surface-variant uppercase font-bold">Atendidos</p>
+<p class="text-2xl font-bold text-primary">3</p>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-sm text-center">
+<p class="text-xs text-on-surface-variant uppercase font-bold">Pendientes</p>
+<p class="text-2xl font-bold text-secondary">5</p>
+</div>
+</div>
+</div>
+<!-- Read Only Notice -->
+<div class="bg-tertiary-container text-on-tertiary-container rounded-3xl p-6 relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-3xl">lock</span>
+<h4 class="font-label-lg">Modo de Consulta</h4>
+</div>
+<p class="text-sm opacity-90 leading-relaxed">
+                                Esta vista está configurada como **solo lectura** para preservar la integridad de la agenda central. Comuníquese con recepción para cambios.
+                            </p>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-9xl opacity-10">visibility</span>
+</div>
+<!-- Medical Illustration -->
+<div class="rounded-3xl overflow-hidden shadow-lg h-48 border border-outline-variant relative">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent z-10"></div>
+<div class="w-full h-full bg-cover bg-center" data-alt="A clean, minimalist 3D illustration of a modern medical office with soft blue lighting. A desk with a digital tablet showing a medical schedule is the focus. The background is a soft blue-grey with a clinical yet warm atmosphere, featuring high-quality rendering with soft shadows and professional healthcare aesthetics." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUKTkVJCloY1XR7iIhE9BpsbV7kVahqxvjQ3a7Hk_wbw-3r60eHTFRtQhqV-6_B7vzLPHTl8PJi8Dhz14hyI3ayGZHJD1POd-_CWAKLTYinZh745TPuMZ-aeWS6bz4pwJY6Reh6s76CLVgMtrJ86GI5lt3NEEc72dmcJ9WjuB7I9CQTp1UVa3dg4iqS-36-5EaF9qbhjDxjOQMFBTD9XNocS3GZK6r213v-X7kiDROy48Ig-74eMdOeZANBNQrWjTxorVsIb1h_50')"></div>
+<div class="absolute bottom-4 left-6 z-20 text-white">
+<p class="font-label-lg">Soporte Médico</p>
+<p class="text-xs opacity-90">Anexo 405 • Central</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Simulated Full-Screen Loading Overlay (Hidden by Default) -->
+<div class="fixed inset-0 bg-surface/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center gap-4" id="loadingOverlay">
+<div class="relative">
+<div class="w-20 h-20 border-4 border-primary-container rounded-full animate-spin border-t-primary"></div>
+<span class="material-symbols-outlined absolute inset-0 flex items-center justify-center text-primary text-3xl">medical_information</span>
+</div>
+<p class="font-label-lg text-primary animate-pulse-soft">Cargando Historia Clínica...</p>
+</div>
+<!-- Access Denied Modal (Hidden by Default) -->
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110] hidden items-center justify-center p-4" id="deniedModal">
+<div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-4 border-error/20 flex flex-col items-center text-center">
+<div class="w-20 h-20 bg-error-container text-error rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-5xl">gpp_maybe</span>
+</div>
+<h3 class="font-headline-md text-error mb-2">Acceso Denegado</h3>
+<p class="font-body-md text-on-surface-variant mb-8">
+                Lo sentimos, su perfil de **Médico Especialista** no cuenta con permisos para acceder al módulo de reportes administrativos y financieros.
+            </p>
+<button class="w-full h-button-height bg-primary text-white rounded-full font-label-lg shadow-lg hover:shadow-primary/30 transition-all" onclick="hideAccessDenied()">
+                Entendido
+            </button>
+</div>
+</div>
+<script>
+        function simulatedLoad(btn) {
+            const originalContent = btn.innerHTML;
+            const loader = document.getElementById('loadingOverlay');
+            
+            // Show overlay
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+
+            // Hide after 2 seconds
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
+            }, 1800);
+        }
+
+        function showAccessDenied() {
+            const modal = document.getElementById('deniedModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideAccessDenied() {
+            const modal = document.getElementById('deniedModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Contextual behavior: Lock input fields as requested "Strictly read-only"
+        document.querySelectorAll('input').forEach(input => {
+            input.setAttribute('readonly', true);
+            input.classList.add('cursor-not-allowed');
+        });
+    </script>
+</body></html>

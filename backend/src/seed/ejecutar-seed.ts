@@ -7,6 +7,7 @@ import { DomainError } from "../domain/errors";
 import { hoyEnLima } from "../domain/fechas";
 import { HORAS_POR_TURNO } from "../domain/turnos";
 import { MotorDisponibilidad } from "../services/motor-disponibilidad";
+import { bootstrapAdmin } from "./bootstrap-admin";
 import { FIXTURE_SEED, type FixtureSeed } from "./fixture";
 
 const TURNOS_VALIDOS = new Set(Object.values(Turno));
@@ -85,8 +86,14 @@ export async function ejecutarSeed(
   database: PrismaClient,
   fechaAncla?: string,
   fixture: FixtureSeed = FIXTURE_SEED,
+  env: NodeJS.ProcessEnv = process.env,
 ) {
   validarFixtureSeed(fixture);
+
+  // Bootstrap idempotente del primer administrador. Si faltan las variables
+  // de entorno, solo advierte y no crea nada, sin interrumpir el resto del
+  // seed (catálogos, programación y horizonte).
+  await bootstrapAdmin(database, env);
 
   await database.$transaction(async (tx) => {
     for (const especialidad of fixture.especialidades) {
