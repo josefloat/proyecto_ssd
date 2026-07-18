@@ -2,6 +2,7 @@ import { EstadoSlot, Turno } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { MotorDisponibilidad } from "../src/services/motor-disponibilidad";
 import { limpiarDominio, testPrisma } from "./helpers/database";
+import { crearRevisionBase } from "./helpers/programacion-versionada";
 
 async function crearDosMedicosMismaEspecialidad() {
   const especialidad = await testPrisma.especialidad.create({
@@ -39,21 +40,29 @@ async function crearDosMedicosMismaEspecialidad() {
       data: { codigo: "QA-3", nombre: "Consultorio QA 3" },
     }),
   ]);
+  const [revisionA, revisionB, revisionC] = await Promise.all([
+    crearRevisionBase(testPrisma, medicoA.id),
+    crearRevisionBase(testPrisma, medicoB.id),
+    crearRevisionBase(testPrisma, medicoC.id),
+  ]);
   await testPrisma.programacionSemanal.createMany({
     data: [
       {
+        revisionId: revisionA.id,
         medicoId: medicoA.id,
         consultorioId: consultorioA.id,
         diaSemana: 5,
         turno: Turno.MANANA,
       },
       {
+        revisionId: revisionB.id,
         medicoId: medicoB.id,
         consultorioId: consultorioB.id,
         diaSemana: 5,
         turno: Turno.MANANA,
       },
       {
+        revisionId: revisionC.id,
         medicoId: medicoC.id,
         consultorioId: consultorioC.id,
         diaSemana: 5,

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { EstadoSlot, Turno } from "@prisma/client";
 import { testPrisma } from "./database";
+import { crearRevisionBase } from "./programacion-versionada";
 
 export async function crearFixtureProgramacion(options?: {
   duracionCitaMinutos?: number;
@@ -29,8 +30,10 @@ export async function crearFixtureProgramacion(options?: {
       nombre: `Consultorio ${prefijo}`,
     },
   });
+  const revision = await crearRevisionBase(testPrisma, medico.id);
   const programacion = await testPrisma.programacionSemanal.create({
     data: {
+      revisionId: revision.id,
       medicoId: medico.id,
       consultorioId: consultorio.id,
       diaSemana: options?.diaSemana ?? 5,

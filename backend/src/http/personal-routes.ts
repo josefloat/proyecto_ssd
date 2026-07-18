@@ -5,16 +5,30 @@ import type {
   Router,
 } from "express";
 import { RolUsuario } from "@prisma/client";
-import { validarCredencialesLogin } from "../domain/auth";
+import { validarCambioPassword, validarCredencialesLogin } from "../domain/auth";
+import {
+  validarActualizarPersonal,
+  validarCrearPersonal,
+  validarIdPersonal,
+} from "../domain/administracion-personal";
+import {
+  validarFechaConsultaProgramacion,
+  validarGuardarProgramacion,
+  validarMedicoId,
+} from "../domain/administracion-programacion";
 import { validarFechaAgenda, validarFiltrosAgendaRecepcion } from "../domain/agenda-personal";
 import {
+  cambioPasswordRequerido,
   noAutenticado,
   noAutorizado,
   PersonalApiError,
+  mutacionNoPermitida,
 } from "../domain/personal-api";
 import { hoyEnLima } from "../domain/fechas";
 import type { ServiciosAuthPersonal, UsuarioSesion } from "../services/auth-personal";
 import type { ServiciosAgendaPersonal } from "../services/agenda-personal";
+import type { ServiciosAdministracionPersonal } from "../services/administracion-personal";
+import type { ServiciosAdministracionProgramacion } from "../services/administracion-programacion";
 
 export const COOKIE_SESION = "sdv_personal_session";
 const MAX_AGE_SESION_MS = 8 * 60 * 60 * 1_000;
@@ -76,11 +90,15 @@ function limpiarCookieSesion(response: Response): void {
 function requireSesion(
   auth: ServiciosAuthPersonal,
   rolesPermitidos: readonly RolUsuario[],
+  permitirCambioPendiente = false,
 ) {
   return asyncHandler(async (request, response, next) => {
     const usuario = await auth.usuarioDeSesion(leerTokenSesion(request));
     if (!usuario) {
       throw noAutenticado();
+    }
+    if (usuario.debeCambiarPassword && !permitirCambioPendiente) {
+      throw cambioPasswordRequerido();
     }
     if (!rolesPermitidos.includes(usuario.rol)) {
       throw noAutorizado();
@@ -102,6 +120,8 @@ export function registrarRutasPersonal(
   router: Router,
   auth: ServiciosAuthPersonal,
   agenda: ServiciosAgendaPersonal,
+  administracion: ServiciosAdministracionPersonal,
+  programacion: ServiciosAdministracionProgramacion,
   reloj: () => Date = () => new Date(),
 ): void {
   router.post(
@@ -110,7 +130,11 @@ export function registrarRutasPersonal(
       const credenciales = validarCredencialesLogin(request.body);
       const { token, usuario } = await auth.login(credenciales);
       fijarCookieSesion(response, token);
-      response.status(200).json({ rol: usuario.rol });
+      response.set("Cache-Control", "no-store");
+      response.status(200).json({
+        rol: usuario.rol,
+        debeCambiarPassword: usuario.debeCambiarPassword,
+      });
     }),
   );
 
@@ -120,6 +144,121 @@ export function registrarRutasPersonal(
       await auth.logout(leerTokenSesion(request));
       limpiarCookieSesion(response);
       response.status(204).end();
+    }),
+  );
+
+  router.get(
+    "/personal/admin/programacion/:medicoId",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, response) => {
+      const hoy = hoyEnLima(reloj());
+      const resultado = await programacion.consultar(
+        validarMedicoId(request.params.medicoId),
+        validarFechaConsultaProgramacion(
+          (request.query as Record<string, unknown>).fechaLima,
+          hoy,
+        ),
+      );
+      response.set("Cache-Control", "no-store");
+      response.status(200).json(resultado);
+    }),
+  );
+
+  router.post(
+    "/personal/admin/programacion/:medicoId",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, response) => {
+      const resultado = await programacion.guardar(
+        validarMedicoId(request.params.medicoId),
+        validarGuardarProgramacion(request.body, hoyEnLima(reloj())),
+      );
+      response.set("Cache-Control", "no-store");
+      response.status(201).json(resultado);
+    }),
+  );
+
+  router.post(
+    "/personal/password",
+    requireSesion(
+      auth,
+      [RolUsuario.ADMIN, RolUsuario.RECEPCIONISTA, RolUsuario.MEDICO],
+      true,
+    ),
+    asyncHandler(async (request, response) => {
+      const usuario = usuarioActual(response);
+      const cambio = validarCambioPassword(request.body);
+      await auth.cambiarPassword(
+        usuario.id,
+        cambio.passwordActual,
+        cambio.passwordNueva,
+      );
+      limpiarCookieSesion(response);
+      response.set("Cache-Control", "no-store");
+      response.status(204).end();
+    }),
+  );
+
+  router.post(
+    "/personal/admin/usuarios/:id/password",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, response) => {
+      const passwordTemporal = await auth.reiniciarPassword(
+        validarIdPersonal(request.params.id),
+      );
+      response.set("Cache-Control", "no-store");
+      response.status(200).json({ passwordTemporal });
+    }),
+  );
+
+  router.get(
+    "/personal/admin/usuarios",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (_request, response) => {
+      response.set("Cache-Control", "no-store");
+      response.status(200).json({ items: await administracion.listar() });
+    }),
+  );
+
+  router.get(
+    "/personal/admin/catalogos",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (_request, response) => {
+      response.set("Cache-Control", "no-store");
+      response.status(200).json(await administracion.catalogos());
+    }),
+  );
+
+  router.post(
+    "/personal/admin/usuarios",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, response) => {
+      const resultado = await administracion.crear(
+        validarCrearPersonal(request.body),
+      );
+      response.set("Cache-Control", "no-store");
+      response.status(201).json(resultado);
+    }),
+  );
+
+  router.patch(
+    "/personal/admin/usuarios/:id",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, response) => {
+      const usuario = await administracion.actualizar(
+        validarIdPersonal(request.params.id),
+        validarActualizarPersonal(request.body),
+      );
+      response.set("Cache-Control", "no-store");
+      response.status(200).json({ usuario });
+    }),
+  );
+
+  router.delete(
+    "/personal/admin/usuarios/:id",
+    requireSesion(auth, [RolUsuario.ADMIN]),
+    asyncHandler(async (request, _response) => {
+      validarIdPersonal(request.params.id);
+      throw mutacionNoPermitida();
     }),
   );
 

@@ -7,7 +7,8 @@ describe("fecha ancla del horizonte", () => {
     const transaction = vi.fn(async (operacion: (tx: unknown) => unknown) =>
       operacion({
         $queryRaw: vi.fn().mockResolvedValue([{ locked: 1 }]),
-        programacionSemanal: { findMany: vi.fn().mockResolvedValue([]) },
+        revisionProgramacion: { findMany: vi.fn().mockResolvedValue([]) },
+        slot: { findMany: vi.fn().mockResolvedValue([]) },
       }),
     );
     const database = { $transaction: transaction };

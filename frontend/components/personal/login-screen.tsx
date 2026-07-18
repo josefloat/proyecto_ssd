@@ -2,12 +2,13 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BriefcaseMedical, LogOut, Lock, Mail } from "lucide-react";
+import { BriefcaseMedical, Lock, Mail } from "lucide-react";
 import { MotionPage } from "@/components/motion-page";
-import { cerrarSesion, iniciarSesion } from "@/lib/personal-client";
+import { cambiarPassword, iniciarSesion } from "@/lib/personal-client";
 import type { RolPersonal } from "@/lib/personal-types";
 
-const DESTINO_POR_ROL: Record<Exclude<RolPersonal, "ADMIN">, string> = {
+const DESTINO_POR_ROL: Record<RolPersonal, string> = {
+  ADMIN: "/personal/admin",
   RECEPCIONISTA: "/personal/recepcion/agenda",
   MEDICO: "/personal/medico/agenda",
 };
@@ -18,8 +19,10 @@ export function PersonalLoginScreen() {
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  // Estado temporal 4A: un ADMIN inicia sesión pero aún no tiene panel.
-  const [adminPendiente, setAdminPendiente] = useState(false);
+  const [rolPendiente, setRolPendiente] = useState<RolPersonal | null>(null);
+  const [passwordNueva, setPasswordNueva] = useState("");
+  const [confirmacion, setConfirmacion] = useState("");
+  const [mensaje, setMensaje] = useState("");
   const errorRef = useRef<HTMLDivElement>(null);
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
@@ -28,9 +31,9 @@ export function PersonalLoginScreen() {
     setPending(true);
     setError("");
     try {
-      const { rol } = await iniciarSesion(email.trim(), password);
-      if (rol === "ADMIN") {
-        setAdminPendiente(true);
+      const { rol, debeCambiarPassword } = await iniciarSesion(email.trim(), password);
+      if (debeCambiarPassword) {
+        setRolPendiente(rol);
         return;
       }
       router.push(DESTINO_POR_ROL[rol]);
@@ -42,14 +45,30 @@ export function PersonalLoginScreen() {
     }
   }
 
-  async function salir() {
-    await cerrarSesion();
-    setAdminPendiente(false);
-    setEmail("");
-    setPassword("");
+  async function cambiar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+    if (passwordNueva !== confirmacion) {
+      setError("Las contraseñas nuevas no coinciden.");
+      return;
+    }
+    setPending(true);
+    setError("");
+    try {
+      await cambiarPassword(password, passwordNueva);
+      setRolPendiente(null);
+      setPassword("");
+      setPasswordNueva("");
+      setConfirmacion("");
+      setMensaje("Contraseña actualizada. Inicia sesión nuevamente.");
+    } catch {
+      setError("Usa al menos 12 caracteres, con mayúscula, minúscula y número.");
+    } finally {
+      setPending(false);
+    }
   }
 
-  if (adminPendiente) {
+  if (rolPendiente) {
     return (
       <div className="personal-login-shell">
         <MotionPage className="personal-login-card">
@@ -60,12 +79,28 @@ export function PersonalLoginScreen() {
             <h1>Señal de Vida</h1>
             <p>Portal administrativo — Ayacucho</p>
           </div>
-          <p className="admin-pendiente-aviso" role="status">
-            El panel administrativo se habilitará en la siguiente etapa.
+          <h2>Cambia tu contraseña temporal</h2>
+          <p className="personal-login-intro">
+            Por seguridad, completa este paso antes de acceder a tu área.
           </p>
-          <button type="button" className="personal-primary-button" onClick={salir}>
-            <LogOut aria-hidden="true" size={22} /> Cerrar sesión
-          </button>
+          <div className={`personal-form-error ${error ? "is-visible" : ""}`} role="alert">
+            {error}
+          </div>
+          <form className="personal-login-form" onSubmit={cambiar}>
+            <label htmlFor="password-nueva">Nueva contraseña</label>
+            <div className="personal-input-group">
+              <Lock aria-hidden="true" size={22} />
+              <input id="password-nueva" type="password" autoComplete="new-password" value={passwordNueva} onChange={(event) => setPasswordNueva(event.target.value)} />
+            </div>
+            <label htmlFor="password-confirmacion">Confirmar nueva contraseña</label>
+            <div className="personal-input-group">
+              <Lock aria-hidden="true" size={22} />
+              <input id="password-confirmacion" type="password" autoComplete="new-password" value={confirmacion} onChange={(event) => setConfirmacion(event.target.value)} />
+            </div>
+            <button type="submit" className="personal-primary-button" disabled={pending}>
+              {pending ? "Guardando…" : "Cambiar contraseña"}
+            </button>
+          </form>
         </MotionPage>
       </div>
     );
@@ -84,6 +119,7 @@ export function PersonalLoginScreen() {
 
         <h2>Iniciar sesión</h2>
         <p className="personal-login-intro">Ingresa tus credenciales de personal autorizado.</p>
+        {mensaje ? <p className="personal-success-message" role="status">{mensaje}</p> : null}
 
         <div
           className={`personal-form-error ${error ? "is-visible" : ""}`}

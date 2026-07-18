@@ -2,6 +2,7 @@ import { Turno } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { crearProgramacionSemanal } from "../src/services/programacion-semanal";
 import { limpiarDominio, testPrisma } from "./helpers/database";
+import { crearRevisionBase } from "./helpers/programacion-versionada";
 
 async function crearMedico(nombre: string, horasSemanales = 8) {
   const especialidad = await testPrisma.especialidad.create({
@@ -90,12 +91,14 @@ describe("programación semanal", () => {
       crearMedico("ISO"),
       crearConsultorio("ISO"),
     ]);
+    const revision = await crearRevisionBase(testPrisma, medico.id);
 
     // Act / Assert
     for (const diaSemana of [0, 8]) {
       await expect(
         testPrisma.programacionSemanal.create({
           data: {
+            revisionId: revision.id,
             medicoId: medico.id,
             consultorioId: consultorio.id,
             diaSemana,

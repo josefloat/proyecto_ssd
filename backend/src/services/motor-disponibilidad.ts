@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { EstadoSlot, PrismaClient } from "@prisma/client";
+import { EstadoSlot, Prisma, PrismaClient } from "@prisma/client";
 import { DomainError } from "../domain/errors";
 import {
   FechaCivil,
@@ -15,8 +15,8 @@ import {
   type FabricaIntervalos,
 } from "../domain/intervalos";
 
-const DIAS_HORIZONTE = 28;
-const ADVISORY_LOCK_GENERADOR = 7_401_992;
+export const DIAS_HORIZONTE = 28;
+export const ADVISORY_LOCK_GENERADOR = 7_401_992;
 
 export type ResultadoHorizonte = Readonly<{
   desde: FechaCivil;
@@ -30,6 +30,191 @@ export type FiltrosDisponibilidadInterna = Readonly<{
   medicoId?: string;
   fechaLima: string;
 }>;
+
+type IntervaloEsperado = {
+  programacionSemanalId: string;
+  medicoId: string;
+  consultorioId: string;
+  fechaLima: FechaCivil;
+  inicioUtc: Date;
+  finUtc: Date;
+};
+
+async function intervalosAplicables(
+  tx: Prisma.TransactionClient,
+  desde: FechaCivil,
+  dias: number,
+  fabricaIntervalos: FabricaIntervalos,
+): Promise<IntervaloEsperado[]> {
+  const ultimaFecha = sumarDias(desde, dias - 1);
+  const revisiones = await tx.revisionProgramacion.findMany({
+    where: { vigenteDesde: { lte: fechaCivilParaPrisma(ultimaFecha) } },
+    orderBy: [{ medicoId: "asc" }, { vigenteDesde: "asc" }, { numero: "asc" }],
+    include: {
+      programaciones: true,
+      medico: { include: { especialidad: true } },
+    },
+  });
+  const porMedico = new Map<string, typeof revisiones>();
+  for (const revision of revisiones) {
+    const grupo = porMedico.get(revision.medicoId) ?? [];
+    grupo.push(revision);
+    porMedico.set(revision.medicoId, grupo);
+  }
+
+  const esperados: IntervaloEsperado[] = [];
+  for (let indice = 0; indice < dias; indice += 1) {
+    const fechaLima = sumarDias(desde, indice);
+    for (const grupo of porMedico.values()) {
+      const aplicable = grupo
+        .filter(
+          (revision) =>
+            fechaCivilDesdePrisma(revision.vigenteDesde) <= fechaLima,
+        )
+        .at(-1);
+      if (!aplicable) continue;
+      for (const programacion of aplicable.programaciones) {
+        if (programacion.diaSemana !== diaIso(fechaLima)) continue;
+        for (const intervalo of fabricaIntervalos(
+          fechaLima,
+          programacion.turno,
+          aplicable.medico.especialidad.duracionCitaMinutos,
+        )) {
+          if (intervalo.finUtc.getTime() <= intervalo.inicioUtc.getTime()) {
+            throw new DomainError(
+              "El intervalo materializado debe tener duración positiva",
+              "INTERVALO_INVALIDO",
+            );
+          }
+          esperados.push({
+            programacionSemanalId: programacion.id,
+            medicoId: programacion.medicoId,
+            consultorioId: programacion.consultorioId,
+            fechaLima,
+            ...intervalo,
+          });
+        }
+      }
+    }
+  }
+  return esperados;
+}
+
+function seSolapan(
+  a: { inicioUtc: Date; finUtc: Date },
+  b: { inicioUtc: Date; finUtc: Date },
+): boolean {
+  return a.inicioUtc < b.finUtc && b.inicioUtc < a.finUtc;
+}
+
+async function materializarIntervalos(
+  tx: Prisma.TransactionClient,
+  desde: FechaCivil,
+  dias: number,
+  fabricaIntervalos: FabricaIntervalos,
+  reconciliar?: { medicoId: string; desde: FechaCivil },
+) {
+  const hastaExclusiva = sumarDias(desde, dias);
+  const esperados = await intervalosAplicables(tx, desde, dias, fabricaIntervalos);
+  let existentes = await tx.slot.findMany({
+    where: {
+      fechaLima: {
+        gte: fechaCivilParaPrisma(desde),
+        lt: fechaCivilParaPrisma(hastaExclusiva),
+      },
+    },
+    include: {
+      programacionSemanal: {
+        select: { medicoId: true, consultorioId: true },
+      },
+    },
+  });
+  const clave = (programacionSemanalId: string, inicioUtc: Date) =>
+    `${programacionSemanalId}:${inicioUtc.toISOString()}`;
+
+  let eliminados = 0;
+  if (reconciliar) {
+    const clavesEsperadas = new Set(
+      esperados
+        .filter(
+          (item) =>
+            item.medicoId === reconciliar.medicoId &&
+            item.fechaLima >= reconciliar.desde,
+        )
+        .map((item) => clave(item.programacionSemanalId, item.inicioUtc)),
+    );
+    const obsoletos = existentes.filter(
+      (slot) =>
+        slot.estado === EstadoSlot.LIBRE &&
+        slot.programacionSemanal.medicoId === reconciliar.medicoId &&
+        fechaCivilDesdePrisma(slot.fechaLima) >= reconciliar.desde &&
+        !clavesEsperadas.has(clave(slot.programacionSemanalId, slot.inicioUtc)),
+    );
+    if (obsoletos.length > 0) {
+      eliminados = (
+        await tx.slot.deleteMany({
+          where: { id: { in: obsoletos.map((slot) => slot.id) } },
+        })
+      ).count;
+      const ids = new Set(obsoletos.map((slot) => slot.id));
+      existentes = existentes.filter((slot) => !ids.has(slot.id));
+    }
+  }
+
+  const clavesPresentes = new Set(
+    existentes.map((slot) => clave(slot.programacionSemanalId, slot.inicioUtc)),
+  );
+  const ocupados = existentes.filter((slot) => slot.estado !== EstadoSlot.LIBRE);
+  let insertados = 0;
+  let omitidosPorOcupacion = 0;
+  for (const esperado of esperados) {
+    if (reconciliar && esperado.fechaLima < reconciliar.desde) continue;
+    const claveEsperada = clave(
+      esperado.programacionSemanalId,
+      esperado.inicioUtc,
+    );
+    if (clavesPresentes.has(claveEsperada)) continue;
+    const solapado = ocupados.some(
+      (slot) =>
+        (slot.programacionSemanal.medicoId === esperado.medicoId ||
+          slot.programacionSemanal.consultorioId === esperado.consultorioId) &&
+        seSolapan(slot, esperado),
+    );
+    if (solapado) {
+      omitidosPorOcupacion += 1;
+      continue;
+    }
+    insertados += await tx.$executeRaw`
+      INSERT INTO "Slot"
+        ("id", "programacionSemanalId", "inicioUtc", "finUtc", "fechaLima", "estado")
+      VALUES
+        (${randomUUID()}::uuid, ${esperado.programacionSemanalId}::uuid,
+         ${esperado.inicioUtc}, ${esperado.finUtc},
+         CAST(${esperado.fechaLima} AS date), CAST(${EstadoSlot.LIBRE} AS "EstadoSlot"))
+      ON CONFLICT ("programacionSemanalId", "inicioUtc") DO NOTHING
+    `;
+    clavesPresentes.add(claveEsperada);
+  }
+  return {
+    considerados: esperados.length,
+    insertados,
+    eliminados,
+    omitidosPorOcupacion,
+  };
+}
+
+export async function reconciliarProgramacionEnTransaccion(
+  tx: Prisma.TransactionClient,
+  fechaAncla: FechaCivil,
+  medicoId: string,
+  vigenteDesde: FechaCivil,
+  fabricaIntervalos: FabricaIntervalos = crearIntervalosTurno,
+) {
+  return materializarIntervalos(tx, fechaAncla, DIAS_HORIZONTE, fabricaIntervalos, {
+    medicoId,
+    desde: vigenteDesde,
+  });
+}
 
 export class MotorDisponibilidad {
   constructor(
@@ -48,96 +233,18 @@ export class MotorDisponibilidad {
           SELECT 1::int AS "locked"
           FROM pg_advisory_xact_lock(${ADVISORY_LOCK_GENERADOR})
         `;
-        const programaciones = await tx.programacionSemanal.findMany({
-          include: {
-            medico: { include: { especialidad: true } },
-          },
-        });
-
-        const intervalosEsperados: Array<{
-          programacionSemanalId: string;
-          fechaLima: FechaCivil;
-          inicioUtc: Date;
-          finUtc: Date;
-        }> = [];
-        for (let indice = 0; indice < DIAS_HORIZONTE; indice += 1) {
-          const fechaLima = sumarDias(desde, indice);
-          const programacionesDelDia = programaciones.filter(
-            (programacion) => programacion.diaSemana === diaIso(fechaLima),
-          );
-          for (const programacion of programacionesDelDia) {
-            const intervalos = this.fabricaIntervalos(
-              fechaLima,
-              programacion.turno,
-              programacion.medico.especialidad.duracionCitaMinutos,
-            );
-            for (const intervalo of intervalos) {
-              intervalosEsperados.push({
-                programacionSemanalId: programacion.id,
-                fechaLima,
-                inicioUtc: intervalo.inicioUtc,
-                finUtc: intervalo.finUtc,
-              });
-            }
-          }
-        }
-
-        if (intervalosEsperados.length === 0) {
-          return {
-            desde,
-            hastaExclusiva,
-            considerados: 0,
-            insertados: 0,
-          };
-        }
-
-        const clavesExistentes = await tx.slot.findMany({
-          where: {
-            programacionSemanalId: {
-              in: programaciones.map((programacion) => programacion.id),
-            },
-            fechaLima: {
-              gte: fechaCivilParaPrisma(desde),
-              lt: fechaCivilParaPrisma(hastaExclusiva),
-            },
-          },
-          select: {
-            programacionSemanalId: true,
-            inicioUtc: true,
-          },
-        });
-        const claveNatural = (programacionSemanalId: string, inicioUtc: Date) =>
-          `${programacionSemanalId}:${inicioUtc.toISOString()}`;
-        const clavesPresentes = new Set(
-          clavesExistentes.map((slot) =>
-            claveNatural(slot.programacionSemanalId, slot.inicioUtc),
-          ),
+        const resultado = await materializarIntervalos(
+          tx,
+          desde,
+          DIAS_HORIZONTE,
+          this.fabricaIntervalos,
         );
-        const intervalosFaltantes = intervalosEsperados.filter(
-          (intervalo) =>
-            !clavesPresentes.has(
-              claveNatural(intervalo.programacionSemanalId, intervalo.inicioUtc),
-            ),
-        );
-
-        let insertados = 0;
-        for (const intervalo of intervalosFaltantes) {
-          insertados += await tx.$executeRaw`
-                INSERT INTO "Slot"
-                  ("id", "programacionSemanalId", "inicioUtc", "finUtc", "fechaLima", "estado")
-                VALUES
-                  (${randomUUID()}::uuid, ${intervalo.programacionSemanalId}::uuid,
-                   ${intervalo.inicioUtc}, ${intervalo.finUtc},
-                   CAST(${intervalo.fechaLima} AS date), CAST(${EstadoSlot.LIBRE} AS "EstadoSlot"))
-                ON CONFLICT ("programacionSemanalId", "inicioUtc") DO NOTHING
-              `;
-        }
 
         return {
           desde,
           hastaExclusiva,
-          considerados: intervalosEsperados.length,
-          insertados,
+          considerados: resultado.considerados,
+          insertados: resultado.insertados,
         };
       },
       { maxWait: 15_000, timeout: 30_000 },

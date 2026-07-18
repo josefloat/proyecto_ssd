@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from "node:crypto";
 import { EstadoCita, EstadoSlot, RolUsuario, Turno } from "@prisma/client";
 import { hashPassword } from "../../src/domain/auth";
 import { testPrisma } from "./database";
+import { crearRevisionBase } from "./programacion-versionada";
 
 const ALFABETO_CODIGO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
@@ -29,6 +30,7 @@ export async function crearUsuario(options: {
   email?: string;
   activo?: boolean;
   medicoId?: string | null;
+  debeCambiarPassword?: boolean;
 }) {
   return testPrisma.usuario.create({
     data: {
@@ -37,6 +39,7 @@ export async function crearUsuario(options: {
       rol: options.rol,
       activo: options.activo ?? true,
       medicoId: options.rol === RolUsuario.MEDICO ? options.medicoId! : null,
+      debeCambiarPassword: options.debeCambiarPassword ?? false,
     },
   });
 }
@@ -66,8 +69,10 @@ export async function crearCitaFixture(options: {
   const consultorio = await testPrisma.consultorio.create({
     data: { codigo: `C-${prefijo}`, nombre: `Consultorio ${prefijo}` },
   });
+  const revision = await crearRevisionBase(testPrisma, medico.id);
   const programacion = await testPrisma.programacionSemanal.create({
     data: {
+      revisionId: revision.id,
       medicoId: medico.id,
       consultorioId: consultorio.id,
       diaSemana: 5,

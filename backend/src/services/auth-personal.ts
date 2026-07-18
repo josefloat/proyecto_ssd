@@ -1,11 +1,14 @@
 import { type PrismaClient, type RolUsuario } from "@prisma/client";
 import {
+  generarPasswordTemporal,
   generarTokenSesion,
+  hashPassword,
   hashToken,
   verifyPassword,
   type CredencialesLogin,
 } from "../domain/auth";
 import { credencialesInvalidas } from "../domain/personal-api";
+import { usuarioNoEncontrado } from "../domain/personal-api";
 
 const DURACION_SESION_MS = 8 * 60 * 60 * 1_000;
 
@@ -13,6 +16,7 @@ export type UsuarioSesion = Readonly<{
   id: string;
   rol: RolUsuario;
   medicoId: string | null;
+  debeCambiarPassword: boolean;
 }>;
 
 export type ResultadoLogin = Readonly<{
@@ -30,6 +34,12 @@ export type ServiciosAuthPersonal = Readonly<{
   // Resuelve el usuario de una sesión vigente (no expirada, no revocada,
   // usuario activo). Devuelve null si el token no autentica.
   usuarioDeSesion(token: string): Promise<UsuarioSesion | null>;
+  cambiarPassword(
+    usuarioId: string,
+    passwordActual: string,
+    passwordNueva: string,
+  ): Promise<void>;
+  reiniciarPassword(usuarioId: string): Promise<string>;
 }>;
 
 export function crearServiciosAuthPersonal(
@@ -65,7 +75,12 @@ export function crearServiciosAuthPersonal(
       });
       return {
         token,
-        usuario: { id: usuario.id, rol: usuario.rol, medicoId: usuario.medicoId },
+        usuario: {
+          id: usuario.id,
+          rol: usuario.rol,
+          medicoId: usuario.medicoId,
+          debeCambiarPassword: usuario.debeCambiarPassword,
+        },
       };
     },
 
@@ -98,7 +113,55 @@ export function crearServiciosAuthPersonal(
         id: sesion.usuario.id,
         rol: sesion.usuario.rol,
         medicoId: sesion.usuario.medicoId,
+        debeCambiarPassword: sesion.usuario.debeCambiarPassword,
       };
+    },
+
+    async cambiarPassword(usuarioId, passwordActual, passwordNueva) {
+      await database.$transaction(async (tx) => {
+        const usuarios = await tx.$queryRaw<Array<{ passwordHash: string }>>`
+          SELECT "passwordHash"
+          FROM "Usuario"
+          WHERE "id" = ${usuarioId}::uuid
+          FOR UPDATE
+        `;
+        const usuario = usuarios[0];
+        if (!usuario || !verifyPassword(passwordActual, usuario.passwordHash)) {
+          throw credencialesInvalidas();
+        }
+        await tx.usuario.update({
+          where: { id: usuarioId },
+          data: {
+            passwordHash: hashPassword(passwordNueva),
+            debeCambiarPassword: false,
+          },
+        });
+        await tx.sesion.updateMany({
+          where: { usuarioId, revocadaEn: null },
+          data: { revocadaEn: reloj() },
+        });
+      });
+    },
+
+    async reiniciarPassword(usuarioId) {
+      const temporal = generarPasswordTemporal();
+      await database.$transaction(async (tx) => {
+        const actualizado = await tx.usuario.updateMany({
+          where: { id: usuarioId },
+          data: {
+            passwordHash: hashPassword(temporal),
+            debeCambiarPassword: true,
+          },
+        });
+        if (actualizado.count === 0) {
+          throw usuarioNoEncontrado();
+        }
+        await tx.sesion.updateMany({
+          where: { usuarioId, revocadaEn: null },
+          data: { revocadaEn: reloj() },
+        });
+      });
+      return temporal;
     },
   };
 }

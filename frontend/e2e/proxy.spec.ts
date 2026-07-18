@@ -7,8 +7,11 @@ import {
 
 test("reenvía exitosamente a un backend alcanzable", async ({ request }) => {
   const port = 3102;
+  const backendPort = 4036;
+  const backend = startPersonalBackendServer(backendPort);
+  await waitForServer(`http://localhost:${backendPort}/live`, 20_000);
   const server = startStandaloneServer(port, {
-    BACKEND_URL: "http://localhost:4001",
+    BACKEND_URL: `http://localhost:${backendPort}`,
   });
   try {
     await waitForServer(`http://localhost:${port}`);
@@ -17,6 +20,7 @@ test("reenvía exitosamente a un backend alcanzable", async ({ request }) => {
     expect(await res.json()).toEqual({ status: "ok", db: "ok" });
   } finally {
     server.kill();
+    backend.kill();
   }
 });
 
