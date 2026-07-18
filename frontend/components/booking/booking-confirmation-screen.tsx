@@ -2,6 +2,7 @@
 
 import {
   CalendarCheck2,
+  MapPin,
   Check,
   Clock3,
   Copy,
@@ -14,6 +15,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { ComoLlegar, DIRECCION_CLINICA } from "@/components/clinic-directions";
 import { MotionPage } from "@/components/motion-page";
 import type { DetalleCita } from "@/lib/api-types";
 import { CONFIRMATION_STORAGE } from "@/lib/appointment-client";
@@ -124,6 +126,15 @@ export function BookingConfirmationScreen() {
           <span>{detalle.slot.medico.nombre}</span>
           <p>{fecha.format(new Date(detalle.slot.inicioUtc))} · {hora.format(new Date(detalle.slot.inicioUtc))}</p>
           <small>{detalle.slot.consultorio.nombre}</small>
+        </section>
+
+        <section className="clinic-location-card">
+          <MapPin aria-hidden="true" size={28} />
+          <div>
+            <strong>Clínica Señal de Vida</strong>
+            <span>{DIRECCION_CLINICA}</span>
+          </div>
+          <ComoLlegar compacto />
         </section>
 
         <div className="confirmation-actions">

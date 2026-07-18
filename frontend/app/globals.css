@@ -4651,6 +4651,44 @@ h2 {
   }
 }
 
+/* Botón "Cómo llegar" (indicaciones de OpenStreetMap) */
+.como-llegar {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  color: white;
+  background: var(--grad-primary);
+  border-radius: 999px;
+  box-shadow: 0 10px 22px -10px rgba(28, 52, 140, 0.5);
+  font-size: 18px;
+  font-weight: 740;
+  text-decoration: none;
+  transition: transform 160ms var(--ease-out), filter 160ms ease;
+}
+
+.como-llegar:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.como-llegar.is-compact {
+  margin-top: 8px;
+}
+
+.clinic-location-card .como-llegar {
+  flex: 0 0 auto;
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .clinic-location-card {
+    flex-wrap: wrap;
+  }
+}
+
 /* --------- Reduced motion: sin animaciones ni transiciones --------- */
 
 @media (prefers-reduced-motion: reduce) {
