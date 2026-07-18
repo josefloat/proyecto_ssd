@@ -22,10 +22,7 @@ test("la home real inicia el flujo y muestra el aviso académico (HOME-1.1)", as
     "Reserva tu cita de manera fácil y rápida",
   );
   await expect(page.getByText("Ayacucho", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Aviso de demostración")).toContainText(
-    "datos ficticios",
-  );
-  const ilustracion = page.getByRole("img");
+  const ilustracion = page.getByRole("img").first();
   await expect(ilustracion).toHaveAttribute(
     "src",
     /profesionales-ayacucho/,

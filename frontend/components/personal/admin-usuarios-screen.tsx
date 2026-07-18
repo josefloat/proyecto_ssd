@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Copy, KeyRound, Plus, UserCheck, UserX, X } from "lucide-react";
+import { Copy, KeyRound, Pencil, Plus, UserCheck, UserX, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   actualizarUsuarioAdmin,
@@ -24,6 +24,8 @@ export function AdminUsuariosScreen() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [temporal, setTemporal] = useState<{ nombre: string; valor: string } | null>(null);
+  const [editando, setEditando] = useState<UsuarioAdmin | null>(null);
+  const [formEditar, setFormEditar] = useState({ nombre: "", email: "", especialidadId: "", horasSemanales: "" });
 
   async function cargar() {
     try {
@@ -78,6 +80,51 @@ export function AdminUsuariosScreen() {
     finally { setPending(false); }
   }
 
+  function abrirEdicion(usuario: UsuarioAdmin) {
+    setError("");
+    setFormEditar({
+      nombre: usuario.nombre,
+      email: usuario.email,
+      especialidadId: usuario.medico?.especialidad.id ?? "",
+      horasSemanales: usuario.medico ? String(usuario.medico.horasSemanales) : "",
+    });
+    setEditando(usuario);
+  }
+
+  async function guardarEdicion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editando) return;
+    setPending(true);
+    setError("");
+    // Solo se envía lo que cambió: el backend rechaza cambios de
+    // especialidad cuando el médico ya tiene programación.
+    const cambios: Record<string, unknown> = {};
+    if (formEditar.nombre !== editando.nombre) cambios.nombre = formEditar.nombre;
+    if (formEditar.email !== editando.email) cambios.email = formEditar.email;
+    if (editando.medico) {
+      if (formEditar.especialidadId !== editando.medico.especialidad.id) cambios.especialidadId = formEditar.especialidadId;
+      if (Number(formEditar.horasSemanales) !== editando.medico.horasSemanales) cambios.horasSemanales = Number(formEditar.horasSemanales);
+    }
+    try {
+      if (Object.keys(cambios).length > 0) {
+        const actualizado = await actualizarUsuarioAdmin(editando.id, cambios);
+        setUsuarios((actual) => actual?.map((item) => item.id === editando.id ? actualizado : item) ?? null);
+      }
+      setEditando(null);
+    } catch (fallo) {
+      const code = (fallo as { code?: string }).code;
+      setError(code === "HORAS_SEMANALES_INCOMPATIBLES"
+        ? "Las horas no pueden ser menores que las ya programadas para el médico."
+        : code === "MUTACION_NO_PERMITIDA"
+          ? "No se puede cambiar la especialidad: el médico ya tiene programación asignada."
+          : code === "EMAIL_DUPLICADO"
+            ? "Ese correo ya pertenece a otra cuenta."
+            : "No se pudo guardar la edición.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function reiniciar(usuario: UsuarioAdmin) {
     setPending(true);
     try {
@@ -107,6 +154,7 @@ export function AdminUsuariosScreen() {
                 <td>{usuario.medico?.especialidad.nombre ?? "—"}</td>
                 <td><span className={`admin-status ${usuario.activo ? "is-active" : ""}`}>{usuario.activo ? "Activa" : "Inactiva"}</span></td>
                 <td><div className="admin-row-actions">
+                  <button type="button" disabled={pending} onClick={() => abrirEdicion(usuario)} aria-label={`Editar a ${usuario.nombre}`}><Pencil /></button>
                   <button type="button" disabled={pending} onClick={() => alternar(usuario)} aria-label={`${usuario.activo ? "Inactivar" : "Activar"} a ${usuario.nombre}`}>{usuario.activo ? <UserX /> : <UserCheck />}</button>
                   <button type="button" disabled={pending} onClick={() => reiniciar(usuario)} aria-label={`Reiniciar contraseña de ${usuario.nombre}`}><KeyRound /></button>
                 </div></td>
@@ -128,6 +176,20 @@ export function AdminUsuariosScreen() {
             <label htmlFor="admin-horas">Horas semanales</label><input id="admin-horas" type="number" min="1" max="168" required value={form.horasSemanales} onChange={(event) => setForm({ ...form, horasSemanales: event.target.value })} />
           </> : null}
           <button className="admin-primary-action" disabled={pending}>{pending ? "Creando…" : "Crear cuenta"}</button>
+        </form>
+      </section></div> : null}
+
+      {editando ? <div className="admin-modal-backdrop"><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="editar-usuario-titulo">
+        <button className="admin-modal-close" type="button" onClick={() => setEditando(null)} aria-label="Cerrar edición"><X /></button>
+        <h2 id="editar-usuario-titulo">Editar a {editando.nombre}</h2>
+        <form className="admin-form" onSubmit={guardarEdicion}>
+          <label htmlFor="editar-nombre">Nombre completo</label><input id="editar-nombre" required value={formEditar.nombre} onChange={(event) => setFormEditar({ ...formEditar, nombre: event.target.value })} />
+          <label htmlFor="editar-email">Correo electrónico</label><input id="editar-email" type="email" required value={formEditar.email} onChange={(event) => setFormEditar({ ...formEditar, email: event.target.value })} />
+          {editando.medico ? <>
+            <label htmlFor="editar-especialidad">Especialidad</label><select id="editar-especialidad" value={formEditar.especialidadId} onChange={(event) => setFormEditar({ ...formEditar, especialidadId: event.target.value })}>{catalogos?.especialidades.map((item) => <option value={item.id} key={item.id}>{item.nombre}</option>)}</select>
+            <label htmlFor="editar-horas">Horas semanales</label><input id="editar-horas" type="number" min="1" max="168" required value={formEditar.horasSemanales} onChange={(event) => setFormEditar({ ...formEditar, horasSemanales: event.target.value })} />
+          </> : null}
+          <button className="admin-primary-action" disabled={pending}>{pending ? "Guardando…" : "Guardar cambios"}</button>
         </form>
       </section></div> : null}
 

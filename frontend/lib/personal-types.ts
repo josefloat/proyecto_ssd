@@ -53,6 +53,13 @@ export type ProgramacionAdmin = Readonly<{
   pendientes: ReadonlyArray<RevisionProgramacionAdmin>;
 }>;
 
+export type OcupacionConsultorioAdmin = Readonly<{
+  consultorioId: string;
+  diaSemana: number;
+  turno: "MANANA" | "TARDE" | "NOCHE";
+  medico: Readonly<{ id: string; nombre: string }>;
+}>;
+
 export type CitaAgendaPersonal = Readonly<{
   id: string;
   codigoReserva: string;

@@ -55,10 +55,21 @@ describe("bootstrap idempotente del administrador inicial", () => {
     await limpiarDominio();
     const resultadoSeed = await ejecutarSeed(testPrisma, "2026-07-17", undefined, {});
 
-    // Assert 2: catálogos sembrados, cero usuarios, sin fallar
+    // Assert 2: catálogos sembrados y NINGÚN administrador sin variables.
+    // El seed sí crea las cuentas MEDICO gestionables de los médicos
+    // sembrados (una por médico del fixture, con cambio de clave forzado).
     expect(resultadoSeed.insertados).toBeGreaterThan(0);
     expect(await testPrisma.especialidad.count()).toBeGreaterThan(0);
-    expect(await testPrisma.usuario.count()).toBe(0);
+    expect(await testPrisma.usuario.count({ where: { rol: "ADMIN" } })).toBe(0);
+    const cuentasMedico = await testPrisma.usuario.findMany({
+      where: { rol: "MEDICO" },
+    });
+    expect(cuentasMedico).toHaveLength(6);
+    expect(
+      cuentasMedico.every(
+        (cuenta) => cuenta.debeCambiarPassword && cuenta.medicoId !== null,
+      ),
+    ).toBe(true);
   });
 
   it("el CHECK exige medicoId según rol (invariante Usuario–Médico)", async () => {

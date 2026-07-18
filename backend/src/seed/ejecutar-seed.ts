@@ -1,4 +1,6 @@
-import { PrismaClient, Turno } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import { PrismaClient, RolUsuario, Turno } from "@prisma/client";
+import { hashPassword } from "../domain/auth";
 import {
   validarCatalogoCanonico,
   validarDuracionCita,
@@ -107,7 +109,30 @@ export async function ejecutarSeed(
       for (const medico of fixture.medicos) {
         await tx.medico.upsert({
           where: { id: medico.id },
-          create: medico,
+          create: {
+            id: medico.id,
+            nombre: medico.nombre,
+            horasSemanales: medico.horasSemanales,
+            especialidadId: medico.especialidadId,
+          },
+          update: {},
+        });
+      }
+      for (const medico of fixture.medicos) {
+        if (!medico.email) continue;
+        // Cuenta gestionable por el ADMIN para cada médico sembrado. Solo se
+        // crea si falta (update: {}), con una clave aleatoria irrecuperable:
+        // el ADMIN emite credenciales temporales desde el panel de usuarios.
+        await tx.usuario.upsert({
+          where: { email: medico.email },
+          create: {
+            email: medico.email,
+            nombre: medico.nombre,
+            rol: RolUsuario.MEDICO,
+            medicoId: medico.id,
+            passwordHash: hashPassword(`${randomUUID()}.${randomUUID()}`),
+            debeCambiarPassword: true,
+          },
           update: {},
         });
       }

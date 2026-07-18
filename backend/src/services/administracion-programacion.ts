@@ -146,6 +146,64 @@ export function crearServiciosAdministracionProgramacion(
       };
     },
 
+    // Ocupación de consultorios por día+turno considerando, para cada
+    // médico, el plan aplicable en la vigencia consultada y los que entren
+    // en vigor después (mismos puntos que valida el guardado).
+    async ocupacion(fecha: FechaCivil) {
+      const [medicos, revisiones] = await Promise.all([
+        database.medico.findMany({ select: { id: true, nombre: true } }),
+        database.revisionProgramacion.findMany({
+          orderBy: [{ vigenteDesde: "asc" }, { numero: "asc" }],
+          include: { programaciones: true },
+        }),
+      ]);
+      const planes: PlanTemporal[] = revisiones.map((revision) => ({
+        medicoId: revision.medicoId,
+        numero: revision.numero,
+        vigenteDesde: fechaCivilDesdePrisma(revision.vigenteDesde),
+        items: revision.programaciones.map(
+          ({ consultorioId, diaSemana, turno }) => ({
+            consultorioId,
+            diaSemana,
+            turno,
+          }),
+        ),
+      }));
+      const puntos = [
+        ...new Set([
+          fecha,
+          ...planes
+            .map((plan) => plan.vigenteDesde)
+            .filter((vigencia) => vigencia > fecha),
+        ]),
+      ].sort();
+      const vistos = new Set<string>();
+      const items: Array<{
+        consultorioId: string;
+        diaSemana: number;
+        turno: string;
+        medico: { id: string; nombre: string };
+      }> = [];
+      for (const medico of medicos) {
+        for (const punto of puntos) {
+          const plan = seleccionarPlan(planes, medico.id, punto);
+          if (!plan) continue;
+          for (const item of plan.items) {
+            const clave = `${medico.id}:${item.consultorioId}:${item.diaSemana}:${item.turno}`;
+            if (vistos.has(clave)) continue;
+            vistos.add(clave);
+            items.push({
+              consultorioId: item.consultorioId,
+              diaSemana: item.diaSemana,
+              turno: item.turno,
+              medico: { id: medico.id, nombre: medico.nombre },
+            });
+          }
+        }
+      }
+      return { fecha, items };
+    },
+
     async guardar(medicoId: string, input: GuardarProgramacionAdmin) {
       return database.$transaction(
         async (tx) => {

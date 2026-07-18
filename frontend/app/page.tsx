@@ -4,12 +4,15 @@ import {
   CalendarDays,
   ChevronRight,
   ClipboardList,
+  Clock3,
   CreditCard,
   FileText,
   HandHeart,
+  HeartHandshake,
   Home,
-  Info,
-  Sparkles,
+  MapPin,
+  Microscope,
+  Stethoscope,
   UserRound,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
@@ -20,6 +23,32 @@ import { obtenerImagenesSitio } from "@/lib/site-images";
 // Fallback local versionado: si la base de datos no define "hero-home"
 // (o el backend no responde), la home sigue mostrando la ilustración local.
 const HERO_LOCAL = "/images/profesionales-ayacucho.png";
+
+// Fotos gestionables de la sección "Conoce la clínica": si el ADMIN aún no
+// sube una foto para la clave, se muestra un marcador ilustrado (sin <img>).
+const TARJETAS_CLINICA = [
+  {
+    clave: "clinica-recepcion",
+    titulo: "Recepción y admisión",
+    detalle: "Te orientamos desde que llegas.",
+    icono: HeartHandshake,
+    tono: "ph-periwinkle",
+  },
+  {
+    clave: "clinica-consultorios",
+    titulo: "Consultorios",
+    detalle: "Atención cómoda por especialidad.",
+    icono: Stethoscope,
+    tono: "ph-cyan",
+  },
+  {
+    clave: "clinica-laboratorio",
+    titulo: "Laboratorio y apoyo",
+    detalle: "Resultados que acompañan tu cita.",
+    icono: Microscope,
+    tono: "ph-pink",
+  },
+] as const;
 const HERO_ALT =
   "Una médica y un enfermero peruanos acompañan con calidez a un adulto mayor en un centro de salud de Ayacucho.";
 
@@ -60,10 +89,6 @@ export default async function HomePaciente() {
             </div>
 
             <div className="hero-copy">
-              <p className="eyebrow">
-                <Sparkles aria-hidden="true" size={20} />
-                Atención cercana en Ayacucho
-              </p>
               <h1 id="home-title">Reserva tu cita de manera fácil y rápida</h1>
               <span className="pulse-underline" aria-hidden="true">
                 <svg viewBox="0 0 220 26" focusable="false">
@@ -116,13 +141,58 @@ export default async function HomePaciente() {
             </article>
           </div>
 
-          <aside className="academic-note" aria-label="Aviso de demostración">
-            <Info aria-hidden="true" size={22} />
-            <p>
-              <strong>Demostración académica.</strong> Los profesionales y horarios
-              mostrados son datos ficticios.
-            </p>
-          </aside>
+          <section className="home-clinic" aria-labelledby="clinic-title">
+            <div className="home-section-head">
+              <h2 id="clinic-title">Conoce la clínica</h2>
+              <p>Espacios pensados para atenderte con calma.</p>
+            </div>
+            <div className="clinic-grid">
+              {TARJETAS_CLINICA.map((tarjeta) => {
+                const imagen = imagenes[tarjeta.clave];
+                const Icono = tarjeta.icono;
+                return (
+                  <figure className="clinic-card" key={tarjeta.clave}>
+                    {imagen ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imagen.url} alt={imagen.alt || tarjeta.titulo} loading="lazy" />
+                    ) : (
+                      <span className={`clinic-placeholder ${tarjeta.tono}`} aria-hidden="true">
+                        <i><Icono size={34} /></i>
+                      </span>
+                    )}
+                    <figcaption>
+                      <strong>{tarjeta.titulo}</strong>
+                      <span>{tarjeta.detalle}</span>
+                    </figcaption>
+                  </figure>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="home-info" aria-label="Información de la clínica">
+            <article>
+              <MapPin aria-hidden="true" />
+              <div>
+                <strong>Estamos en Ayacucho</strong>
+                <span>Atención presencial en nuestra sede central.</span>
+              </div>
+            </article>
+            <article>
+              <Clock3 aria-hidden="true" />
+              <div>
+                <strong>Turnos de 9:00 a 23:00</strong>
+                <span>Mañana, tarde y noche según especialidad.</span>
+              </div>
+            </article>
+            <article>
+              <Stethoscope aria-hidden="true" />
+              <div>
+                <strong>6 especialidades</strong>
+                <span>Del cuidado general a la atención especializada.</span>
+              </div>
+            </article>
+          </section>
         </section>
       </MotionPage>
 

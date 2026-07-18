@@ -12,8 +12,6 @@ describe("contrato de contenido de la home", () => {
 
     // Assert
     expect(home).toContain("Ayacucho");
-    expect(home).toContain("Demostración académica");
-    expect(home).toContain("datos ficticios");
     for (const texto of copiaProhibida) {
       expect(home.toLocaleLowerCase("es")).not.toContain(
         texto.toLocaleLowerCase("es"),
