@@ -2,6 +2,7 @@ import { Turno } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { MotorDisponibilidad } from "../src/services/motor-disponibilidad";
 import { limpiarDominio, testPrisma } from "./helpers/database";
+import { crearRevisionBase } from "./helpers/programacion-versionada";
 
 async function crearProgramacionNoche() {
   const especialidad = await testPrisma.especialidad.create({
@@ -17,8 +18,10 @@ async function crearProgramacionNoche() {
   const consultorio = await testPrisma.consultorio.create({
     data: { codigo: "NOCHE", nombre: "Consultorio nocturno" },
   });
+  const revision = await crearRevisionBase(testPrisma, medico.id);
   return testPrisma.programacionSemanal.create({
     data: {
+      revisionId: revision.id,
       medicoId: medico.id,
       consultorioId: consultorio.id,
       diaSemana: 5,

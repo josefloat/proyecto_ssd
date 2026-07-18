@@ -49,77 +49,98 @@ model HealthCheck {
 }
 
 model Especialidad {
-  id                    String   @id @default(uuid()) @db.Uuid
-  nombre                String   @unique
-  duracionCitaMinutos   Int
-  medicos               Medico[]
+  id                  String   @id @default(uuid()) @db.Uuid
+  nombre              String   @unique
+  duracionCitaMinutos Int
+  medicos             Medico[]
 }
 
 model Medico {
-  id                    String                 @id @default(uuid()) @db.Uuid
-  nombre                String
-  horasSemanales        Int
-  especialidadId        String                 @db.Uuid
-  especialidad          Especialidad           @relation(fields: [especialidadId], references: [id])
-  programaciones        ProgramacionSemanal[]
-  usuario               Usuario?
+  id             String                 @id @default(uuid()) @db.Uuid
+  nombre         String
+  horasSemanales Int
+  especialidadId String                 @db.Uuid
+  especialidad   Especialidad           @relation(fields: [especialidadId], references: [id])
+  programaciones ProgramacionSemanal[]
+  revisiones     RevisionProgramacion[]
+  usuario        Usuario?
 }
 
 model Usuario {
-  id            String     @id @default(uuid()) @db.Uuid
-  email         String     @unique
-  passwordHash  String
-  rol           RolUsuario
-  activo        Boolean    @default(true)
-  medicoId      String?    @unique @db.Uuid
+  id                  String     @id @default(uuid()) @db.Uuid
+  nombre              String?
+  email               String     @unique
+  passwordHash        String
+  rol                 RolUsuario
+  activo              Boolean    @default(true)
+  debeCambiarPassword Boolean    @default(false)
+  medicoId            String?    @unique @db.Uuid
   // Restrict (no SetNull, el default para relaciones opcionales): borrar un
   // Medico con usuario asociado dejaría un usuario MEDICO con medicoId nulo,
   // violando el CHECK Usuario_medicoId_segun_rol_check.
-  medico        Medico?    @relation(fields: [medicoId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  sesiones      Sesion[]
+  medico              Medico?    @relation(fields: [medicoId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sesiones            Sesion[]
 }
 
 model Sesion {
-  id          String    @id @default(uuid()) @db.Uuid
-  usuarioId   String    @db.Uuid
-  tokenHash   String    @unique
-  creadaEn    DateTime  @default(now()) @db.Timestamptz(3)
-  expiraEn    DateTime  @db.Timestamptz(3)
-  revocadaEn  DateTime? @db.Timestamptz(3)
-  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  id         String    @id @default(uuid()) @db.Uuid
+  usuarioId  String    @db.Uuid
+  tokenHash  String    @unique
+  creadaEn   DateTime  @default(now()) @db.Timestamptz(3)
+  expiraEn   DateTime  @db.Timestamptz(3)
+  revocadaEn DateTime? @db.Timestamptz(3)
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId])
 }
 
 model Consultorio {
-  id                    String                 @id @default(uuid()) @db.Uuid
-  codigo                String                 @unique
-  nombre                String
-  programaciones        ProgramacionSemanal[]
+  id             String                @id @default(uuid()) @db.Uuid
+  codigo         String                @unique
+  nombre         String
+  programaciones ProgramacionSemanal[]
+}
+
+model RevisionProgramacion {
+  id             String                @id @default(uuid()) @db.Uuid
+  medicoId       String                @db.Uuid
+  numero         Int
+  vigenteDesde   DateTime              @db.Date
+  creadaEn       DateTime              @default(now()) @db.Timestamptz(3)
+  medico         Medico                @relation(fields: [medicoId], references: [id])
+  programaciones ProgramacionSemanal[]
+
+  @@unique([medicoId, numero])
+  @@unique([id, medicoId])
+  @@index([medicoId, vigenteDesde, numero])
 }
 
 model ProgramacionSemanal {
-  id                    String       @id @default(uuid()) @db.Uuid
-  medicoId              String       @db.Uuid
-  consultorioId         String       @db.Uuid
-  diaSemana             Int
-  turno                 Turno
-  medico                Medico       @relation(fields: [medicoId], references: [id])
-  consultorio           Consultorio  @relation(fields: [consultorioId], references: [id])
-  slots                 Slot[]
+  id            String               @id @default(uuid()) @db.Uuid
+  revisionId    String               @db.Uuid
+  medicoId      String               @db.Uuid
+  consultorioId String               @db.Uuid
+  diaSemana     Int
+  turno         Turno
+  medico        Medico               @relation(fields: [medicoId], references: [id])
+  revision      RevisionProgramacion @relation(fields: [revisionId, medicoId], references: [id, medicoId], onDelete: Restrict, onUpdate: Cascade)
+  consultorio   Consultorio          @relation(fields: [consultorioId], references: [id])
+  slots         Slot[]
 
-  @@unique([medicoId, diaSemana, turno])
-  @@unique([consultorioId, diaSemana, turno])
+  @@unique([revisionId, diaSemana, turno])
+  @@unique([revisionId, consultorioId, diaSemana, turno], map: "Programacion_revision_consultorio_key")
+  @@index([medicoId, diaSemana, turno])
+  @@index([consultorioId, diaSemana, turno])
 }
 
 model Slot {
-  id                    String               @id @default(uuid()) @db.Uuid
-  programacionSemanalId String               @db.Uuid
-  inicioUtc             DateTime             @db.Timestamptz(3)
-  finUtc                DateTime             @db.Timestamptz(3)
-  fechaLima             DateTime             @db.Date
-  estado                EstadoSlot           @default(LIBRE)
-  programacionSemanal   ProgramacionSemanal  @relation(fields: [programacionSemanalId], references: [id])
+  id                    String              @id @default(uuid()) @db.Uuid
+  programacionSemanalId String              @db.Uuid
+  inicioUtc             DateTime            @db.Timestamptz(3)
+  finUtc                DateTime            @db.Timestamptz(3)
+  fechaLima             DateTime            @db.Date
+  estado                EstadoSlot          @default(LIBRE)
+  programacionSemanal   ProgramacionSemanal @relation(fields: [programacionSemanalId], references: [id])
   citas                 Cita[]
 
   @@unique([programacionSemanalId, inicioUtc])
@@ -127,27 +148,27 @@ model Slot {
 }
 
 model Paciente {
-  id                    String  @id @default(uuid()) @db.Uuid
-  dni                   String  @unique
-  telefono              String
-  nombre                String
-  citas                 Cita[]
+  id       String @id @default(uuid()) @db.Uuid
+  dni      String @unique
+  telefono String
+  nombre   String
+  citas    Cita[]
 }
 
 model Cita {
-  id                     String              @id @default(uuid()) @db.Uuid
-  pacienteId             String              @db.Uuid
-  slotId                 String              @db.Uuid
-  codigoReserva          String              @unique
-  estado                 EstadoCita          @default(RESERVADA)
+  id                     String             @id @default(uuid()) @db.Uuid
+  pacienteId             String             @db.Uuid
+  slotId                 String             @db.Uuid
+  codigoReserva          String             @unique
+  estado                 EstadoCita         @default(RESERVADA)
   motivoCancelacion      MotivoCancelacion?
-  reservadaEn            DateTime            @db.Timestamptz(3)
-  venceEn                DateTime            @db.Timestamptz(3)
-  canceladaEn            DateTime?           @db.Timestamptz(3)
-  idempotencyKey         String              @unique @db.Uuid
+  reservadaEn            DateTime           @db.Timestamptz(3)
+  venceEn                DateTime           @db.Timestamptz(3)
+  canceladaEn            DateTime?          @db.Timestamptz(3)
+  idempotencyKey         String             @unique @db.Uuid
   idempotencyFingerprint String
-  paciente               Paciente            @relation(fields: [pacienteId], references: [id])
-  slot                   Slot                @relation(fields: [slotId], references: [id])
+  paciente               Paciente           @relation(fields: [pacienteId], references: [id])
+  slot                   Slot               @relation(fields: [slotId], references: [id])
 
   @@index([slotId])
   @@index([estado, venceEn])

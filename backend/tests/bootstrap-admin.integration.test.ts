@@ -26,6 +26,7 @@ describe("bootstrap idempotente del administrador inicial", () => {
     expect(admins[0].rol).toBe(RolUsuario.ADMIN);
     expect(admins[0].email).toBe("admin@senaldevida.pe");
     expect(admins[0].medicoId).toBeNull();
+    expect(admins[0].debeCambiarPassword).toBe(true);
     expect(admins[0].passwordHash).not.toContain("Clave-Admin-Inicial-123");
     expect(
       verifyPassword("Clave-Admin-Inicial-123", admins[0].passwordHash),

@@ -40,8 +40,19 @@ export async function crearProgramacionSemanal(
           throw new DomainError("El médico no existe", "MEDICO_NO_EXISTE");
         }
 
+        const revision = await tx.revisionProgramacion.upsert({
+          where: { medicoId_numero: { medicoId: input.medicoId, numero: 1 } },
+          create: {
+            id: input.medicoId,
+            medicoId: input.medicoId,
+            numero: 1,
+            vigenteDesde: new Date("1970-01-01T00:00:00.000Z"),
+          },
+          update: {},
+        });
+
         const turnosAsignados = await tx.programacionSemanal.count({
-          where: { medicoId: input.medicoId },
+          where: { revisionId: revision.id },
         });
         const horasResultantes = (turnosAsignados + 1) * HORAS_POR_TURNO;
         if (horasResultantes > medico.horasSemanales) {
@@ -51,7 +62,27 @@ export async function crearProgramacionSemanal(
           );
         }
 
-        return tx.programacionSemanal.create({ data: input });
+        const conflicto = await tx.programacionSemanal.findFirst({
+          where: {
+            diaSemana: input.diaSemana,
+            turno: input.turno,
+            OR: [
+              { revisionId: revision.id },
+              { consultorioId: input.consultorioId },
+            ],
+          },
+          select: { id: true },
+        });
+        if (conflicto) {
+          throw new DomainError(
+            "El médico o consultorio ya está ocupado en ese día y turno",
+            "PROGRAMACION_EN_CONFLICTO",
+          );
+        }
+
+        return tx.programacionSemanal.create({
+          data: { ...input, revisionId: revision.id },
+        });
       },
       { maxWait: 10_000, timeout: 15_000 },
     );

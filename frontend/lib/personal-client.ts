@@ -4,6 +4,11 @@ import type {
   CitaAgendaPersonal,
   FiltrosAgenda,
   LoginResponse,
+  CatalogosAdmin,
+  ItemProgramacionAdmin,
+  ProgramacionAdmin,
+  RevisionProgramacionAdmin,
+  UsuarioAdmin,
 } from "./personal-types";
 
 async function leerRespuesta(response: Response): Promise<unknown> {
@@ -39,6 +44,111 @@ export async function iniciarSesion(
 
 export async function cerrarSesion(): Promise<void> {
   await fetch("/api/personal/sesion", { method: "DELETE" });
+}
+
+function errorApi(response: Response, body: unknown, tipo: string) {
+  return Object.assign(new Error(tipo), {
+    status: response.status,
+    code: codigoError(body),
+  });
+}
+
+export async function cambiarPassword(
+  passwordActual: string,
+  passwordNueva: string,
+): Promise<void> {
+  const response = await fetch("/api/personal/password", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ passwordActual, passwordNueva }),
+  });
+  if (!response.ok) {
+    const body = await leerRespuesta(response);
+    throw errorApi(response, body, "PASSWORD_FAILED");
+  }
+}
+
+export async function listarUsuariosAdmin(): Promise<UsuarioAdmin[]> {
+  const response = await fetch("/api/personal/admin/usuarios", {
+    cache: "no-store",
+  });
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "ADMIN_USERS_FAILED");
+  return (body as { items: UsuarioAdmin[] }).items;
+}
+
+export async function obtenerCatalogosAdmin(): Promise<CatalogosAdmin> {
+  const response = await fetch("/api/personal/admin/catalogos", {
+    cache: "no-store",
+  });
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "ADMIN_CATALOGS_FAILED");
+  return body as CatalogosAdmin;
+}
+
+export async function crearUsuarioAdmin(body: Record<string, unknown>): Promise<{
+  usuario: UsuarioAdmin;
+  passwordTemporal: string;
+}> {
+  const response = await fetch("/api/personal/admin/usuarios", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const respuesta = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, respuesta, "ADMIN_CREATE_FAILED");
+  return respuesta as { usuario: UsuarioAdmin; passwordTemporal: string };
+}
+
+export async function actualizarUsuarioAdmin(
+  usuarioId: string,
+  cambios: Record<string, unknown>,
+): Promise<UsuarioAdmin> {
+  const response = await fetch(`/api/personal/admin/usuarios/${usuarioId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(cambios),
+  });
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "ADMIN_UPDATE_FAILED");
+  return (body as { usuario: UsuarioAdmin }).usuario;
+}
+
+export async function reiniciarPasswordAdmin(usuarioId: string): Promise<string> {
+  const response = await fetch(`/api/personal/admin/usuarios/${usuarioId}/password`, {
+    method: "POST",
+  });
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "ADMIN_RESET_FAILED");
+  return (body as { passwordTemporal: string }).passwordTemporal;
+}
+
+export async function obtenerProgramacionAdmin(
+  medicoId: string,
+): Promise<ProgramacionAdmin> {
+  const response = await fetch(`/api/personal/admin/programacion/${medicoId}`, {
+    cache: "no-store",
+  });
+  const body = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, body, "ADMIN_PROGRAM_FAILED");
+  return body as ProgramacionAdmin;
+}
+
+export async function guardarProgramacionAdmin(
+  medicoId: string,
+  body: { versionBase: number; vigenteDesde: string; items: ItemProgramacionAdmin[] },
+) {
+  const response = await fetch(`/api/personal/admin/programacion/${medicoId}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const respuesta = await leerRespuesta(response);
+  if (!response.ok) throw errorApi(response, respuesta, "ADMIN_PROGRAM_SAVE_FAILED");
+  return respuesta as {
+    revision: RevisionProgramacionAdmin;
+    reconciliacion: { eliminados: number; insertados: number; omitidosPorOcupacion: number };
+  };
 }
 
 function construirQuery(filtros: FiltrosAgenda): string {

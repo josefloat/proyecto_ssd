@@ -4,6 +4,7 @@ import { EstadoCita, RolUsuario } from "@prisma/client";
 import { createApp } from "../src/app";
 import { limpiarDominio, testPrisma } from "./helpers/database";
 import { crearCitaFixture, crearUsuario } from "./helpers/personal-fixtures";
+import { verifyPassword } from "../src/domain/auth";
 
 const AHORA = new Date("2026-07-17T14:00:00.000Z");
 const reloj = () => AHORA;
@@ -182,5 +183,149 @@ describe("sesión y autorización del personal", () => {
 
     // Assert expiración
     expect(expirada.status).toBe(401);
+  });
+
+  it("la sesión temporal solo permite cambiar clave y exige login nuevo por rol (AUTH-3.1)", async () => {
+    const app = createApp(testPrisma, { reloj });
+    const { medico } = await crearCitaFixture({
+      fechaLima: "2026-07-17",
+      inicioUtc: new Date("2026-07-17T15:00:00.000Z"),
+      prefijo: "auth31",
+    });
+    const usuarios = await Promise.all([
+      crearUsuario({
+        rol: RolUsuario.ADMIN,
+        password: PASSWORD,
+        email: "admin31@senaldevida.pe",
+        debeCambiarPassword: true,
+      }),
+      crearUsuario({
+        rol: RolUsuario.RECEPCIONISTA,
+        password: PASSWORD,
+        email: "recep31@senaldevida.pe",
+        debeCambiarPassword: true,
+      }),
+      crearUsuario({
+        rol: RolUsuario.MEDICO,
+        password: PASSWORD,
+        email: "medico31@senaldevida.pe",
+        medicoId: medico.id,
+        debeCambiarPassword: true,
+      }),
+    ]);
+    const casos = [
+      {
+        usuario: usuarios[0],
+        email: "admin31@senaldevida.pe",
+        privada: (cookie: string) =>
+          request(app)
+            .post(`/personal/admin/usuarios/${usuarios[0].id}/password`)
+            .set("Cookie", cookie),
+      },
+      {
+        usuario: usuarios[1],
+        email: "recep31@senaldevida.pe",
+        privada: (cookie: string) =>
+          request(app).get("/personal/recepcion/agenda").set("Cookie", cookie),
+      },
+      {
+        usuario: usuarios[2],
+        email: "medico31@senaldevida.pe",
+        privada: (cookie: string) =>
+          request(app).get("/personal/medico/agenda").set("Cookie", cookie),
+      },
+    ];
+
+    for (const [indice, caso] of casos.entries()) {
+      const login = await request(app)
+        .post("/personal/sesion")
+        .send({ email: caso.email, password: PASSWORD });
+      const cookie = valorCookie(extraerCookieSesion(login));
+      expect(login.body.debeCambiarPassword).toBe(true);
+      const bloqueada = await caso.privada(cookie);
+      expect(bloqueada.status).toBe(403);
+      expect(bloqueada.body.error.code).toBe("CAMBIO_PASSWORD_REQUERIDO");
+
+      const nueva = `Nueva-Segura-${indice + 1}-2026`;
+      const cambio = await request(app)
+        .post("/personal/password")
+        .set("Cookie", cookie)
+        .send({ passwordActual: PASSWORD, passwordNueva: nueva });
+      expect(cambio.status).toBe(204);
+      expect(cambio.headers["cache-control"]).toBe("no-store");
+      expect(
+        await testPrisma.sesion.count({
+          where: { usuarioId: caso.usuario.id, revocadaEn: null },
+        }),
+      ).toBe(0);
+      const conTemporal = await request(app)
+        .post("/personal/sesion")
+        .send({ email: caso.email, password: PASSWORD });
+      expect(conTemporal.status).toBe(401);
+      const conNueva = await request(app)
+        .post("/personal/sesion")
+        .send({ email: caso.email, password: nueva });
+      expect(conNueva.status).toBe(200);
+      expect(conNueva.body.debeCambiarPassword).toBe(false);
+    }
+  });
+
+  it("reinicio revoca sesiones y los cambios inválidos no exponen ni escriben claves (AUTH-3.2)", async () => {
+    const app = createApp(testPrisma, { reloj });
+    await crearUsuario({
+      rol: RolUsuario.ADMIN,
+      password: PASSWORD,
+      email: "admin32@senaldevida.pe",
+    });
+    const objetivo = await crearUsuario({
+      rol: RolUsuario.RECEPCIONISTA,
+      password: PASSWORD,
+      email: "recep32@senaldevida.pe",
+    });
+    const loginAdmin = await request(app)
+      .post("/personal/sesion")
+      .send({ email: "admin32@senaldevida.pe", password: PASSWORD });
+    const loginObjetivo = await request(app)
+      .post("/personal/sesion")
+      .send({ email: "recep32@senaldevida.pe", password: PASSWORD });
+    const cookieAdmin = valorCookie(extraerCookieSesion(loginAdmin));
+    const cookieAnterior = valorCookie(extraerCookieSesion(loginObjetivo));
+
+    const reinicio = await request(app)
+      .post(`/personal/admin/usuarios/${objetivo.id}/password`)
+      .set("Cookie", cookieAdmin);
+    expect(reinicio.status).toBe(200);
+    expect(reinicio.headers["cache-control"]).toBe("no-store");
+    const temporal = reinicio.body.passwordTemporal as string;
+    expect(temporal).toMatch(/^[A-Za-z0-9_-]{32}$/);
+    const persistido = await testPrisma.usuario.findUniqueOrThrow({
+      where: { id: objetivo.id },
+    });
+    expect(persistido.passwordHash).not.toContain(temporal);
+    expect(verifyPassword(temporal, persistido.passwordHash)).toBe(true);
+    expect(persistido.debeCambiarPassword).toBe(true);
+    expect(
+      await request(app)
+        .get("/personal/recepcion/agenda")
+        .set("Cookie", cookieAnterior),
+    ).toMatchObject({ status: 401 });
+
+    const loginTemporal = await request(app)
+      .post("/personal/sesion")
+      .send({ email: "recep32@senaldevida.pe", password: temporal });
+    const cookieTemporal = valorCookie(extraerCookieSesion(loginTemporal));
+    for (const passwordNueva of ["corta", "solominusculas123", "SINMINUSCULAS123"]) {
+      const invalida = await request(app)
+        .post("/personal/password")
+        .set("Cookie", cookieTemporal)
+        .send({ passwordActual: temporal, passwordNueva });
+      expect(invalida.status).toBe(400);
+      expect(JSON.stringify(invalida.body)).not.toContain(passwordNueva);
+    }
+    expect(
+      await testPrisma.sesion.count({
+        where: { usuarioId: objetivo.id, revocadaEn: null },
+      }),
+    ).toBe(1);
   });
 });

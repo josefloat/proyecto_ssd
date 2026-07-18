@@ -6,6 +6,7 @@ import { createApp } from "../src/app";
 import { sumarDias } from "../src/domain/fechas";
 import { MotorDisponibilidad } from "../src/services/motor-disponibilidad";
 import { limpiarDominio, testPrisma } from "./helpers/database";
+import { crearRevisionBase } from "./helpers/programacion-versionada";
 
 const AHORA_FIJO = new Date("2026-07-17T15:00:00.000Z");
 const relojFijo = () => AHORA_FIJO;
@@ -53,21 +54,29 @@ async function crearEscenarioDisponibilidad() {
       data: { codigo: "C-103", nombre: "Consultorio C 103" },
     }),
   ]);
+  const [revisionA, revisionB, revisionAjena] = await Promise.all([
+    crearRevisionBase(testPrisma, medicoA.id),
+    crearRevisionBase(testPrisma, medicoB.id),
+    crearRevisionBase(testPrisma, medicoAjeno.id),
+  ]);
   await testPrisma.programacionSemanal.createMany({
     data: [
       {
+        revisionId: revisionA.id,
         medicoId: medicoA.id,
         consultorioId: consultorioA.id,
         diaSemana: 5,
         turno: Turno.MANANA,
       },
       {
+        revisionId: revisionB.id,
         medicoId: medicoB.id,
         consultorioId: consultorioB.id,
         diaSemana: 5,
         turno: Turno.MANANA,
       },
       {
+        revisionId: revisionAjena.id,
         medicoId: medicoAjeno.id,
         consultorioId: consultorioC.id,
         diaSemana: 5,

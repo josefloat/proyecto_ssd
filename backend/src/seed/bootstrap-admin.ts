@@ -37,6 +37,7 @@ export async function bootstrapAdmin(
       email,
       passwordHash: hashPassword(password),
       rol: RolUsuario.ADMIN,
+      debeCambiarPassword: true,
     },
   });
   return { estado: "creado", email };

@@ -26,6 +26,14 @@ import {
   registrarRutasPersonal,
   responderErrorPersonal,
 } from "./http/personal-routes";
+import {
+  crearServiciosAdministracionPersonal,
+  type ServiciosAdministracionPersonal,
+} from "./services/administracion-personal";
+import {
+  crearServiciosAdministracionProgramacion,
+  type ServiciosAdministracionProgramacion,
+} from "./services/administracion-programacion";
 
 export type AppOptions = Readonly<{
   reloj?: () => Date;
@@ -33,6 +41,8 @@ export type AppOptions = Readonly<{
   citasApi?: Partial<ServiciosCitasPaciente>;
   authPersonal?: Partial<ServiciosAuthPersonal>;
   agendaPersonal?: Partial<ServiciosAgendaPersonal>;
+  administracionPersonal?: Partial<ServiciosAdministracionPersonal>;
+  administracionProgramacion?: Partial<ServiciosAdministracionProgramacion>;
   generarCodigoReserva?: GeneradorCodigoReserva;
 }>;
 
@@ -69,6 +79,22 @@ export function createApp(
     ...agendaBase,
     ...options.agendaPersonal,
   };
+  const administracionBase = crearServiciosAdministracionPersonal(
+    database,
+    options.reloj,
+  );
+  const serviciosAdministracion: ServiciosAdministracionPersonal = {
+    ...administracionBase,
+    ...options.administracionPersonal,
+  };
+  const programacionBase = crearServiciosAdministracionProgramacion(
+    database,
+    options.reloj,
+  );
+  const serviciosProgramacion: ServiciosAdministracionProgramacion = {
+    ...programacionBase,
+    ...options.administracionProgramacion,
+  };
 
   app.use(express.json({ limit: "16kb" }));
 
@@ -91,7 +117,14 @@ export function createApp(
   });
 
   registrarRutasPublicas(app, serviciosPublicos, serviciosCitas);
-  registrarRutasPersonal(app, serviciosAuth, serviciosAgenda, options.reloj);
+  registrarRutasPersonal(
+    app,
+    serviciosAuth,
+    serviciosAgenda,
+    serviciosAdministracion,
+    serviciosProgramacion,
+    options.reloj,
+  );
   // El handler de errores del personal corre primero y delega al público
   // cualquier error que no sea PersonalApiError.
   app.use(responderErrorPersonal);

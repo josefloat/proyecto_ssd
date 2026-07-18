@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from "node:crypto";
 import { EstadoCita, EstadoSlot, PrismaClient, RolUsuario, Turno } from "@prisma/client";
 import { createApp } from "../../src/app";
 import { hashPassword } from "../../src/domain/auth";
+import { crearRevisionBase } from "./programacion-versionada";
 
 const database = new PrismaClient();
 const port = Number(process.env.PORT ?? 4030);
@@ -21,6 +22,7 @@ async function limpiar() {
   await database.paciente.deleteMany();
   await database.slot.deleteMany();
   await database.programacionSemanal.deleteMany();
+  await database.revisionProgramacion.deleteMany();
   await database.medico.deleteMany();
   await database.consultorio.deleteMany();
   await database.especialidad.deleteMany();
@@ -45,8 +47,9 @@ async function crearMedicoConCitas(options: {
   const consultorio = await database.consultorio.create({
     data: { codigo: options.consultorioCodigo, nombre: `Consultorio ${options.consultorioCodigo}` },
   });
+  const revision = await crearRevisionBase(database, medico.id);
   const programacion = await database.programacionSemanal.create({
-    data: { medicoId: medico.id, consultorioId: consultorio.id, diaSemana: 5, turno: Turno.MANANA },
+    data: { revisionId: revision.id, medicoId: medico.id, consultorioId: consultorio.id, diaSemana: 5, turno: Turno.MANANA },
   });
   const alfabeto = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
   for (const item of options.citas) {
@@ -114,7 +117,7 @@ async function main() {
     data: { email: MEDICO.email, passwordHash: hashPassword(MEDICO.password), rol: RolUsuario.MEDICO, medicoId: medicoPrincipal.id },
   });
   await database.usuario.create({
-    data: { email: ADMIN.email, passwordHash: hashPassword(ADMIN.password), rol: RolUsuario.ADMIN },
+    data: { email: ADMIN.email, passwordHash: hashPassword(ADMIN.password), rol: RolUsuario.ADMIN, debeCambiarPassword: true },
   });
 
   const app = createApp(database, { reloj: () => AHORA });

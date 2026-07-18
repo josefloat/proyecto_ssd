@@ -4,17 +4,18 @@ import { FIXTURE_SEED, type FixtureSeed } from "../src/seed/fixture";
 import { limpiarDominio, testPrisma } from "./helpers/database";
 
 async function snapshotSeed() {
-  const [especialidades, medicos, consultorios, programaciones, slots] =
+  const [especialidades, medicos, consultorios, revisiones, programaciones, slots] =
     await Promise.all([
       testPrisma.especialidad.findMany({ orderBy: { id: "asc" } }),
       testPrisma.medico.findMany({ orderBy: { id: "asc" } }),
       testPrisma.consultorio.findMany({ orderBy: { id: "asc" } }),
+      testPrisma.revisionProgramacion.findMany({ orderBy: { id: "asc" } }),
       testPrisma.programacionSemanal.findMany({ orderBy: { id: "asc" } }),
       testPrisma.slot.findMany({
         orderBy: [{ programacionSemanalId: "asc" }, { inicioUtc: "asc" }],
       }),
     ]);
-  return { especialidades, medicos, consultorios, programaciones, slots };
+  return { especialidades, medicos, consultorios, revisiones, programaciones, slots };
 }
 
 describe("seed determinista", () => {
@@ -61,5 +62,34 @@ describe("seed determinista", () => {
     await expect(testPrisma.programacionSemanal.count()).resolves.toBe(0);
     await expect(testPrisma.slot.count()).resolves.toBe(0);
     await expect(testPrisma.especialidad.count()).resolves.toBe(0);
+  });
+
+  it("no sobrescribe perfiles ni revisiones administrados al volver a desplegar (ADM-PER-2.2)", async () => {
+    await ejecutarSeed(testPrisma, "2026-07-17");
+    const medicoId = FIXTURE_SEED.medicos[0].id;
+    await testPrisma.medico.update({
+      where: { id: medicoId },
+      data: { nombre: "Nombre administrado", horasSemanales: 12 },
+    });
+    await testPrisma.revisionProgramacion.update({
+      where: { medicoId_numero: { medicoId, numero: 1 } },
+      data: { vigenteDesde: new Date("2026-01-01T00:00:00.000Z") },
+    });
+
+    await ejecutarSeed(testPrisma, "2026-07-17");
+
+    await expect(
+      testPrisma.medico.findUniqueOrThrow({ where: { id: medicoId } }),
+    ).resolves.toMatchObject({
+      nombre: "Nombre administrado",
+      horasSemanales: 12,
+    });
+    await expect(
+      testPrisma.revisionProgramacion.findUniqueOrThrow({
+        where: { medicoId_numero: { medicoId, numero: 1 } },
+      }),
+    ).resolves.toMatchObject({
+      vigenteDesde: new Date("2026-01-01T00:00:00.000Z"),
+    });
   });
 });

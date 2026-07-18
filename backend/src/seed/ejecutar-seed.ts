@@ -98,40 +98,44 @@ export async function ejecutarSeed(
   await database.$transaction(async (tx) => {
     for (const especialidad of fixture.especialidades) {
       await tx.especialidad.upsert({
-        where: { nombre: especialidad.nombre },
+        where: { id: especialidad.id },
         create: especialidad,
-        update: { duracionCitaMinutos: especialidad.duracionCitaMinutos },
+        update: {},
       });
     }
     for (const medico of fixture.medicos) {
       await tx.medico.upsert({
         where: { id: medico.id },
         create: medico,
-        update: {
-          nombre: medico.nombre,
-          horasSemanales: medico.horasSemanales,
-          especialidadId: medico.especialidadId,
-        },
+        update: {},
       });
     }
     for (const consultorio of fixture.consultorios) {
       await tx.consultorio.upsert({
-        where: { codigo: consultorio.codigo },
+        where: { id: consultorio.id },
         create: consultorio,
-        update: { nombre: consultorio.nombre },
+        update: {},
+      });
+    }
+    for (const medicoId of new Set(
+      fixture.programaciones.map((programacion) => programacion.medicoId),
+    )) {
+      await tx.revisionProgramacion.upsert({
+        where: { medicoId_numero: { medicoId, numero: 1 } },
+        create: {
+          id: medicoId,
+          medicoId,
+          numero: 1,
+          vigenteDesde: new Date("1970-01-01T00:00:00.000Z"),
+        },
+        update: {},
       });
     }
     for (const programacion of fixture.programaciones) {
       await tx.programacionSemanal.upsert({
-        where: {
-          medicoId_diaSemana_turno: {
-            medicoId: programacion.medicoId,
-            diaSemana: programacion.diaSemana,
-            turno: programacion.turno,
-          },
-        },
-        create: programacion,
-        update: { consultorioId: programacion.consultorioId },
+        where: { id: programacion.id },
+        create: { ...programacion, revisionId: programacion.medicoId },
+        update: {},
       });
     }
   });

@@ -12,11 +12,17 @@ import { queryInvalidaPersonal } from "./personal-api";
 const SCRYPT_KEYLEN = 64;
 const SALT_BYTES = 16;
 const TOKEN_BYTES = 32;
+const PASSWORD_TEMPORAL_BYTES = 24;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type CredencialesLogin = Readonly<{
   email: string;
   password: string;
+}>;
+
+export type CambioPassword = Readonly<{
+  passwordActual: string;
+  passwordNueva: string;
 }>;
 
 function objetoPlano(valor: unknown): Record<string, unknown> {
@@ -42,6 +48,19 @@ function validarPassword(valor: unknown): string {
   return valor;
 }
 
+function validarPasswordNueva(valor: unknown): string {
+  const password = validarPassword(valor);
+  if (
+    password.length < 12 ||
+    !/[a-z]/.test(password) ||
+    !/[A-Z]/.test(password) ||
+    !/[0-9]/.test(password)
+  ) {
+    throw queryInvalidaPersonal();
+  }
+  return password;
+}
+
 export function validarCredencialesLogin(valor: unknown): CredencialesLogin {
   const body = objetoPlano(valor);
   const claves = new Set(Object.keys(body));
@@ -52,6 +71,28 @@ export function validarCredencialesLogin(valor: unknown): CredencialesLogin {
     email: normalizarEmail(body.email),
     password: validarPassword(body.password),
   };
+}
+
+export function validarCambioPassword(valor: unknown): CambioPassword {
+  const body = objetoPlano(valor);
+  const claves = new Set(Object.keys(body));
+  if (
+    claves.size !== 2 ||
+    !claves.has("passwordActual") ||
+    !claves.has("passwordNueva")
+  ) {
+    throw queryInvalidaPersonal();
+  }
+  return {
+    passwordActual: validarPassword(body.passwordActual),
+    passwordNueva: validarPasswordNueva(body.passwordNueva),
+  };
+}
+
+// 192 bits aleatorios, codificados sin caracteres problemáticos para copiar.
+// El valor en claro solo se devuelve al caller inmediato; nunca se persiste.
+export function generarPasswordTemporal(): string {
+  return randomBytes(PASSWORD_TEMPORAL_BYTES).toString("base64url");
 }
 
 // Deriva `salt:clave` en hex. El salt aleatorio hace que dos usuarios con la
