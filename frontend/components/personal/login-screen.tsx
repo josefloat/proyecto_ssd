@@ -3,7 +3,6 @@
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BriefcaseMedical,
   CalendarClock,
   CircleCheck,
   HeartPulse,
@@ -11,6 +10,7 @@ import {
   Mail,
   ShieldCheck,
 } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { MotionPage } from "@/components/motion-page";
 import { cambiarPassword, iniciarSesion } from "@/lib/personal-client";
 import type { RolPersonal } from "@/lib/personal-types";
@@ -131,9 +131,7 @@ export function PersonalLoginScreen({ fondoUrl }: { fondoUrl?: string }) {
       <LoginStage fondoUrl={fondoUrl}>
         <MotionPage className="personal-login-card">
           <div className="personal-brand">
-            <span className="personal-brand-badge" aria-hidden="true">
-              <BriefcaseMedical size={30} />
-            </span>
+            <BrandMark size={62} />
             <h1>Señal de Vida</h1>
             <p>Portal administrativo — Ayacucho</p>
           </div>
@@ -168,9 +166,7 @@ export function PersonalLoginScreen({ fondoUrl }: { fondoUrl?: string }) {
     <LoginStage fondoUrl={fondoUrl}>
       <MotionPage className="personal-login-card">
         <div className="personal-brand">
-          <span className="personal-brand-badge" aria-hidden="true">
-            <BriefcaseMedical size={30} />
-          </span>
+          <BrandMark size={62} />
           <h1>Señal de Vida</h1>
           <p>Portal administrativo — Ayacucho</p>
         </div>

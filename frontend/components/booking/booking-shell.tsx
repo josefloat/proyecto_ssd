@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, HeartPulse, Info } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { useRouter } from "next/navigation";
 import { MotionPage } from "@/components/motion-page";
 
@@ -28,7 +29,7 @@ export function BookingShell({
           <span>Volver</span>
         </button>
         <div className="booking-brand" aria-label="Señal de Vida — Ayacucho">
-          <HeartPulse aria-hidden="true" size={26} />
+          <BrandMark size={34} />
           <span>Señal de Vida</span>
         </div>
         <span className="topbar-spacer" aria-hidden="true" />

@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BriefcaseMedical, CalendarDays, ImageIcon, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { CalendarDays, ImageIcon, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { cerrarSesion } from "@/lib/personal-client";
 
 const enlaces = [
@@ -35,7 +36,7 @@ export function AdminShell({
     <div className="personal-shell admin-shell">
       <aside className="personal-sidebar" aria-label="Navegación administrativa">
         <div className="personal-sidebar-brand">
-          <span aria-hidden="true"><BriefcaseMedical size={26} /></span>
+          <BrandMark size={46} />
           <div><strong>Señal de Vida</strong><small>Administración</small></div>
         </div>
         <nav className="personal-sidebar-nav" aria-label="Secciones administrativas">
