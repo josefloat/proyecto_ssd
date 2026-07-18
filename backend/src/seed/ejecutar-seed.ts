@@ -95,50 +95,56 @@ export async function ejecutarSeed(
   // seed (catálogos, programación y horizonte).
   await bootstrapAdmin(database, env);
 
-  await database.$transaction(async (tx) => {
-    for (const especialidad of fixture.especialidades) {
-      await tx.especialidad.upsert({
-        where: { id: especialidad.id },
-        create: especialidad,
-        update: {},
-      });
-    }
-    for (const medico of fixture.medicos) {
-      await tx.medico.upsert({
-        where: { id: medico.id },
-        create: medico,
-        update: {},
-      });
-    }
-    for (const consultorio of fixture.consultorios) {
-      await tx.consultorio.upsert({
-        where: { id: consultorio.id },
-        create: consultorio,
-        update: {},
-      });
-    }
-    for (const medicoId of new Set(
-      fixture.programaciones.map((programacion) => programacion.medicoId),
-    )) {
-      await tx.revisionProgramacion.upsert({
-        where: { medicoId_numero: { medicoId, numero: 1 } },
-        create: {
-          id: medicoId,
-          medicoId,
-          numero: 1,
-          vigenteDesde: new Date("1970-01-01T00:00:00.000Z"),
-        },
-        update: {},
-      });
-    }
-    for (const programacion of fixture.programaciones) {
-      await tx.programacionSemanal.upsert({
-        where: { id: programacion.id },
-        create: { ...programacion, revisionId: programacion.medicoId },
-        update: {},
-      });
-    }
-  });
+  await database.$transaction(
+    async (tx) => {
+      for (const especialidad of fixture.especialidades) {
+        await tx.especialidad.upsert({
+          where: { id: especialidad.id },
+          create: especialidad,
+          update: {},
+        });
+      }
+      for (const medico of fixture.medicos) {
+        await tx.medico.upsert({
+          where: { id: medico.id },
+          create: medico,
+          update: {},
+        });
+      }
+      for (const consultorio of fixture.consultorios) {
+        await tx.consultorio.upsert({
+          where: { id: consultorio.id },
+          create: consultorio,
+          update: {},
+        });
+      }
+      for (const medicoId of new Set(
+        fixture.programaciones.map((programacion) => programacion.medicoId),
+      )) {
+        await tx.revisionProgramacion.upsert({
+          where: { medicoId_numero: { medicoId, numero: 1 } },
+          create: {
+            id: medicoId,
+            medicoId,
+            numero: 1,
+            vigenteDesde: new Date("1970-01-01T00:00:00.000Z"),
+          },
+          update: {},
+        });
+      }
+      for (const programacion of fixture.programaciones) {
+        await tx.programacionSemanal.upsert({
+          where: { id: programacion.id },
+          create: { ...programacion, revisionId: programacion.medicoId },
+          update: {},
+        });
+      }
+    },
+    // Neon añade latencia de red por cada upsert. El límite predeterminado de
+    // 5 s es insuficiente para el fixture completo, aunque la transacción siga
+    // progresando normalmente.
+    { timeout: 30_000 },
+  );
 
   const ancla = fechaAncla ?? hoyEnLima();
   return new MotorDisponibilidad(database).asegurarHorizonte(ancla);
