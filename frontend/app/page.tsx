@@ -1,19 +1,26 @@
 import Link from "next/link";
 import {
+  Baby,
   Bell,
+  Bone,
   CalendarDays,
+  ChevronDown,
   ChevronRight,
+  CircleHelp,
   ClipboardList,
   Clock3,
   CreditCard,
   FileText,
+  Hand,
   HandHeart,
   HeartHandshake,
+  HeartPulse,
   Home,
   MapPin,
   Microscope,
   Stethoscope,
   UserRound,
+  Venus,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ComoLlegar, DIRECCION_CLINICA } from "@/components/clinic-directions";
@@ -53,6 +60,79 @@ const TARJETAS_CLINICA = [
 const HERO_ALT =
   "Una médica y un enfermero peruanos acompañan con calidez a un adulto mayor en un centro de salud de Ayacucho.";
 
+// Especialidades de atención ambulatoria: el mismo catálogo canónico del
+// backend (nombre y duración de consulta), con su tono e icono de la
+// presentación pública. Cada tarjeta lleva al primer paso de la reserva.
+const ESPECIALIDADES_HOME = [
+  {
+    nombre: "Medicina General",
+    detalle: "Chequeos y atención primaria",
+    duracion: 20,
+    icono: Stethoscope,
+    tono: "tone-amber",
+  },
+  {
+    nombre: "Cardiología",
+    detalle: "Cuidado del corazón",
+    duracion: 30,
+    icono: HeartPulse,
+    tono: "tone-rose",
+  },
+  {
+    nombre: "Pediatría",
+    detalle: "Salud de los más pequeños",
+    duracion: 20,
+    icono: Baby,
+    tono: "tone-cyan",
+  },
+  {
+    nombre: "Traumatología",
+    detalle: "Huesos, golpes y articulaciones",
+    duracion: 30,
+    icono: Bone,
+    tono: "tone-violet",
+  },
+  {
+    nombre: "Ginecología",
+    detalle: "Salud de la mujer",
+    duracion: 30,
+    icono: Venus,
+    tono: "tone-blue",
+  },
+  {
+    nombre: "Dermatología",
+    detalle: "Cuidado de la piel",
+    duracion: 15,
+    icono: Hand,
+    tono: "tone-orange",
+  },
+] as const;
+
+// Dudas típicas del paciente, resueltas sin salir de la página. Acordeón
+// nativo (details/summary): accesible por teclado y sin JavaScript extra.
+const PREGUNTAS_FRECUENTES = [
+  {
+    pregunta: "¿Necesito pagar para reservar en línea?",
+    respuesta:
+      "No. La reserva es gratuita: pagas tu consulta directamente en recepción el día de tu cita.",
+  },
+  {
+    pregunta: "¿Cómo consulto o cancelo mi cita?",
+    respuesta:
+      "Ingresa a «Ver mi cita» con tu DNI y tu código de reserva. Desde ahí puedes revisar el detalle o cancelar sin costo.",
+  },
+  {
+    pregunta: "¿Qué debo llevar el día de mi cita?",
+    respuesta:
+      "Tu DNI y el código de reserva que recibiste al confirmar. Te recomendamos llegar 10 minutos antes de tu horario.",
+  },
+  {
+    pregunta: "¿Puedo reservar para un familiar?",
+    respuesta:
+      "Sí. Solo necesitas su DNI, su nombre completo y un número de celular de contacto.",
+  },
+] as const;
+
 export default async function HomePaciente() {
   const imagenes = await obtenerImagenesSitio();
   const hero = imagenes["hero-home"];
@@ -90,6 +170,10 @@ export default async function HomePaciente() {
             </div>
 
             <div className="hero-copy">
+              <p className="eyebrow">
+                <HeartPulse aria-hidden="true" size={18} />
+                Clínica ambulatoria · Ayacucho
+              </p>
               <h1 id="home-title">Reserva tu cita de manera fácil y rápida</h1>
               <span className="pulse-underline" aria-hidden="true">
                 <svg viewBox="0 0 220 26" focusable="false">
@@ -141,6 +225,34 @@ export default async function HomePaciente() {
               </div>
             </article>
           </div>
+
+          <section className="home-specialties" aria-labelledby="specialties-title">
+            <div className="home-section-head">
+              <h2 id="specialties-title">Nuestras especialidades</h2>
+              <p>Seis áreas de atención para ti y tu familia.</p>
+            </div>
+            <ul className="specialty-grid">
+              {ESPECIALIDADES_HOME.map((especialidad) => {
+                const Icono = especialidad.icono;
+                return (
+                  <li key={especialidad.nombre}>
+                    <Link className="specialty-card" href="/reservar/especialidad">
+                      <span className={`specialty-icon ${especialidad.tono}`} aria-hidden="true">
+                        <Icono size={27} />
+                      </span>
+                      <span className="specialty-text">
+                        <strong>{especialidad.nombre}</strong>
+                        <span>
+                          {especialidad.detalle} · {especialidad.duracion} min
+                        </span>
+                      </span>
+                      <ChevronRight className="specialty-go" aria-hidden="true" size={22} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
           <section className="home-clinic" aria-labelledby="clinic-title">
             <div className="home-section-head">
@@ -195,8 +307,108 @@ export default async function HomePaciente() {
               </div>
             </article>
           </section>
+
+          <section className="home-faq" aria-labelledby="faq-title">
+            <div className="home-section-head">
+              <h2 id="faq-title">Preguntas frecuentes</h2>
+              <p>Lo que más nos preguntan nuestros pacientes.</p>
+            </div>
+            <div className="faq-list">
+              {PREGUNTAS_FRECUENTES.map((item) => (
+                <details className="faq-item" key={item.pregunta}>
+                  <summary>
+                    <CircleHelp className="faq-q-icon" aria-hidden="true" size={22} />
+                    <span>{item.pregunta}</span>
+                    <ChevronDown className="faq-chev" aria-hidden="true" size={22} />
+                  </summary>
+                  <p className="faq-answer">{item.respuesta}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+
+          <section className="home-cta" aria-labelledby="cta-title">
+            <svg className="cta-ecg" viewBox="0 0 220 26" aria-hidden="true" focusable="false">
+              <path d="M2 15h56l9-10 10 17 8-13 6 6h127" pathLength={100} />
+            </svg>
+            <div className="cta-copy">
+              <h2 id="cta-title">¿Listo para reservar tu cita?</h2>
+              <p>
+                Elige especialidad, médico y horario en cinco pasos guiados.
+                Sin pagos en línea y con cancelación gratuita.
+              </p>
+            </div>
+            <div className="cta-actions">
+              <Link className="cta-btn cta-btn-primary" href="/reservar/especialidad">
+                Reservar ahora
+                <ChevronRight aria-hidden="true" size={22} />
+              </Link>
+              <Link className="cta-btn cta-btn-ghost" href="/mi-cita">
+                Consultar mi cita
+              </Link>
+            </div>
+          </section>
         </section>
       </MotionPage>
+
+      <footer className="home-footer">
+        <div className="home-footer-main">
+          <div className="footer-brand">
+            <span className="footer-brand-lockup">
+              <BrandMark size={42} />
+              <span className="footer-brand-name">Señal de Vida</span>
+            </span>
+            <p>
+              Clínica ambulatoria en Ayacucho, Perú. Reserva tu cita en línea,
+              paga en la clínica y cancela sin costo cuando lo necesites.
+            </p>
+          </div>
+
+          <nav className="footer-col" aria-label="Enlaces de interés">
+            <h2 className="footer-title">Accesos</h2>
+            <ul className="footer-links">
+              <li>
+                <Link href="/">Inicio</Link>
+              </li>
+              <li>
+                <Link href="/reservar/especialidad">Reservar cita</Link>
+              </li>
+              <li>
+                <Link href="/mi-cita">Consultar cita</Link>
+              </li>
+              <li>
+                <Link href="/personal/login">Portal del personal</Link>
+              </li>
+            </ul>
+          </nav>
+
+          <div className="footer-col">
+            <h2 className="footer-title">La clínica</h2>
+            <ul className="footer-facts">
+              <li>
+                <MapPin aria-hidden="true" size={20} />
+                <span>{DIRECCION_CLINICA}</span>
+              </li>
+              <li>
+                <Clock3 aria-hidden="true" size={20} />
+                <span>Turnos de 9:00 a 23:00, según especialidad.</span>
+              </li>
+              <li>
+                <Stethoscope aria-hidden="true" size={20} />
+                <span>6 especialidades de atención ambulatoria.</span>
+              </li>
+            </ul>
+            <ComoLlegar compacto />
+          </div>
+        </div>
+
+        <div className="home-footer-bar">
+          <div>
+            <span>© {new Date().getFullYear()} Señal de Vida · Ayacucho, Perú</span>
+            <span>Proyecto académico — demostración sin fines comerciales.</span>
+          </div>
+        </div>
+      </footer>
 
       <nav className="patient-nav" aria-label="Navegación principal">
         <span className="patient-nav-item is-current" aria-current="page">
