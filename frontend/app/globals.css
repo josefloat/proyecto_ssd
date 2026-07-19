@@ -5272,8 +5272,8 @@ h2 {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(237, 240, 248, 0.82),
-    rgba(237, 240, 248, 0.9)
+    rgba(237, 240, 248, 0.42),
+    rgba(237, 240, 248, 0.56)
   );
 }
 
@@ -5283,8 +5283,8 @@ h2 {
 .tiene-video .home-info article,
 .tiene-video .faq-item,
 .tiene-video .spec-arrows button {
-  background: var(--glass-strong);
-  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(248, 250, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
 }
