@@ -10,9 +10,9 @@ Esta matriz no contiene contraseñas, cookies, tokens, cadenas de conexión, cab
 | MEDICO-1.2 | Integración y `personal-medico.spec.ts` existentes | Otra identidad excluida y agenda sin rutas de escritura; Playwright verde | Pendiente |
 | RECEP-1.1 | `agenda-recepcion.integration.test.ts`; captura funcional | Ventana global de siete días y captura funcional guardada fuera de git | Pendiente |
 | RECEP-1.2 | Misma integración y componente existente | Filtros combinados aplicados sobre toda la ventana | Pendiente |
-| PIPE-1.1 | `pipeline-seed-gate.test.ts`; API de GitHub Actions | Contratos verdes dentro de 109/109; validación remota pendiente del PR | Pendiente |
+| PIPE-1.1 | `pipeline-seed-gate.test.ts`; API de GitHub Actions | Contratos verdes dentro de 109/109; `build-and-test` verde en PR #32 | Pendiente |
 | PIPE-1.2 | Contrato del workflow y fixtures negativos existentes | `permissions: contents: read`, acciones v7, Node 22, caché desactivada y logs sanitizados | Pendiente |
-| CIERRE-1.1 | Auditoría, suite completa, cinco jobs, smokes y Cloudinary | Backend 109/109 (87.33% líneas); frontend 17/17; Playwright 49 pasadas + 1 smoke preview omitido | Pendiente |
+| CIERRE-1.1 | Auditoría, suite completa, cinco jobs, smokes y Cloudinary | Backend 109/109 (87.33% líneas); frontend 17/17; Playwright 49 pasadas + 1 smoke preview omitido; PR #32 verde | Pendiente |
 | CIERRE-1.2 | Fixtures negativos, checklist y OpenSpec strict/list | OpenSpec strict 15/15; auditoría sin secretos de alta confianza en árbol/historial | Pendiente |
 
 ## Checklist posterior al merge
