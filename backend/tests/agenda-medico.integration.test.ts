@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
-import { EstadoCita, RolUsuario } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import { EstadoCita, EstadoSlot, RolUsuario } from "@prisma/client";
 import { createApp } from "../src/app";
 import { limpiarDominio, testPrisma } from "./helpers/database";
 import { crearCitaFixture, crearUsuario } from "./helpers/personal-fixtures";
@@ -21,8 +22,7 @@ describe("agenda diaria del médico, solo lectura", () => {
   beforeEach(limpiarDominio);
   afterAll(async () => testPrisma.$disconnect());
 
-  it("el médico ve exactamente su propia agenda del día (MEDICO-1.1)", async () => {
-    // Arrange: citas del día de dos médicos distintos
+  it("la ventana propia incluye mañana y +6, excluye +7 y otros médicos (MEDICO-1.1)", async () => {
     const app = createApp(testPrisma, { reloj });
     const propia = await crearCitaFixture({
       fechaLima: "2026-07-17",
@@ -31,11 +31,36 @@ describe("agenda diaria del médico, solo lectura", () => {
       prefijo: "propia",
     });
     await crearCitaFixture({
-      fechaLima: "2026-07-17",
-      inicioUtc: new Date("2026-07-17T16:00:00.000Z"),
+      fechaLima: "2026-07-18",
+      inicioUtc: new Date("2026-07-18T16:00:00.000Z"),
       estadoCita: EstadoCita.RESERVADA,
       prefijo: "ajena",
     });
+    const crearPropia = async (fechaLima: string, inicioUtc: string, sufijo: string) => {
+      const slot = await testPrisma.slot.create({
+        data: {
+          programacionSemanalId: propia.programacion.id,
+          inicioUtc: new Date(inicioUtc),
+          finUtc: new Date(new Date(inicioUtc).getTime() + 30 * 60 * 1_000),
+          fechaLima: new Date(`${fechaLima}T00:00:00.000Z`),
+          estado: EstadoSlot.RESERVADO,
+        },
+      });
+      const paciente = await testPrisma.paciente.create({
+        data: { dni: `9000${sufijo.padStart(4, "0")}`, telefono: "987654321", nombre: `Paciente ${sufijo}` },
+      });
+      return testPrisma.cita.create({
+        data: {
+          pacienteId: paciente.id, slotId: slot.id, codigoReserva: `SV-ABCDEF${sufijo}`,
+          estado: EstadoCita.RESERVADA, reservadaEn: AHORA,
+          venceEn: new Date(AHORA.getTime() + 72 * 60 * 60 * 1_000),
+          idempotencyKey: randomUUID(), idempotencyFingerprint: "a".repeat(64),
+        },
+      });
+    };
+    const manana = await crearPropia("2026-07-18", "2026-07-18T15:00:00.000Z", "23");
+    const dia6 = await crearPropia("2026-07-23", "2026-07-23T15:00:00.000Z", "26");
+    await crearPropia("2026-07-24", "2026-07-24T15:00:00.000Z", "27");
     const usuarioMedico = await crearUsuario({
       rol: RolUsuario.MEDICO,
       password: PASSWORD,
@@ -54,9 +79,11 @@ describe("agenda diaria del médico, solo lectura", () => {
 
     // Assert
     expect(res.status).toBe(200);
-    expect(res.body.items).toHaveLength(1);
-    expect(res.body.items[0].id).toBe(propia.cita.id);
-    expect(res.body.items[0].medico.id).toBe(propia.medico.id);
+    expect(res.body).toMatchObject({ desde: "2026-07-17", hastaExclusiva: "2026-07-24" });
+    expect(res.body.items.map((item: { id: string }) => item.id)).toEqual([
+      propia.cita.id, manana.id, dia6.id,
+    ]);
+    expect(res.body.items.every((item: { medico: { id: string } }) => item.medico.id === propia.medico.id)).toBe(true);
   });
 
   it("ninguna acción de escritura es alcanzable para el rol médico (MEDICO-1.2)", async () => {

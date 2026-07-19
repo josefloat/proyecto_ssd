@@ -37,7 +37,7 @@ export function RecepcionDetalleScreen({ citaId }: { citaId: string }) {
   useEffect(() => {
     let activo = true;
     obtenerAgendaRecepcion()
-      .then((items) => {
+      .then(({ items }) => {
         if (!activo) return;
         const encontrada = items.find((c) => c.id === citaId) ?? null;
         setCita(encontrada);

@@ -1,11 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Copy, KeyRound, Pencil, Plus, UserCheck, UserX, X } from "lucide-react";
+import { Copy, KeyRound, Pencil, Plus, Trash2, UserCheck, UserX, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   actualizarUsuarioAdmin,
   crearUsuarioAdmin,
+  eliminarUsuarioAdmin,
   listarUsuariosAdmin,
   obtenerCatalogosAdmin,
   reiniciarPasswordAdmin,
@@ -25,6 +26,7 @@ export function AdminUsuariosScreen() {
   const [error, setError] = useState("");
   const [temporal, setTemporal] = useState<{ nombre: string; valor: string } | null>(null);
   const [editando, setEditando] = useState<UsuarioAdmin | null>(null);
+  const [porEliminar, setPorEliminar] = useState<UsuarioAdmin | null>(null);
   const [formEditar, setFormEditar] = useState({ nombre: "", email: "", especialidadId: "", horasSemanales: "" });
 
   async function cargar() {
@@ -135,6 +137,25 @@ export function AdminUsuariosScreen() {
     finally { setPending(false); }
   }
 
+  async function confirmarEliminacion() {
+    if (!porEliminar) return;
+    setPending(true);
+    setError("");
+    try {
+      await eliminarUsuarioAdmin(porEliminar.id);
+      setUsuarios((actual) => actual?.filter((item) => item.id !== porEliminar.id) ?? null);
+      setPorEliminar(null);
+    } catch (fallo) {
+      const code = (fallo as { code?: string }).code;
+      setError(code === "CUENTA_CON_HISTORIAL"
+        ? "Esta cuenta tiene historial operativo y no puede eliminarse. Desactívala para conservar la evidencia."
+        : "No se pudo eliminar la cuenta.");
+      setPorEliminar(null);
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <AdminShell
       actual="usuarios"
@@ -157,6 +178,7 @@ export function AdminUsuariosScreen() {
                   <button type="button" disabled={pending} onClick={() => abrirEdicion(usuario)} aria-label={`Editar a ${usuario.nombre}`}><Pencil /></button>
                   <button type="button" disabled={pending} onClick={() => alternar(usuario)} aria-label={`${usuario.activo ? "Inactivar" : "Activar"} a ${usuario.nombre}`}>{usuario.activo ? <UserX /> : <UserCheck />}</button>
                   <button type="button" disabled={pending} onClick={() => reiniciar(usuario)} aria-label={`Reiniciar contraseña de ${usuario.nombre}`}><KeyRound /></button>
+                  <button type="button" disabled={pending} onClick={() => setPorEliminar(usuario)} aria-label={`Eliminar cuenta de ${usuario.nombre}`}><Trash2 /></button>
                 </div></td>
               </tr>
             ))}</tbody>
@@ -199,6 +221,15 @@ export function AdminUsuariosScreen() {
         <output aria-label="Contraseña temporal">{temporal.valor}</output>
         <button className="admin-primary-action" type="button" onClick={() => navigator.clipboard.writeText(temporal.valor)}><Copy aria-hidden="true" /> Copiar contraseña</button>
         <button className="personal-secondary-button" type="button" onClick={() => setTemporal(null)}>Ya la guardé</button>
+      </section></div> : null}
+
+      {porEliminar ? <div className="admin-modal-backdrop"><section className="admin-modal" role="alertdialog" aria-modal="true" aria-labelledby="eliminar-usuario-titulo" aria-describedby="eliminar-usuario-descripcion">
+        <h2 id="eliminar-usuario-titulo">Eliminar cuenta de {porEliminar.nombre}</h2>
+        <p id="eliminar-usuario-descripcion">Esta acción es irreversible. Solo se eliminará si la cuenta no tiene programación, citas ni otro historial operativo.</p>
+        <div className="admin-modal-actions">
+          <button className="personal-secondary-button" type="button" disabled={pending} onClick={() => setPorEliminar(null)}>Cancelar</button>
+          <button className="admin-primary-action" type="button" disabled={pending} onClick={confirmarEliminacion}>{pending ? "Eliminando…" : "Eliminar cuenta"}</button>
+        </div>
       </section></div> : null}
     </AdminShell>
   );

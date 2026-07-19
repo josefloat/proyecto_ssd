@@ -47,7 +47,7 @@ test("cuatro baselines de personal en escritorio (FLOW visual 4A)", async ({ pag
 
   // 2. Agenda de recepción
   await login(page, "recepcion@senaldevida.pe", "Recepcion-123");
-  await expect(page.getByRole("heading", { name: "Agenda del día" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agenda de los próximos 7 días" })).toBeVisible();
   await expect(page.locator(".agenda-row").nth(1)).toBeVisible();
   await expect(page).toHaveScreenshot("recepcion-agenda-desktop.png", {
     fullPage: true,

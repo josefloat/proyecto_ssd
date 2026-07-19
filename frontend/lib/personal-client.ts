@@ -124,6 +124,16 @@ export async function reiniciarPasswordAdmin(usuarioId: string): Promise<string>
   return (body as { passwordTemporal: string }).passwordTemporal;
 }
 
+export async function eliminarUsuarioAdmin(usuarioId: string): Promise<void> {
+  const response = await fetch(`/api/personal/admin/usuarios/${usuarioId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok && response.status !== 204) {
+    const body = await leerRespuesta(response);
+    throw errorApi(response, body, "ADMIN_DELETE_FAILED");
+  }
+}
+
 export async function obtenerProgramacionAdmin(
   medicoId: string,
 ): Promise<ProgramacionAdmin> {
@@ -163,7 +173,7 @@ function construirQuery(filtros: FiltrosAgenda): string {
 
 export async function obtenerAgendaRecepcion(
   filtros: FiltrosAgenda = {},
-): Promise<CitaAgendaPersonal[]> {
+): Promise<AgendaResponse> {
   const response = await fetch(
     `/api/personal/recepcion/agenda${construirQuery(filtros)}`,
     { headers: { "cache-control": "no-store" } },
@@ -175,10 +185,10 @@ export async function obtenerAgendaRecepcion(
       code: codigoError(body),
     });
   }
-  return (body as AgendaResponse).items;
+  return body as AgendaResponse;
 }
 
-export async function obtenerAgendaMedico(): Promise<CitaAgendaPersonal[]> {
+export async function obtenerAgendaMedico(): Promise<AgendaResponse> {
   const response = await fetch("/api/personal/medico/agenda", {
     headers: { "cache-control": "no-store" },
   });
@@ -189,7 +199,7 @@ export async function obtenerAgendaMedico(): Promise<CitaAgendaPersonal[]> {
       code: codigoError(body),
     });
   }
-  return (body as AgendaResponse).items;
+  return body as AgendaResponse;
 }
 
 export async function registrarPago(

@@ -132,7 +132,13 @@ export function AdminProgramacionScreen() {
       acciones={<button className="admin-primary-action" type="button" disabled={guardando || cargando || !medicoId || excedeHoras} onClick={guardar}><Save aria-hidden="true" /> {guardando ? "Guardando…" : "Guardar plan"}</button>}
     >
       <section className="schedule-controls" aria-label="Parámetros de programación">
-        <label htmlFor="schedule-medico">Médico<select id="schedule-medico" value={medicoId} onChange={(event) => { setCargando(true); setMedicoId(event.target.value); }}><option value="">Selecciona un médico</option>{catalogos?.medicos.map((item) => <option key={item.id} value={item.id}>{item.nombre} — {item.especialidad.nombre}</option>)}</select></label>
+        <label htmlFor="schedule-medico">Médico<select id="schedule-medico" value={medicoId} onChange={(event) => {
+          const siguiente = event.target.value;
+          if (siguiente !== medicoId) {
+            setCargando(true);
+            setMedicoId(siguiente);
+          }
+        }}><option value="">Selecciona un médico</option>{catalogos?.medicos.map((item) => <option key={item.id} value={item.id}>{item.nombre} — {item.especialidad.nombre}</option>)}</select></label>
         <label htmlFor="schedule-vigencia">Vigente desde<input id="schedule-vigencia" type="date" min={proximoLunes()} value={vigenteDesde} onChange={(event) => setVigenteDesde(event.target.value)} /></label>
         <div className="schedule-version"><span>Versión leída</span><strong>{version}</strong></div>
         <div className={`schedule-hours${excedeHoras ? " is-over" : ""}`} role="status">

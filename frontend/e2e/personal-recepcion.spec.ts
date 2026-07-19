@@ -40,7 +40,7 @@ test("recepción: login → agenda → detalle → pago → constancia → wa.me
   await page.getByRole("button", { name: "Acceder al sistema" }).click();
 
   await expect(page).toHaveURL(/\/personal\/recepcion\/agenda$/);
-  await expect(page.getByRole("heading", { name: "Agenda del día" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agenda de los próximos 7 días" })).toBeVisible();
   const filaRosa = page.locator(".agenda-row").filter({ hasText: "Rosa Huamán Quispe" });
   await expect(filaRosa).toBeVisible();
   await expect(filaRosa.getByText("Pendiente de pago")).toBeVisible();

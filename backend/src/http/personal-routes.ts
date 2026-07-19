@@ -16,7 +16,8 @@ import {
   validarGuardarProgramacion,
   validarMedicoId,
 } from "../domain/administracion-programacion";
-import { validarFechaAgenda, validarFiltrosAgendaRecepcion } from "../domain/agenda-personal";
+import { validarFiltrosAgendaRecepcion } from "../domain/agenda-personal";
+import { sumarDias } from "../domain/fechas";
 import {
   cambioPasswordRequerido,
   noAutenticado,
@@ -273,9 +274,10 @@ export function registrarRutasPersonal(
   router.delete(
     "/personal/admin/usuarios/:id",
     requireSesion(auth, [RolUsuario.ADMIN]),
-    asyncHandler(async (request, _response) => {
-      validarIdPersonal(request.params.id);
-      throw mutacionNoPermitida();
+    asyncHandler(async (request, response) => {
+      const admin = usuarioActual(response);
+      await administracion.eliminar(validarIdPersonal(request.params.id), admin.id);
+      response.status(204).end();
     }),
   );
 
@@ -288,7 +290,11 @@ export function registrarRutasPersonal(
         hoyEnLima(reloj()),
       );
       response.set("Cache-Control", "no-store");
-      response.status(200).json({ items: await agenda.agendaRecepcion(filtros) });
+      response.status(200).json({
+        desde: filtros.desde,
+        hastaExclusiva: sumarDias(filtros.desde, 7),
+        items: await agenda.agendaRecepcion(filtros),
+      });
     }),
   );
 
@@ -306,15 +312,14 @@ export function registrarRutasPersonal(
   router.get(
     "/personal/medico/agenda",
     requireSesion(auth, [RolUsuario.MEDICO]),
-    asyncHandler(async (request, response) => {
+    asyncHandler(async (_request, response) => {
       const usuario = usuarioActual(response);
-      const fechaLima = validarFechaAgenda(
-        (request.query as Record<string, unknown>).fechaLima,
-        hoyEnLima(reloj()),
-      );
+      const desde = hoyEnLima(reloj());
       response.set("Cache-Control", "no-store");
       response.status(200).json({
-        items: await agenda.agendaMedico(usuario.medicoId!, fechaLima),
+        desde,
+        hastaExclusiva: sumarDias(desde, 7),
+        items: await agenda.agendaMedico(usuario.medicoId!, desde),
       });
     }),
   );

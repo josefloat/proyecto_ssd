@@ -31,6 +31,24 @@ export function formatearHora(iso: string): string {
   return horaCorta.format(new Date(iso));
 }
 
+const fechaCivilLarga = new Intl.DateTimeFormat("es-PE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export function formatearFechaCivil(fechaLima: string): string {
+  const [anio, mes, dia] = fechaLima.split("-").map(Number);
+  return fechaCivilLarga.format(new Date(Date.UTC(anio, mes - 1, dia, 12)));
+}
+
+export function sumarDiasCivil(fechaLima: string, dias: number): string {
+  const [anio, mes, dia] = fechaLima.split("-").map(Number);
+  return new Date(Date.UTC(anio, mes - 1, dia + dias)).toISOString().slice(0, 10);
+}
+
 // Enmascara el DNI para la vista de lista (primeros 2, últimos 3): 45812678 →
 // 45***678. Los datos completos solo se muestran en el detalle autorizado.
 export function enmascararDni(dni: string): string {

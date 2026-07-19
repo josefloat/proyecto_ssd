@@ -2986,6 +2986,10 @@ button.patient-nav-item:disabled {
 
 .agenda-limpiar:hover { background: var(--surface-highest); }
 
+.agenda-semana { display: flex; flex-direction: column; gap: 22px; }
+.agenda-dia { display: flex; flex-direction: column; gap: 10px; }
+.agenda-dia > h2 { margin: 0; font-size: 21px; color: var(--on-surface); text-transform: capitalize; }
+
 .agenda-tabla {
   display: flex;
   flex-direction: column;
@@ -3201,6 +3205,8 @@ button.patient-nav-item:disabled {
 .medico-cita-hora { font-weight: 800; font-size: 20px; color: var(--primary); }
 .medico-cita-datos strong { display: block; font-size: 19px; }
 .medico-cita-datos small { color: var(--on-surface-variant); }
+
+.admin-modal-actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
 
 /* --------- Responsive del personal: navbar dinámico --------- */
 

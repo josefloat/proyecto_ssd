@@ -33,8 +33,7 @@ describe("agenda diaria de recepción y registro de pago", () => {
     return valorCookie(login);
   }
 
-  it("agenda del día con filtros combinados devuelve el subconjunto exacto (RECEP-1.1)", async () => {
-    // Arrange: tres citas del día y una de otro día
+  it("ventana de siete días y filtros combinados devuelven el subconjunto exacto (RECEP-1.1)", async () => {
     const app = createApp(testPrisma, { reloj });
     const cookie = await cookieRecepcion(app);
     const c1 = await crearCitaFixture({
@@ -55,11 +54,23 @@ describe("agenda diaria de recepción y registro de pago", () => {
       estadoCita: EstadoCita.CANCELADA,
       prefijo: "r1c",
     });
-    await crearCitaFixture({
+    const manana = await crearCitaFixture({
       fechaLima: "2026-07-18",
       inicioUtc: new Date("2026-07-18T15:00:00.000Z"),
       estadoCita: EstadoCita.RESERVADA,
       prefijo: "r1d",
+    });
+    await crearCitaFixture({
+      fechaLima: "2026-07-23",
+      inicioUtc: new Date("2026-07-23T15:00:00.000Z"),
+      estadoCita: EstadoCita.ATENDIDA,
+      prefijo: "r1e",
+    });
+    await crearCitaFixture({
+      fechaLima: "2026-07-24",
+      inicioUtc: new Date("2026-07-24T15:00:00.000Z"),
+      estadoCita: EstadoCita.RESERVADA,
+      prefijo: "r1f",
     });
 
     // Act
@@ -69,27 +80,28 @@ describe("agenda diaria de recepción y registro de pago", () => {
     const combinado = await request(app)
       .get("/personal/recepcion/agenda")
       .query({
-        especialidadId: c1.especialidad.id,
-        medicoId: c1.medico.id,
+        especialidadId: manana.especialidad.id,
+        medicoId: manana.medico.id,
         estado: "RESERVADA",
       })
       .set("Cookie", cookie);
 
     // Assert
     expect(sinFiltros.status).toBe(200);
-    expect(sinFiltros.body.items).toHaveLength(3); // solo las del 2026-07-17
+    expect(sinFiltros.body).toMatchObject({ desde: "2026-07-17", hastaExclusiva: "2026-07-24" });
+    expect(sinFiltros.body.items).toHaveLength(5);
     expect(sinFiltros.body.items.map((i: { estado: string }) => i.estado)).toEqual([
       "RESERVADA",
       "PAGADA",
-      "CANCELADA",
+      "CANCELADA", "RESERVADA", "ATENDIDA",
     ]);
     expect(combinado.status).toBe(200);
     expect(combinado.body.items).toHaveLength(1);
-    expect(combinado.body.items[0].id).toBe(c1.cita.id);
+    expect(combinado.body.items[0].id).toBe(manana.cita.id);
     expect(combinado.body.items[0].paciente).toHaveProperty("telefono");
   });
 
-  it("día o filtro sin coincidencias devuelve lista vacía sin error (RECEP-1.2)", async () => {
+  it("filtro sin coincidencias no inventa citas y fecha elegida se rechaza (RECEP-1.2)", async () => {
     // Arrange
     const app = createApp(testPrisma, { reloj });
     const cookie = await cookieRecepcion(app);
@@ -111,8 +123,7 @@ describe("agenda diaria de recepción y registro de pago", () => {
       .set("Cookie", cookie);
 
     // Assert
-    expect(otroDia.status).toBe(200);
-    expect(otroDia.body.items).toEqual([]);
+    expect(otroDia.status).toBe(400);
     expect(sinCoincidencia.status).toBe(200);
     expect(sinCoincidencia.body.items).toEqual([]);
   });

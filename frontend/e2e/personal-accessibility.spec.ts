@@ -63,12 +63,12 @@ test("único barrido axe de las pantallas del personal 01–05 (FLOW-7.2 equival
 
   // Agenda con datos
   await login(page, "recepcion@senaldevida.pe", "Recepcion-123");
-  await expect(page.getByRole("heading", { name: "Agenda del día" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agenda de los próximos 7 días" })).toBeVisible();
   await analizar(page, violaciones);
 
   // Agenda con filtro sin coincidencias (estado vacío)
   await page.getByLabel("Estado de cita").selectOption("NO_ASISTIO");
-  await expect(page.getByText(/No hay citas que coincidan/)).toBeVisible();
+  await expect(page.getByText("Sin citas").first()).toBeVisible();
   await analizar(page, violaciones);
   await page.getByRole("button", { name: "Limpiar filtros" }).click();
 

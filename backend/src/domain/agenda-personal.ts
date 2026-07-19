@@ -1,5 +1,4 @@
 import { EstadoCita } from "@prisma/client";
-import { validarFechaCivil } from "./fechas";
 import { queryInvalidaPersonal } from "./personal-api";
 
 const UUID =
@@ -7,7 +6,7 @@ const UUID =
 const ESTADOS = new Set<string>(Object.values(EstadoCita));
 
 export type FiltrosAgendaRecepcionQuery = {
-  fechaLima: string;
+  desde: string;
   especialidadId?: string;
   medicoId?: string;
   estado?: EstadoCita;
@@ -21,20 +20,6 @@ function uuidOpcional(valor: unknown): string | undefined {
     throw queryInvalidaPersonal();
   }
   return valor;
-}
-
-function fechaOpcional(valor: unknown, porDefecto: string): string {
-  if (valor === undefined) {
-    return porDefecto;
-  }
-  if (typeof valor !== "string") {
-    throw queryInvalidaPersonal();
-  }
-  try {
-    return validarFechaCivil(valor);
-  } catch {
-    throw queryInvalidaPersonal();
-  }
 }
 
 function estadoOpcional(valor: unknown): EstadoCita | undefined {
@@ -51,12 +36,12 @@ export function validarFiltrosAgendaRecepcion(
   query: Readonly<Record<string, unknown>>,
   hoyPorDefecto: string,
 ): FiltrosAgendaRecepcionQuery {
-  const permitidos = new Set(["fechaLima", "especialidadId", "medicoId", "estado"]);
+  const permitidos = new Set(["especialidadId", "medicoId", "estado"]);
   if (Object.keys(query).some((clave) => !permitidos.has(clave))) {
     throw queryInvalidaPersonal();
   }
   const filtros: FiltrosAgendaRecepcionQuery = {
-    fechaLima: fechaOpcional(query.fechaLima, hoyPorDefecto),
+    desde: hoyPorDefecto,
   };
   const especialidadId = uuidOpcional(query.especialidadId);
   if (especialidadId) {
@@ -71,11 +56,4 @@ export function validarFiltrosAgendaRecepcion(
     filtros.estado = estado;
   }
   return filtros;
-}
-
-export function validarFechaAgenda(
-  valor: unknown,
-  hoyPorDefecto: string,
-): string {
-  return fechaOpcional(valor, hoyPorDefecto);
 }

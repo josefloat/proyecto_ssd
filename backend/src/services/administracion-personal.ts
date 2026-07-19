@@ -6,6 +6,7 @@ import type {
 } from "../domain/administracion-personal";
 import { hoyEnLima } from "../domain/fechas";
 import {
+  cuentaConHistorial,
   emailDuplicado,
   especialidadNoEncontrada,
   horasSemanalesIncompatibles,
@@ -294,6 +295,55 @@ export function crearServiciosAdministracionPersonal(
           error.code === "P2002"
         ) {
           throw emailDuplicado();
+        }
+        throw error;
+      }
+    },
+
+    async eliminar(usuarioId: string, adminActualId: string) {
+      try {
+        await database.$transaction(async (tx) => {
+          const filas = await tx.$queryRaw<UsuarioBloqueado[]>`
+            SELECT "id", "rol", "medicoId"
+            FROM "Usuario"
+            WHERE "id" = ${usuarioId}::uuid
+            FOR UPDATE
+          `;
+          const usuario = filas[0];
+          if (!usuario) throw usuarioNoEncontrado();
+          if (usuario.id === adminActualId || usuario.rol === RolUsuario.ADMIN) {
+            throw mutacionNoPermitida();
+          }
+
+          if (usuario.medicoId) {
+            await tx.$queryRaw`
+              SELECT "id" FROM "Medico"
+              WHERE "id" = ${usuario.medicoId}::uuid
+              FOR UPDATE
+            `;
+            const [revisiones, programaciones, slots, citas] = await Promise.all([
+              tx.revisionProgramacion.count({ where: { medicoId: usuario.medicoId } }),
+              tx.programacionSemanal.count({ where: { medicoId: usuario.medicoId } }),
+              tx.slot.count({ where: { programacionSemanal: { medicoId: usuario.medicoId } } }),
+              tx.cita.count({ where: { slot: { programacionSemanal: { medicoId: usuario.medicoId } } } }),
+            ]);
+            if (revisiones + programaciones + slots + citas > 0) {
+              throw cuentaConHistorial();
+            }
+          }
+
+          await tx.sesion.deleteMany({ where: { usuarioId } });
+          await tx.usuario.delete({ where: { id: usuarioId } });
+          if (usuario.medicoId) {
+            await tx.medico.delete({ where: { id: usuario.medicoId } });
+          }
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2003"
+        ) {
+          throw cuentaConHistorial();
         }
         throw error;
       }
