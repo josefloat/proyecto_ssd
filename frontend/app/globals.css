@@ -234,7 +234,7 @@ select:focus-visible {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   min-height: 84px;
   align-items: center;
   gap: 4px;
@@ -4618,55 +4618,122 @@ h2 {
   font-size: 18px;
 }
 
-.home-info {
-  display: grid;
+/* ============================================================
+   Home: mapa de la clinica con overlay y tira de datos rapidos.
+   Sustituye a .home-info: el mapa es protagonista; los tres
+   datos (turnos, especialidades, reserva sin costo) van en una
+   fila sutil debajo, sin tarjetas recargadas.
+   ============================================================ */
+
+.home-map-info {
   width: 100%;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 26px;
+  margin-top: 44px;
 }
 
-.home-info article {
-  display: flex;
+.map-hero {
+  position: relative;
+  width: 100%;
+  margin-top: 22px;
+  overflow: hidden;
+  aspect-ratio: 21 / 9;
+  background: var(--surface-low);
+  border: 1px solid rgba(210, 216, 235, 0.7);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-soft);
+}
+
+.clinic-map {
+  display: block;
+  width: 100%;
+  height: calc(100% + 60px);
+}
+
+.clinic-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.map-card {
+  position: absolute;
+  left: clamp(12px, 2vw, 22px);
+  bottom: clamp(12px, 2vw, 22px);
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  background: var(--surface-card);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-card);
-}
-
-.home-info svg {
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  padding: 10px;
-  color: var(--primary);
-  background: var(--primary-ghost);
-  border-radius: 14px;
-}
-
-.home-info div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.home-info strong {
-  color: var(--on-surface);
-  font-size: 19px;
-  line-height: 1.25;
-}
-
-.home-info span {
-  color: var(--on-surface-variant);
+  gap: 10px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  box-shadow: 0 12px 30px -8px rgba(18, 28, 58, 0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   font-size: 18px;
-  line-height: 1.35;
+  font-weight: 660;
+  color: var(--on-surface);
+  max-width: calc(100% - 28px);
+}
+
+.map-card-icon {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+.map-card .como-llegar {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.home-info-strip {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.home-info-strip > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(239, 242, 250, 0.64);
+  border: 1px solid rgba(210, 216, 235, 0.5);
+  border-radius: 999px;
+  color: var(--on-surface);
+  font-size: 18px;
+  font-weight: 660;
+}
+
+.home-info-strip > span svg {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+@media (max-width: 680px) {
+  .map-hero {
+    aspect-ratio: 4 / 3;
+  }
+
+  .map-card {
+    left: 8px;
+    bottom: 8px;
+    right: 8px;
+    max-width: none;
+    font-size: 17px;
+    padding: 10px 14px;
+  }
+
+  .home-info-strip {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 @media (max-width: 860px) {
-  .clinic-grid,
-  .home-info {
+  .clinic-grid {
     grid-template-columns: 1fr;
   }
 
@@ -5217,28 +5284,6 @@ h2 {
 }
 
 /* ============================================================
-   Mapa embebido de la clínica (OpenStreetMap, solo en la home)
-   ============================================================ */
-
-.clinic-map {
-  display: block;
-  width: 100%;
-  margin: 12px 0 2px;
-  overflow: hidden;
-  aspect-ratio: 16 / 10;
-  background: var(--surface-low);
-  border: 1px solid rgba(210, 216, 235, 0.75);
-  border-radius: var(--r-md);
-}
-
-.clinic-map iframe {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-/* ============================================================
    Fondo en vídeo de la home (opcional, lo sube el ADMIN).
    Cuando existe, el shell aísla su contexto de apilado y el
    vídeo queda detrás de todo el contenido pero por encima del
@@ -5280,7 +5325,7 @@ h2 {
 .tiene-video .feature-card,
 .tiene-video .spec-slide,
 .tiene-video .clinic-card,
-.tiene-video .home-info article,
+.tiene-video .home-info-strip > span,
 .tiene-video .faq-item,
 .tiene-video .spec-arrows button {
   background: rgba(248, 250, 255, 0.62);

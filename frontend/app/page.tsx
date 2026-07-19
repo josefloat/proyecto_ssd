@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Bell,
   CalendarDays,
   ChevronDown,
   ChevronRight,
@@ -15,6 +14,7 @@ import {
   Home,
   MapPin,
   Microscope,
+  ShieldCheck,
   Stethoscope,
   UserRound,
 } from "lucide-react";
@@ -285,30 +285,32 @@ export default async function HomePaciente() {
             </div>
           </section>
 
-          <section className="home-info" aria-label="Información de la clínica">
-            <article>
-              <MapPin aria-hidden="true" />
-              <div>
-                <strong>Estamos en Ayacucho</strong>
+          <section className="home-map-info" aria-labelledby="map-title">
+            <div className="home-section-head">
+              <h2 id="map-title">Estamos en Ayacucho</h2>
+            </div>
+            <div className="map-hero">
+              <MapaClinica />
+              <div className="map-card">
+                <MapPin className="map-card-icon" aria-hidden="true" size={20} />
                 <span>{DIRECCION_CLINICA}</span>
-                <MapaClinica />
                 <ComoLlegar compacto />
               </div>
-            </article>
-            <article>
-              <Clock3 aria-hidden="true" />
-              <div>
-                <strong>Turnos de 9:00 a 23:00</strong>
-                <span>Mañana, tarde y noche según especialidad.</span>
-              </div>
-            </article>
-            <article>
-              <Stethoscope aria-hidden="true" />
-              <div>
-                <strong>6 especialidades</strong>
-                <span>Del cuidado general a la atención especializada.</span>
-              </div>
-            </article>
+            </div>
+            <div className="home-info-strip">
+              <span>
+                <Clock3 aria-hidden="true" size={20} />
+                Turnos de 9:00 a 23:00
+              </span>
+              <span>
+                <Stethoscope aria-hidden="true" size={20} />
+                6 especialidades
+              </span>
+              <span>
+                <ShieldCheck aria-hidden="true" size={20} />
+                Reserva sin costo
+              </span>
+            </div>
           </section>
 
           <section className="home-faq" aria-labelledby="faq-title">
@@ -417,23 +419,14 @@ export default async function HomePaciente() {
           <Home aria-hidden="true" size={25} />
           <span>Inicio</span>
         </span>
-        <button type="button" className="patient-nav-item" disabled>
+        <Link className="patient-nav-item" href="/mi-cita">
           <ClipboardList aria-hidden="true" size={25} />
           <span>Mis citas</span>
-          <span className="sr-only">Próximamente</span>
-        </button>
-        <button type="button" className="patient-nav-item" disabled>
-          <Bell aria-hidden="true" size={25} />
-          <span>
-            Notifica<wbr />ciones
-          </span>
-          <span className="sr-only">Próximamente</span>
-        </button>
-        <button type="button" className="patient-nav-item" disabled>
+        </Link>
+        <Link className="patient-nav-item" href="/mi-cita">
           <UserRound aria-hidden="true" size={25} />
           <span>Perfil</span>
-          <span className="sr-only">Próximamente</span>
-        </button>
+        </Link>
       </nav>
     </div>
   );

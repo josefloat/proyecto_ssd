@@ -31,7 +31,7 @@ test("la home real inicia el flujo y muestra la portada de la clínica (HOME-1.1
   await expect(page).toHaveURL(`${BASE_URL}/reservar/especialidad`);
 });
 
-test("solo las funciones futuras permanecen deshabilitadas (HOME-1.2)", async ({ page }) => {
+test("las funciones del nav inferior estan activas (HOME-1.2)", async ({ page }) => {
   // Arrange
   await page.goto(BASE_URL);
   const urlInicial = page.url();
@@ -43,10 +43,14 @@ test("solo las funciones futuras permanecen deshabilitadas (HOME-1.2)", async ({
     "href",
     "/mi-cita",
   );
-  for (const nombre of [/Mis citas/, /Notificaciones/, /Perfil/]) {
-    await expect(page.getByRole("button", { name: nombre }).first()).toBeDisabled();
-  }
-  await expect(page.getByText("Próximamente").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Mis citas" })).toHaveAttribute(
+    "href",
+    "/mi-cita",
+  );
+  await expect(page.getByRole("link", { name: "Perfil" })).toHaveAttribute(
+    "href",
+    "/mi-cita",
+  );
   expect(page.url()).toBe(urlInicial);
   expect(requests.filter((url) => url.includes("/api/"))).toEqual([]);
 });

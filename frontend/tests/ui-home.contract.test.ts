@@ -10,10 +10,10 @@ describe("contrato de entradas de la home", () => {
     // Act / Assert
     expect(home).toContain('href="/reservar/especialidad"');
     expect(home).toContain('href="/mi-cita"');
-    for (const etiqueta of ["Mis citas", "Notifica", "Perfil"]) {
+    for (const etiqueta of ["Mis citas", "Perfil"]) {
       expect(home).toContain(etiqueta);
     }
-    expect((home.match(/disabled/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect((home.match(/disabled/g) ?? []).length).toBeGreaterThanOrEqual(1);
     for (const prohibido of ["San Borja", "ratings", "reseñas", "http://", "https://"]) {
       expect(home.toLocaleLowerCase("es")).not.toContain(
         prohibido.toLocaleLowerCase("es"),
