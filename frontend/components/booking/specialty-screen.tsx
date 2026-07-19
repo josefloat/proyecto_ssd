@@ -50,7 +50,10 @@ export function SpecialtyScreen() {
     emptyEspecialidades,
   );
 
-  const items = state.kind === "ready" || state.kind === "empty" ? state.data.items : [];
+  const items = useMemo(
+    () => (state.kind === "ready" || state.kind === "empty" ? state.data.items : []),
+    [state],
+  );
   const selected = items.find((item) => item.id === seleccion.especialidadId);
 
   useEffect(() => {
@@ -76,6 +79,18 @@ export function SpecialtyScreen() {
     },
     [pathname, router],
   );
+
+  useEffect(() => {
+    if (state.kind !== "ready" || selected) return;
+    const nombre = searchParams.get("nombre");
+    if (!nombre) return;
+    const coincidencia = items.find(
+      (item) => item.nombre.toLocaleLowerCase("es") === nombre.toLocaleLowerCase("es"),
+    );
+    if (coincidencia) {
+      router.replace(seleccionarEspecialidad(coincidencia.id, pathname), { scroll: false });
+    }
+  }, [state.kind, items, selected, searchParams, pathname, router]);
 
   return (
     <BookingShell

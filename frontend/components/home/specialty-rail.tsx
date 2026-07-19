@@ -84,7 +84,10 @@ export function SpecialtyRail({
           const Icono = ICONOS[especialidad.icono];
           return (
             <li key={especialidad.nombre}>
-              <Link className="spec-slide" href="/reservar/especialidad">
+              <Link
+                  className="spec-slide"
+                  href={`/reservar/especialidad?nombre=${encodeURIComponent(especialidad.nombre)}`}
+                >
                 <span className="spec-shot">
                   {especialidad.foto ? (
                     <Image
