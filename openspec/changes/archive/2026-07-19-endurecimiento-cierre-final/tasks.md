@@ -13,4 +13,4 @@
 ## 3. Operación, evidencia y entrega
 
 - [x] 3.1 Crear el runbook raíz y la matriz requisito → escenario → prueba/smoke → resultado/SHA con Docker Compose, `BACKEND_URL`, rutas por rol, variables, despliegue, recuperación y limitaciones; verificar CIERRE-1.1 y CIERRE-1.2 mediante contratos documentales y OpenSpec strict.
-- [ ] 3.2 Ejecutar backend/frontend y Playwright en serie, guardar evidencias externas, abrir el PR y esperar CI; después de una autorización posterior de merge, exigir los cinco jobs de `main`, realizar smokes productivos y Cloudinary, completar evidencia y solo entonces sincronizar/archivar; verificar CIERRE-1.1 y CIERRE-1.2. Esta tarea permanece abierta al detenerse antes del merge.
+- [x] 3.2 Ejecutar backend/frontend y Playwright en serie, guardar evidencias externas, abrir el PR y esperar CI; después de una autorización posterior de merge, exigir los cinco jobs de `main`, realizar smokes productivos y Cloudinary, completar evidencia y solo entonces sincronizar/archivar; verificar CIERRE-1.1 y CIERRE-1.2.

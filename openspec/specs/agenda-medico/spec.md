@@ -1,21 +1,21 @@
 # agenda-medico Specification
 
 ## Purpose
-Definir la agenda diaria de solo lectura disponible para cada médico autenticado.
+Definir la agenda semanal móvil de solo lectura disponible para cada médico autenticado.
 
 ## Requirements
 
 ### Requirement: MEDICO-1 Agenda diaria del médico, exclusivamente de lectura
-`GET /personal/medico/agenda` SHALL exigir sesión con rol MEDICO, SHALL devolver únicamente las citas del día Lima cuyo slot pertenece al `Medico` vinculado a ese `Usuario` (vía `medicoId`), y el rol MEDICO SHALL no tener disponible ninguna ruta bajo `/personal/**` que escriba datos de cita, paciente o agenda.
+`GET /personal/medico/agenda` SHALL exigir sesión MEDICO y devolver únicamente las citas del `Medico` vinculado al Usuario dentro de la ventana móvil de fechas civiles `fechaLima` `[hoy en America/Lima, hoy + 7 días)`: hoy y los seis días siguientes, con +7 excluido. SHALL ordenar cronológicamente, incluir fecha y hora y permitir que la UI represente exactamente los siete días, marcando “Sin citas” los vacíos sin derivar la fecha desde UTC. El rol MEDICO SHALL no disponer de ninguna ruta de escritura de cita, paciente o agenda.
 
-#### Scenario: MEDICO-1.1 El médico ve exactamente su propia agenda del día
-- **GIVEN** citas del día Lima repartidas entre dos médicos distintos
-- **WHEN** el usuario MEDICO vinculado al primer médico consulta su agenda
-- **THEN** recibe `200` con únicamente las citas de su propio médico para ese día, sin citas del segundo médico
-- **PRUEBA AUTOMATIZADA** `agenda-medico.integration.test.ts` usa Supertest/PostgreSQL reales y compara el conjunto exacto por `medicoId`
+#### Scenario: MEDICO-1.1 Ventana propia incluye mañana y +6, excluye +7 y otros médicos
+- **GIVEN** citas propias hoy, mañana, día +6 y +7, más una cita de otro médico dentro de la ventana
+- **WHEN** el MEDICO consulta su agenda
+- **THEN** recibe solo sus citas de hoy, mañana y +6 ordenadas por `fechaLima`/hora; +7 y el otro médico quedan excluidos, y los días intermedios vacíos aparecen como “Sin citas”
+- **PRUEBA AUTOMATIZADA** `agenda-medico.integration.test.ts` amplía el conjunto exacto contra PostgreSQL real y el componente existente se verifica sin E2E nuevo
 
-#### Scenario: MEDICO-1.2 Ninguna acción de escritura es alcanzable para el rol médico
-- **GIVEN** una sesión válida de rol MEDICO y una cita real de su propia agenda
-- **WHEN** intenta `POST /personal/recepcion/citas/:id/pago` y cualquier otro verbo de escritura bajo `/personal/**`
-- **THEN** todos responden `403` antes de tocar la base de datos y la cita permanece con su estado original
-- **PRUEBA AUTOMATIZADA** `agenda-medico.integration.test.ts` recorre las rutas de escritura existentes con Supertest/PostgreSQL reales y confirma ausencia de cambios; `personal-medico.spec.ts` (segundo flujo Playwright) confirma que la UI del médico no ofrece ningún control de escritura
+#### Scenario: MEDICO-1.2 La ventana completa continúa exclusivamente de lectura
+- **GIVEN** una sesión MEDICO y citas propias en varios días de la ventana
+- **WHEN** recorre todos los grupos e intenta las rutas de escritura existentes
+- **THEN** ve fecha/hora sin controles de mutación y cada escritura responde `403` sin cambiar citas, pacientes ni agenda
+- **PRUEBA AUTOMATIZADA** `agenda-medico.integration.test.ts` conserva la tabla de rutas prohibidas y `personal-medico.spec.ts` existente confirma UI de solo lectura
