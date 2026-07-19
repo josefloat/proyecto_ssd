@@ -21,19 +21,19 @@ Solo un `Usuario` ADMIN autenticado SHALL poder crear cuentas MEDICO y RECEPCION
 - **PRUEBA AUTOMATIZADA** `administracion-personal.integration.test.ts` cubre la tabla de variantes con una única aserción estructural de rollback y autorización
 
 ### Requirement: ADM-2 Ciclo de vida explícito sin borrado ni efectos clínicos implícitos
-El ADMIN SHALL poder actualizar nombre, email, horas semanales compatibles y estado `activo`, pero SHALL no poder borrar cuentas, cambiar su rol ni cambiar la especialidad de un médico que ya tenga programación, slots o citas. Reducir horas SHALL rechazarse si queda por debajo de la carga de la programación aplicable. Desactivar o reactivar SHALL revocar todas las sesiones del usuario y SHALL afectar únicamente su acceso: no cancelará citas ni modificará programación o slots.
+El ADMIN SHALL poder actualizar nombre, email, horas semanales compatibles y estado `activo`, pero SHALL no poder cambiar el rol ni cambiar la especialidad de un médico que ya tenga programación, slots o citas. Reducir horas SHALL rechazarse si queda por debajo de la carga de la programación aplicable. Desactivar o reactivar SHALL revocar todas las sesiones y afectar únicamente el acceso. El ADMIN SHALL poder eliminar una cuenta MEDICO o RECEPCIONISTA distinta de sí mismo, nunca una cuenta ADMIN: dentro de una transacción bloqueará el objetivo, eliminará sus sesiones y borrará físicamente un RECEPCIONISTA sin referencias o un MEDICO junto con `Medico` solo si no existen revisiones, programación, slots, citas ni otra historia. Cualquier historia o carrera concurrente SHALL responder `409 CUENTA_CON_HISTORIAL`, revertir todo y conservar la desactivación; ninguna cascada SHALL borrar evidencia clínica. La UI SHALL exigir confirmación irreversible y recomendar desactivar ante `409`.
 
-#### Scenario: ADM-2.1 Actualización compatible y cambio de estado conservan la agenda
-- **GIVEN** un médico con cuenta activa, programación, slots y una sesión vigente
-- **WHEN** el ADMIN actualiza un dato permitido, lo desactiva y posteriormente lo reactiva
-- **THEN** los datos permitidos se conservan, la sesión deja de autenticar desde la desactivación, la reactivación exige un login nuevo y las citas, programaciones y slots mantienen ids y estados
-- **PRUEBA AUTOMATIZADA** `administracion-personal.integration.test.ts` recorre el ciclo contra PostgreSQL real y compara sesiones y snapshots de agenda antes/después
+#### Scenario: ADM-2.1 Actualización, estado y eliminación vacía siguen el ciclo seguro
+- **GIVEN** cuentas actualizables y, por separado, un RECEPCIONISTA y un MEDICO sin historia, ambos con sesiones
+- **WHEN** el ADMIN actualiza/desactiva una cuenta y confirma la eliminación irreversible de las dos cuentas vacías
+- **THEN** actualizar o desactivar conserva la agenda y revoca acceso; cada eliminación responde `204`, borra sesiones/Usuario y también Medico cuando aplica, sin tocar otra información
+- **PRUEBA AUTOMATIZADA** `administracion-personal.integration.test.ts` conserva el ciclo existente y añade una única tabla parametrizada para ambos roles eliminables contra PostgreSQL real
 
-#### Scenario: ADM-2.2 Mutaciones estructurales o reducción incompatible son rechazadas
-- **GIVEN** un médico con especialidad, ocho horas programadas y actividad materializada
-- **WHEN** el ADMIN intenta cambiar su rol, cambiar su especialidad, reducir sus horas por debajo de ocho o borrar su cuenta
-- **THEN** todas las variantes reciben rechazo controlado sin cambiar `Usuario`, `Medico`, programación, slots ni citas
-- **PRUEBA AUTOMATIZADA** `administracion-personal.integration.test.ts` parametriza las mutaciones prohibidas y compara el mismo snapshot persistido
+#### Scenario: ADM-2.2 Mutaciones, cuentas protegidas o con historia no pierden evidencia
+- **GIVEN** variantes con el ADMIN actual, otra cuenta ADMIN y médicos con revisión, programación, slot o cita, incluida una creación concurrente de historia
+- **WHEN** el ADMIN intenta una mutación estructural incompatible o eliminarlas
+- **THEN** recibe rechazo controlado, `409 MUTACION_NO_PERMITIDA` o `409 CUENTA_CON_HISTORIAL`; no cambia ni borra sesiones, cuenta, médico o evidencia y la UI conserva la opción de desactivar
+- **PRUEBA AUTOMATIZADA** la prueba existente de mutaciones y la misma tabla parametrizada de eliminación comparan snapshots antes/después; la autorización ajena reutiliza AUTH-2.1
 
 ### Requirement: ADM-3 Superficies administrativas reales, accesibles y exclusivas de ADMIN
 Después del login, un ADMIN sin cambio de contraseña pendiente SHALL entrar a `/personal/admin`; el dashboard SHALL mostrar solo conteos reales de médicos activos y recepcionistas y enlaces a `/personal/admin/usuarios` y `/personal/admin/programacion`. Las tres superficies SHALL seguir la composición responsive de Stitch `personal/06`–`08`, usar texto significativo de al menos 18 px, objetivos de 48×48 px, foco visible y nombres accesibles. SHALL omitir o deshabilitar como “Próximamente” búsquedas globales, citas manuales, reportes, métricas/alertas ficticias, fotografías, DNI y cualquier acción fuera de alcance.

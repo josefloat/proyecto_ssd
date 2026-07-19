@@ -1,24 +1,24 @@
 # agenda-recepcion Specification
 
 ## Purpose
-Definir la consulta de agenda diaria y el registro seguro de pagos operados por recepción.
+Definir la consulta de agenda semanal móvil y el registro seguro de pagos operados por recepción.
 
 ## Requirements
 
 ### Requirement: RECEP-1 Agenda diaria de recepción con filtros
-`GET /personal/recepcion/agenda` SHALL exigir sesión RECEPCIONISTA, SHALL devolver las citas cuyo slot cae en la fecha Lima solicitada (por defecto hoy) con paciente, médico, especialidad, consultorio, hora y estado, y SHALL aceptar filtros opcionales por especialidad, médico y estado de cita combinables entre sí.
+`GET /personal/recepcion/agenda` SHALL exigir sesión RECEPCIONISTA y devolver la agenda global dentro de la ventana móvil de fechas civiles `fechaLima` `[hoy en America/Lima, hoy + 7 días)`: hoy y los seis días siguientes, con +7 excluido. SHALL incluir paciente, médico, especialidad, consultorio, fecha, hora y estado, ordenar cronológicamente y aceptar filtros combinables por especialidad, médico y estado sobre toda la ventana. La UI SHALL representar exactamente los siete días y marcar “Sin citas” los vacíos sin derivar la fecha desde UTC.
 
-#### Scenario: RECEP-1.1 Agenda del día con filtros combinados
-- **GIVEN** citas del día en distintos estados, especialidades y médicos, más citas de otras fechas
-- **WHEN** recepción solicita la agenda sin filtros y después con especialidad+médico+estado combinados
-- **THEN** la primera respuesta incluye exactamente las citas de ese día Lima con sus datos permitidos, y la segunda incluye únicamente las que cumplen los tres filtros a la vez
-- **PRUEBA AUTOMATIZADA** `agenda-recepcion.integration.test.ts` usa Supertest/PostgreSQL reales y compara conjuntos exactos por combinación de filtros
+#### Scenario: RECEP-1.1 Ventana global y filtros combinados cubren mañana y +6
+- **GIVEN** citas hoy, mañana, +6 y +7 entre distintas especialidades, médicos y estados
+- **WHEN** RECEPCIÓN consulta sin filtros y luego combina especialidad+médico+estado
+- **THEN** la primera respuesta incluye hoy, mañana y +6 pero excluye +7; la segunda contiene solo coincidencias de los tres filtros en cualquier día incluido, ordenadas por fecha/hora
+- **PRUEBA AUTOMATIZADA** `agenda-recepcion.integration.test.ts` amplía los conjuntos exactos y filtros contra PostgreSQL real
 
-#### Scenario: RECEP-1.2 Día o filtro sin coincidencias no inventa citas
-- **GIVEN** una fecha Lima sin ninguna cita y, por separado, una combinación de filtros que ninguna cita cumple
-- **WHEN** recepción consulta cada caso
-- **THEN** ambos reciben `200` con lista vacía, sin error ni datos de otras fechas o filtros
-- **PRUEBA AUTOMATIZADA** `agenda-recepcion.integration.test.ts` verifica ambos casos contra PostgreSQL real
+#### Scenario: RECEP-1.2 Días y filtros vacíos son visibles sin inventar citas
+- **GIVEN** días sin citas dentro de la ventana y una combinación de filtros sin coincidencias
+- **WHEN** RECEPCIÓN consulta la agenda
+- **THEN** los siete grupos siguen consultables, cada día vacío muestra “Sin citas” y ninguna cita de +7 o contraria a filtros aparece
+- **PRUEBA AUTOMATIZADA** `agenda-recepcion.integration.test.ts` conserva los casos vacíos y el componente existente se verifica sin E2E nuevo
 
 ### Requirement: RECEP-2 Registro de pago, constancia y enlace de contacto
 `POST /personal/recepcion/citas/:id/pago` SHALL exigir sesión RECEPCIONISTA, SHALL mover la cita de `RESERVADA` a `PAGADA` mediante una escritura condicionada al estado de origen dentro de una transacción, y SHALL responder `409` sin ninguna escritura cuando el estado de origen no sea `RESERVADA` o cuando otra solicitud ya haya ganado la transición; la constancia HTML imprimible y el enlace `wa.me` SHALL construirse únicamente a partir de datos reales de una cita `PAGADA` (paciente, médico, especialidad, consultorio, horario, código), sin ejecutar ninguna escritura adicional.
