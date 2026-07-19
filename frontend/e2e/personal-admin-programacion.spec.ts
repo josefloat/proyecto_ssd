@@ -27,8 +27,14 @@ test("ADMIN guarda un plan semanal completo con vigencia y datos reales (PROG-4.
   await expect(page.getByText("Contraseña actualizada")).toBeVisible();
   await page.getByLabel("Contraseña", { exact: true }).fill("Admin-Programacion-2026");
   await page.getByRole("button", { name: "Acceder al sistema" }).click();
+  const cargaProgramacion = page.waitForResponse((response) =>
+    response.request().method() === "GET" &&
+    response.url().includes("/api/personal/admin/programacion/"),
+  );
   await page.getByRole("link", { name: /Programación semanal/ }).click();
   await expect(page.getByRole("heading", { name: "Programación semanal" })).toBeVisible();
+  await expect((await cargaProgramacion).status()).toBe(200);
+  await expect(page.locator(".schedule-matrix")).toBeVisible();
   const opcionMedico = page.getByLabel("Médico").locator("option").filter({ hasText: "Dr. Carlos Rojas" });
   await page.getByLabel("Médico").selectOption((await opcionMedico.getAttribute("value"))!);
   await page.getByLabel("Vigente desde").fill("2026-07-20");

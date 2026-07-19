@@ -15,6 +15,18 @@ function bloqueJob(workflow: string, nombre: string, siguiente?: string) {
 }
 
 describe("gate de migración y seed", () => {
+  it("usa acciones vigentes, permisos mínimos y logs de proveedor sanitizados (PIPE-1.1, PIPE-1.2)", () => {
+    const workflow = readFileSync(workflowPath, "utf8");
+    expect(workflow).toContain("permissions:\n  contents: read");
+    expect(workflow).not.toMatch(/actions\/(checkout|setup-node)@v4/);
+    expect(workflow.match(/actions\/checkout@v7/g)?.length).toBe(5);
+    expect(workflow.match(/actions\/setup-node@v7/g)?.length).toBe(3);
+    expect(workflow.match(/package-manager-cache: false/g)?.length).toBe(3);
+    expect(workflow).toContain("vercel@56.3.2");
+    expect(workflow).not.toMatch(/\n\s+cat \/tmp\/render-(response|deploy|poll)\.json/);
+    expect(workflow).not.toMatch(/\n\s+echo "\$deploy"\s*\n/);
+  });
+
   it("ordena migrate y seed antes de habilitar ambos despliegues (DP-1.1)", () => {
     // Arrange
     const workflow = readFileSync(workflowPath, "utf8");

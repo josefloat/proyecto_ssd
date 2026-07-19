@@ -73,7 +73,11 @@ export type CitaAgendaPersonal = Readonly<{
   consultorio: Readonly<{ id: string; codigo: string; nombre: string }>;
 }>;
 
-export type AgendaResponse = Readonly<{ items: CitaAgendaPersonal[] }>;
+export type AgendaResponse = Readonly<{
+  desde: string;
+  hastaExclusiva: string;
+  items: CitaAgendaPersonal[];
+}>;
 
 export type FiltrosAgenda = Readonly<{
   especialidadId?: string;

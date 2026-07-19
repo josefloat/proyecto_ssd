@@ -242,13 +242,35 @@ describe("administración de personal", () => {
     ).resolves.toMatchObject({ status: 200 });
   });
 
-  it("rechaza rol, especialidad, horas incompatibles y borrado sin mutar clínica (ADM-2.2)", async () => {
+  it("elimina cuentas vacías y rechaza mutaciones o borrado con historia sin mutar clínica (ADM-2.1, ADM-2.2)", async () => {
     const app = createApp(testPrisma, { reloj: () => AHORA });
     const cookieAdmin = await adminAutenticado(app);
     const { medico, usuario } = await personalMedicoConAgenda();
     const otra = await testPrisma.especialidad.create({
       data: { nombre: "Otra especialidad", duracionCitaMinutos: 30 },
     });
+    const recepcionVacia = await crearUsuario({
+      rol: RolUsuario.RECEPCIONISTA, email: "recepcion-vacia@senaldevida.pe", password: PASSWORD_MEDICO,
+    });
+    await request(app).post("/personal/sesion").send({ email: recepcionVacia.email, password: PASSWORD_MEDICO });
+    const especialidadVacia = await testPrisma.especialidad.create({
+      data: { nombre: "Especialidad sin historia", duracionCitaMinutos: 30 },
+    });
+    const medicoVacio = await testPrisma.medico.create({
+      data: { nombre: "Médico sin historia", horasSemanales: 8, especialidadId: especialidadVacia.id },
+    });
+    const usuarioMedicoVacio = await crearUsuario({
+      rol: RolUsuario.MEDICO, email: "medico-vacio@senaldevida.pe", password: PASSWORD_MEDICO, medicoId: medicoVacio.id,
+    });
+    await request(app).post("/personal/sesion").send({ email: usuarioMedicoVacio.email, password: PASSWORD_MEDICO });
+    const eliminaciones = await Promise.all([
+      request(app).delete(`/personal/admin/usuarios/${recepcionVacia.id}`).set("Cookie", cookieAdmin),
+      request(app).delete(`/personal/admin/usuarios/${usuarioMedicoVacio.id}`).set("Cookie", cookieAdmin),
+    ]);
+    expect(eliminaciones.map((item) => item.status)).toEqual([204, 204]);
+    await expect(testPrisma.usuario.findMany({ where: { id: { in: [recepcionVacia.id, usuarioMedicoVacio.id] } } })).resolves.toEqual([]);
+    await expect(testPrisma.sesion.count({ where: { usuarioId: { in: [recepcionVacia.id, usuarioMedicoVacio.id] } } })).resolves.toBe(0);
+    await expect(testPrisma.medico.findUnique({ where: { id: medicoVacio.id } })).resolves.toBeNull();
     const antes = {
       usuario: await testPrisma.usuario.findUniqueOrThrow({ where: { id: usuario.id } }),
       medico: await testPrisma.medico.findUniqueOrThrow({ where: { id: medico.id } }),

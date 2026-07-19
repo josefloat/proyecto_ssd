@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, Filter } from "lucide-react";
 import { PersonalShell } from "./personal-shell";
 import { obtenerAgendaRecepcion } from "@/lib/personal-client";
-import type { CitaAgendaPersonal, FiltrosAgenda } from "@/lib/personal-types";
+import type { AgendaResponse, FiltrosAgenda } from "@/lib/personal-types";
 import type { EstadoCita } from "@/lib/api-types";
 import {
   ESTADO_ETIQUETA,
   enmascararDni,
-  formatearFechaLarga,
+  formatearFechaCivil,
   formatearHora,
+  sumarDiasCivil,
 } from "@/lib/personal-format";
 
 const ESTADOS: EstadoCita[] = [
@@ -25,15 +26,15 @@ const ESTADOS: EstadoCita[] = [
 
 export function RecepcionAgendaScreen() {
   const router = useRouter();
-  const [citas, setCitas] = useState<CitaAgendaPersonal[] | null>(null);
+  const [agenda, setAgenda] = useState<AgendaResponse | null>(null);
   const [error, setError] = useState("");
   const [filtros, setFiltros] = useState<FiltrosAgenda>({});
 
   useEffect(() => {
     let activo = true;
     obtenerAgendaRecepcion()
-      .then((items) => {
-        if (activo) setCitas(items);
+      .then((respuesta) => {
+        if (activo) setAgenda(respuesta);
       })
       .catch((e: { status?: number }) => {
         if (!activo) return;
@@ -50,31 +51,36 @@ export function RecepcionAgendaScreen() {
 
   const especialidades = useMemo(() => {
     const mapa = new Map<string, string>();
-    (citas ?? []).forEach((c) => mapa.set(c.especialidad.id, c.especialidad.nombre));
+    (agenda?.items ?? []).forEach((c) => mapa.set(c.especialidad.id, c.especialidad.nombre));
     return [...mapa.entries()];
-  }, [citas]);
+  }, [agenda]);
 
   const medicos = useMemo(() => {
     const mapa = new Map<string, string>();
-    (citas ?? []).forEach((c) => mapa.set(c.medico.id, c.medico.nombre));
+    (agenda?.items ?? []).forEach((c) => mapa.set(c.medico.id, c.medico.nombre));
     return [...mapa.entries()];
-  }, [citas]);
+  }, [agenda]);
 
   const visibles = useMemo(() => {
-    return (citas ?? []).filter((c) => {
+    return (agenda?.items ?? []).filter((c) => {
       if (filtros.especialidadId && c.especialidad.id !== filtros.especialidadId) return false;
       if (filtros.medicoId && c.medico.id !== filtros.medicoId) return false;
       if (filtros.estado && c.estado !== filtros.estado) return false;
       return true;
     });
-  }, [citas, filtros]);
+  }, [agenda, filtros]);
 
-  const fechaHoy = citas && citas.length > 0 ? formatearFechaLarga(citas[0].inicioUtc) : "";
+  const dias = useMemo(() => agenda
+    ? Array.from({ length: 7 }, (_, indice) => {
+        const fecha = sumarDiasCivil(agenda.desde, indice);
+        return { fecha, citas: visibles.filter((cita) => cita.fechaLima === fecha) };
+      })
+    : [], [agenda, visibles]);
 
   return (
     <PersonalShell
-      titulo="Agenda del día"
-      subtitulo={fechaHoy || undefined}
+      titulo="Agenda de los próximos 7 días"
+      subtitulo={agenda ? `Desde ${formatearFechaCivil(agenda.desde)}` : undefined}
       usuario="Recepción"
     >
       <section className="agenda-filtros" aria-label="Filtros de la agenda">
@@ -141,12 +147,15 @@ export function RecepcionAgendaScreen() {
         <p className="personal-inline-error" role="alert">{error}</p>
       ) : null}
 
-      {citas === null && !error ? (
+      {agenda === null && !error ? (
         <p className="agenda-cargando">Cargando agenda…</p>
       ) : null}
 
-      {citas !== null ? (
-        <div className="agenda-tabla" aria-label="Citas del día">
+      {agenda !== null ? (
+        <div className="agenda-semana" aria-label="Citas de los próximos siete días">
+          {dias.map((dia) => <section className="agenda-dia" key={dia.fecha}>
+          <h2>{formatearFechaCivil(dia.fecha)}</h2>
+        <div className="agenda-tabla" aria-label={`Citas del ${dia.fecha}`}>
           <div className="agenda-row agenda-head" aria-hidden="true">
             <span>Hora</span>
             <span>Paciente</span>
@@ -154,12 +163,12 @@ export function RecepcionAgendaScreen() {
             <span>Estado</span>
             <span>Acción</span>
           </div>
-          {visibles.length === 0 ? (
+          {dia.citas.length === 0 ? (
             <p className="agenda-vacia" role="status">
-              No hay citas que coincidan con los filtros seleccionados.
+              Sin citas
             </p>
           ) : (
-            visibles.map((cita) => (
+            dia.citas.map((cita) => (
               <div className="agenda-row" key={cita.id}>
                 <span className="agenda-hora">{formatearHora(cita.inicioUtc)}</span>
                 <span className="agenda-paciente">
@@ -186,7 +195,7 @@ export function RecepcionAgendaScreen() {
                 </span>
               </div>
             ))
-          )}
+          )}</div></section>)}
         </div>
       ) : null}
     </PersonalShell>

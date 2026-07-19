@@ -14,6 +14,7 @@ export class PersonalApiError extends Error {
       | "EMAIL_DUPLICADO"
       | "ESPECIALIDAD_NO_ENCONTRADA"
       | "MUTACION_NO_PERMITIDA"
+      | "CUENTA_CON_HISTORIAL"
       | "HORAS_SEMANALES_INCOMPATIBLES"
       | "MEDICO_NO_ENCONTRADO"
       | "CONSULTORIO_NO_ENCONTRADO"
@@ -92,6 +93,14 @@ export function mutacionNoPermitida(): PersonalApiError {
     409,
     "MUTACION_NO_PERMITIDA",
     "La modificación solicitada no está permitida.",
+  );
+}
+
+export function cuentaConHistorial(): PersonalApiError {
+  return new PersonalApiError(
+    409,
+    "CUENTA_CON_HISTORIAL",
+    "La cuenta tiene historial operativo. Desactívala en lugar de eliminarla.",
   );
 }
 

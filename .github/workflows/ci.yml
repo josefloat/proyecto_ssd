@@ -1,5 +1,8 @@
 name: ci
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -34,11 +37,12 @@ jobs:
       DATABASE_URL: postgresql://senal_de_vida:senal_de_vida@localhost:5432/senal_de_vida?schema=public
       DIRECT_URL: postgresql://senal_de_vida:senal_de_vida@localhost:5432/senal_de_vida?schema=public
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Instalar dependencias del backend
         working-directory: backend
@@ -110,11 +114,12 @@ jobs:
             || secrets.DIRECT_URL
         }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Instalar dependencias del backend
         working-directory: backend
@@ -148,7 +153,7 @@ jobs:
     outputs:
       backend_url: ${{ steps.backend.outputs.url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Desactivar auto-deploy nativo de Render
         run: |
@@ -157,7 +162,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"autoDeploy": "no"}')"
           echo "HTTP $http_code"
-          cat /tmp/render-response.json
           if [ "$http_code" -ge 300 ]; then
             echo "::error::La API de Render devolvió $http_code al desactivar autoDeploy"
             exit 1
@@ -171,7 +175,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"commitId\": \"${GITHUB_SHA}\"}")"
           echo "HTTP $http_code"
-          cat /tmp/render-deploy.json
           if [ "$http_code" -ge 300 ]; then
             echo "::error::La API de Render devolvió $http_code al disparar el deploy"
             exit 1
@@ -191,7 +194,6 @@ jobs:
               -H "Authorization: Bearer ${RENDER_API_KEY}")"
             if [ "$http_code" -ge 300 ]; then
               echo "::error::La API de Render devolvió $http_code al consultar el deploy"
-              cat /tmp/render-poll.json
               exit 1
             fi
             deploy="$(cat /tmp/render-poll.json)"
@@ -206,7 +208,6 @@ jobs:
             case "$status" in
               build_failed|update_failed|canceled|deactivated|pre_deploy_failed)
                 echo "::error::Deploy de Render terminó en estado $status"
-                echo "$deploy"
                 exit 1
                 ;;
             esac
@@ -246,14 +247,15 @@ jobs:
     outputs:
       frontend_domain: ${{ steps.production.outputs.domain }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Instalar Vercel CLI y dependencias del frontend (para el smoke/axe)
-        run: npm install -g vercel@latest
+        run: npm install -g vercel@56.3.2
 
       - name: Instalar dependencias del frontend
         working-directory: frontend
@@ -340,7 +342,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # /live nunca toca la base de datos (backend/tests/live.test.ts lo
       # prueba mockeando $queryRaw), así que no hace falta romper Neon aquí

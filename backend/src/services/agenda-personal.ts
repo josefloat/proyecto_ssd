@@ -1,5 +1,5 @@
 import { EstadoCita, Prisma, type PrismaClient } from "@prisma/client";
-import { fechaCivilDesdePrisma, fechaCivilParaPrisma } from "../domain/fechas";
+import { fechaCivilDesdePrisma, fechaCivilParaPrisma, sumarDias } from "../domain/fechas";
 import {
   citaNoEncontradaPersonal,
   citaNoPagable,
@@ -35,7 +35,7 @@ export type CitaAgendaPersonal = Readonly<{
 }>;
 
 export type FiltrosAgendaRecepcion = Readonly<{
-  fechaLima: string;
+  desde: string;
   especialidadId?: string;
   medicoId?: string;
   estado?: EstadoCita;
@@ -47,7 +47,7 @@ export type ServiciosAgendaPersonal = Readonly<{
   ): Promise<ReadonlyArray<CitaAgendaPersonal>>;
   agendaMedico(
     medicoId: string,
-    fechaLima: string,
+    desde: string,
   ): Promise<ReadonlyArray<CitaAgendaPersonal>>;
   registrarPago(citaId: string): Promise<CitaAgendaPersonal>;
 }>;
@@ -99,11 +99,15 @@ export function crearServiciosAgendaPersonal(
 ): ServiciosAgendaPersonal {
   return {
     async agendaRecepcion(filtros) {
+      const hastaExclusiva = sumarDias(filtros.desde, 7);
       const citas = await database.cita.findMany({
         where: {
           estado: filtros.estado,
           slot: {
-            fechaLima: fechaCivilParaPrisma(filtros.fechaLima),
+            fechaLima: {
+              gte: fechaCivilParaPrisma(filtros.desde),
+              lt: fechaCivilParaPrisma(hastaExclusiva),
+            },
             programacionSemanal: {
               medicoId: filtros.medicoId,
               medico: filtros.especialidadId
@@ -117,11 +121,15 @@ export function crearServiciosAgendaPersonal(
       return ordenarAgenda(citas);
     },
 
-    async agendaMedico(medicoId, fechaLima) {
+    async agendaMedico(medicoId, desde) {
+      const hastaExclusiva = sumarDias(desde, 7);
       const citas = await database.cita.findMany({
         where: {
           slot: {
-            fechaLima: fechaCivilParaPrisma(fechaLima),
+            fechaLima: {
+              gte: fechaCivilParaPrisma(desde),
+              lt: fechaCivilParaPrisma(hastaExclusiva),
+            },
             programacionSemanal: { medicoId },
           },
         },
