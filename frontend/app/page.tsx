@@ -1,8 +1,6 @@
 import Link from "next/link";
 import {
-  Baby,
   Bell,
-  Bone,
   CalendarDays,
   ChevronDown,
   ChevronRight,
@@ -11,7 +9,6 @@ import {
   Clock3,
   CreditCard,
   FileText,
-  Hand,
   HandHeart,
   HeartHandshake,
   HeartPulse,
@@ -20,13 +17,20 @@ import {
   Microscope,
   Stethoscope,
   UserRound,
-  Venus,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ComoLlegar, DIRECCION_CLINICA } from "@/components/clinic-directions";
+import { MapaClinica } from "@/components/home/clinic-map";
 import { HeroCarousel } from "@/components/home/hero-carousel";
+import { HomeBackgroundVideo } from "@/components/home/home-background-video";
+import { SpecialtyRail } from "@/components/home/specialty-rail";
 import { MotionPage } from "@/components/motion-page";
-import { obtenerImagenesSitio } from "@/lib/site-images";
+import {
+  fondoDeVideo,
+  fotoDeEspecialidad,
+  fotosDelHero,
+  obtenerImagenesSitio,
+} from "@/lib/site-images";
 
 // Fallback local versionado: si la base de datos no define "hero-home"
 // (o el backend no responde), la home sigue mostrando la ilustración local.
@@ -60,51 +64,53 @@ const TARJETAS_CLINICA = [
 const HERO_ALT =
   "Una médica y un enfermero peruanos acompañan con calidez a un adulto mayor en un centro de salud de Ayacucho.";
 
-// Especialidades de atención ambulatoria: el mismo catálogo canónico del
-// backend (nombre y duración de consulta), con su tono e icono de la
-// presentación pública. Cada tarjeta lleva al primer paso de la reserva.
+// Especialidades del catálogo canónico del backend (nombre y duración de
+// consulta), con su tono e icono de la presentación pública. Cada tarjeta
+// del carrusel lleva al primer paso de la reserva; la foto la sube el ADMIN
+// desde el panel (clave "especialidad-<slug>") y, si falta, la tarjeta cae
+// en un marcador ilustrado con el icono de la especialidad.
 const ESPECIALIDADES_HOME = [
   {
     nombre: "Medicina General",
     detalle: "Chequeos y atención primaria",
     duracion: 20,
-    icono: Stethoscope,
-    tono: "tone-amber",
+    icono: "stethoscope",
+    tono: "spec-amber",
   },
   {
     nombre: "Cardiología",
     detalle: "Cuidado del corazón",
     duracion: 30,
-    icono: HeartPulse,
-    tono: "tone-rose",
+    icono: "heart",
+    tono: "spec-rose",
   },
   {
     nombre: "Pediatría",
     detalle: "Salud de los más pequeños",
     duracion: 20,
-    icono: Baby,
-    tono: "tone-cyan",
+    icono: "baby",
+    tono: "spec-cyan",
   },
   {
     nombre: "Traumatología",
     detalle: "Huesos, golpes y articulaciones",
     duracion: 30,
-    icono: Bone,
-    tono: "tone-violet",
+    icono: "bone",
+    tono: "spec-violet",
   },
   {
     nombre: "Ginecología",
     detalle: "Salud de la mujer",
     duracion: 30,
-    icono: Venus,
-    tono: "tone-blue",
+    icono: "venus",
+    tono: "spec-blue",
   },
   {
     nombre: "Dermatología",
     detalle: "Cuidado de la piel",
     duracion: 15,
-    icono: Hand,
-    tono: "tone-orange",
+    icono: "hand",
+    tono: "spec-orange",
   },
 ] as const;
 
@@ -135,10 +141,29 @@ const PREGUNTAS_FRECUENTES = [
 
 export default async function HomePaciente() {
   const imagenes = await obtenerImagenesSitio();
-  const hero = imagenes["hero-home"];
+
+  // Portada: las fotos que el ADMIN haya subido, o la ilustración local
+  // versionada si todavía no hay ninguna (o el backend no responde).
+  const subidas = fotosDelHero(imagenes);
+  const fotosHero = subidas.length
+    ? subidas.map((foto, i) => ({
+        url: foto.url,
+        alt: i === 0 ? foto.alt || HERO_ALT : "",
+      }))
+    : [{ url: HERO_LOCAL, alt: HERO_ALT }];
+
+  const especialidades = ESPECIALIDADES_HOME.map((especialidad) => ({
+    ...especialidad,
+    foto: fotoDeEspecialidad(imagenes, especialidad.nombre)?.url ?? "",
+  }));
+
+  // El fondo en vídeo es opcional: solo cuando existe, la home pasa a su
+  // variante en cristal para que las secciones se lean sobre el movimiento.
+  const video = fondoDeVideo(imagenes);
 
   return (
-    <div className="patient-home-shell">
+    <div className={`patient-home-shell${video ? " tiene-video" : ""}`}>
+      {video ? <HomeBackgroundVideo url={video.url} poster={video.poster} /> : null}
       <header className="home-topbar">
         <div className="brand-lockup" aria-label="Señal de Vida — Ayacucho">
           <BrandMark size={46} />
@@ -163,16 +188,13 @@ export default async function HomePaciente() {
           <div className="home-hero-grid">
             <div className="hero-media">
               <div className="hero-glow" aria-hidden="true" />
-              <HeroCarousel
-                fotoUrl={hero?.url ?? HERO_LOCAL}
-                fotoAlt={hero?.alt || HERO_ALT}
-              />
+              <HeroCarousel fotos={fotosHero} />
             </div>
 
             <div className="hero-copy">
               <p className="eyebrow">
                 <HeartPulse aria-hidden="true" size={18} />
-                Clínica ambulatoria · Ayacucho
+                Clínica Señal de Vida · Ayacucho
               </p>
               <h1 id="home-title">Reserva tu cita de manera fácil y rápida</h1>
               <span className="pulse-underline" aria-hidden="true">
@@ -231,27 +253,7 @@ export default async function HomePaciente() {
               <h2 id="specialties-title">Nuestras especialidades</h2>
               <p>Seis áreas de atención para ti y tu familia.</p>
             </div>
-            <ul className="specialty-grid">
-              {ESPECIALIDADES_HOME.map((especialidad) => {
-                const Icono = especialidad.icono;
-                return (
-                  <li key={especialidad.nombre}>
-                    <Link className="specialty-card" href="/reservar/especialidad">
-                      <span className={`specialty-icon ${especialidad.tono}`} aria-hidden="true">
-                        <Icono size={27} />
-                      </span>
-                      <span className="specialty-text">
-                        <strong>{especialidad.nombre}</strong>
-                        <span>
-                          {especialidad.detalle} · {especialidad.duracion} min
-                        </span>
-                      </span>
-                      <ChevronRight className="specialty-go" aria-hidden="true" size={22} />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <SpecialtyRail especialidades={especialidades} />
           </section>
 
           <section className="home-clinic" aria-labelledby="clinic-title">
@@ -289,6 +291,7 @@ export default async function HomePaciente() {
               <div>
                 <strong>Estamos en Ayacucho</strong>
                 <span>{DIRECCION_CLINICA}</span>
+                <MapaClinica />
                 <ComoLlegar compacto />
               </div>
             </article>
@@ -359,8 +362,8 @@ export default async function HomePaciente() {
               <span className="footer-brand-name">Señal de Vida</span>
             </span>
             <p>
-              Clínica ambulatoria en Ayacucho, Perú. Reserva tu cita en línea,
-              paga en la clínica y cancela sin costo cuando lo necesites.
+              Clínica en Ayacucho, Perú. Reserva tu cita en línea, paga en la
+              clínica y cancela sin costo cuando lo necesites.
             </p>
           </div>
 
@@ -395,7 +398,7 @@ export default async function HomePaciente() {
               </li>
               <li>
                 <Stethoscope aria-hidden="true" size={20} />
-                <span>6 especialidades de atención ambulatoria.</span>
+                <span>6 especialidades para ti y tu familia.</span>
               </li>
             </ul>
             <ComoLlegar compacto />
@@ -405,7 +408,6 @@ export default async function HomePaciente() {
         <div className="home-footer-bar">
           <div>
             <span>© {new Date().getFullYear()} Señal de Vida · Ayacucho, Perú</span>
-            <span>Proyecto académico — demostración sin fines comerciales.</span>
           </div>
         </div>
       </footer>

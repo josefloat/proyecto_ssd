@@ -1,13 +1,27 @@
 // Subida directa navegador → Cloudinary con firma emitida por el route
 // handler /api/cloudinary-firma (que valida la sesión ADMIN contra el
 // backend). Devuelve la URL segura del asset subido.
-const LIMITE_BYTES = 10 * 1024 * 1024;
+//
+// El tipo de recurso viaja en la ruta del endpoint, no entre los parámetros
+// firmados (la firma cubre solo folder + timestamp), así que la misma firma
+// sirve para subir imágenes y vídeos sin tocar el route handler.
+export type RecursoCloudinary = "image" | "video";
 
-export async function subirImagenCloudinary(archivo: File): Promise<string> {
-  if (!archivo.type.startsWith("image/")) {
-    throw new Error("ARCHIVO_NO_IMAGEN");
+const LIMITE_BYTES: Readonly<Record<RecursoCloudinary, number>> = {
+  image: 10 * 1024 * 1024,
+  // El fondo de la home es un vídeo corto en bucle; por encima de 100 MB
+  // Cloudinary exige subida por trozos, que este cliente no implementa.
+  video: 80 * 1024 * 1024,
+};
+
+export async function subirArchivoCloudinary(
+  archivo: File,
+  recurso: RecursoCloudinary = "image",
+): Promise<string> {
+  if (!archivo.type.startsWith(`${recurso}/`)) {
+    throw new Error(recurso === "video" ? "ARCHIVO_NO_VIDEO" : "ARCHIVO_NO_IMAGEN");
   }
-  if (archivo.size > LIMITE_BYTES) {
+  if (archivo.size > LIMITE_BYTES[recurso]) {
     throw new Error("ARCHIVO_MUY_GRANDE");
   }
   const firmaResponse = await fetch("/api/cloudinary-firma", { method: "POST" });
@@ -33,7 +47,7 @@ export async function subirImagenCloudinary(archivo: File): Promise<string> {
   form.append("signature", firma);
 
   const subida = await fetch(
-    `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/${recurso}/upload`,
     { method: "POST", body: form },
   );
   const cuerpo = (await subida.json().catch(() => null)) as {
@@ -47,4 +61,12 @@ export async function subirImagenCloudinary(archivo: File): Promise<string> {
     });
   }
   return cuerpo.secure_url;
+}
+
+export function subirImagenCloudinary(archivo: File): Promise<string> {
+  return subirArchivoCloudinary(archivo, "image");
+}
+
+export function subirVideoCloudinary(archivo: File): Promise<string> {
+  return subirArchivoCloudinary(archivo, "video");
 }

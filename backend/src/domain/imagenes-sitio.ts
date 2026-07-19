@@ -8,8 +8,11 @@ const MEDICO =
   /^medico:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // Solo se aceptan URLs de entrega de Cloudinary (upload o fetch): el panel
-// nunca debe apuntar el sitio público a un origen no controlado.
-const CLOUDINARY_URL = /^https:\/\/res\.cloudinary\.com\/[a-z0-9_-]+\/image\//i;
+// nunca debe apuntar el sitio público a un origen no controlado. Se admiten
+// los dos tipos de recurso que publica el panel: "image" para fotos y
+// "video" para el fondo animado de la home.
+const CLOUDINARY_URL =
+  /^https:\/\/res\.cloudinary\.com\/[a-z0-9_-]+\/(image|video)\//i;
 
 export type ImagenSitioInput = Readonly<{ url: string; alt: string }>;
 

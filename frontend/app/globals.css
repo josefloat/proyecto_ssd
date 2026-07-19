@@ -3589,12 +3589,20 @@ button.patient-nav-item:disabled {
   border-bottom: 1px solid var(--outline-variant);
 }
 
-.image-card-preview img {
+.image-card-preview img,
+.image-card-preview video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Las fotos del carrusel de especialidades son verticales: la previsualización
+   usa la misma proporción que la tarjeta pública para que el ADMIN vea el
+   encuadre real antes de publicar. */
+.image-card.is-retrato .image-card-preview {
+  aspect-ratio: 3 / 4;
 }
 
 .image-card-preview span {
@@ -3873,6 +3881,16 @@ h2 {
 
 .hc-scene-pago {
   background: linear-gradient(150deg, #16264d, #0e1830 82%);
+}
+
+/* Fotos de portada 2..n: viajan como overlay (la 1 es la capa base), así que
+   heredan el mismo barrido con clip-path que las escenas ilustradas. */
+.hc-scene-foto {
+  background: var(--surface-low);
+}
+
+.hc-scene-foto img {
+  object-fit: cover;
 }
 
 /* Leyenda de cada diapositiva: chip sólido (contraste estable para axe). */
@@ -4668,83 +4686,189 @@ h2 {
   margin-top: 52px;
 }
 
-.specialty-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin: 22px 0 0;
-  padding: 0;
-  list-style: none;
+/* --- Carrusel de especialidades de la home ---
+   Prefijo propio (.spec-*) porque .specialty-* lo comparte el paso de
+   especialidad del flujo de reserva: convertir aquellas clases en carrusel
+   rompería esa pantalla. El desplazamiento es scroll nativo con snap; las
+   flechas son solo un atajo para ratón. */
+
+.spec-rail-wrap {
+  position: relative;
 }
 
-.specialty-card {
+.spec-rail {
   display: flex;
-  height: 100%;
+  /* Los márgenes negativos con padding equivalente evitan que el overflow
+     recorte la sombra de las tarjetas y el anillo de foco del teclado. */
+  margin: 22px -6px 0;
+  padding: 12px 6px 18px;
+  gap: 18px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-variant) transparent;
+}
+
+.spec-rail > li {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.spec-slide {
+  display: grid;
+  width: 252px;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
+  column-gap: 10px;
+  row-gap: 12px;
+  padding: 12px 14px 16px;
   color: inherit;
   background: var(--surface-card);
   border: 1px solid rgba(210, 216, 235, 0.6);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   box-shadow: var(--shadow-card);
   text-decoration: none;
   transition:
-    transform 200ms var(--ease-out),
-    box-shadow 200ms ease,
-    border-color 200ms ease;
+    transform 220ms var(--ease-out),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
 }
 
-.specialty-card:hover {
-  transform: translateY(-3px);
+/* Leve desalineación alterna: da el aire de fotos apoyadas unas sobre otras
+   sin mover el flujo (la rotación no afecta al layout). Al enfocar o pasar
+   por encima, la tarjeta se endereza. */
+.spec-rail > li:nth-child(odd) .spec-slide {
+  transform: rotate(-1.3deg);
+}
+
+.spec-rail > li:nth-child(even) .spec-slide {
+  transform: rotate(1.1deg);
+}
+
+.spec-rail > li:nth-child(odd) .spec-slide:hover,
+.spec-rail > li:nth-child(even) .spec-slide:hover,
+.spec-rail > li:nth-child(odd) .spec-slide:focus-visible,
+.spec-rail > li:nth-child(even) .spec-slide:focus-visible {
+  transform: translateY(-4px);
   border-color: rgba(47, 95, 232, 0.38);
   box-shadow: var(--shadow-soft);
 }
 
-.specialty-icon {
-  display: grid;
-  width: 54px;
-  height: 54px;
-  flex: 0 0 54px;
-  place-items: center;
-  border-radius: 17px;
+.spec-shot {
+  position: relative;
+  display: block;
+  grid-column: 1 / -1;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: var(--surface-low);
+  border-radius: 22px;
 }
 
-.tone-amber { color: #9d6206; background: #fdeecd; }
-.tone-rose { color: #c22f5c; background: #ffe1e8; }
-.tone-cyan { color: var(--accent-deep); background: var(--accent-soft); }
-.tone-violet { color: #6743c4; background: #e9e2fc; }
-.tone-blue { color: var(--primary-deep); background: var(--primary-soft); }
-.tone-orange { color: #bf5416; background: #ffe7d6; }
+.spec-shot img {
+  object-fit: cover;
+}
 
-.specialty-text {
+/* Marcador cuando la especialidad todavía no tiene foto publicada. Tonos
+   propios (.spec-*) y no los .tone-* del flujo de reserva: son dos paletas
+   que deben poder evolucionar por separado. */
+.spec-shot-ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.spec-amber { color: #8a5600; background: linear-gradient(160deg, #ffedbd, #ffdf94); }
+.spec-rose { color: #b04553; background: linear-gradient(160deg, #ffdde3, #ffc4cf); }
+.spec-cyan { color: #00708a; background: linear-gradient(160deg, #cdeffa, #a8e2f2); }
+.spec-violet { color: #7f2ea4; background: linear-gradient(160deg, #ecdcfa, #d9bff2); }
+.spec-blue { color: #2456d0; background: linear-gradient(160deg, #d6e4fd, #b8cdfb); }
+.spec-orange { color: #a04f00; background: linear-gradient(160deg, #ffe5c8, #ffd2a2); }
+
+.spec-shot-badge {
+  position: absolute;
+  z-index: 2;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: var(--primary-deep);
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 15px;
+  box-shadow: 0 10px 22px -10px rgba(18, 28, 58, 0.5);
+}
+
+.spec-slide-text {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 2px;
 }
 
-.specialty-text strong {
+.spec-slide-text strong {
   color: var(--on-surface);
-  font-size: 19px;
+  font-size: 20px;
   line-height: 1.2;
 }
 
-.specialty-text > span {
+.spec-slide-text > span {
   color: var(--on-surface-variant);
   font-size: 18px;
   line-height: 1.3;
 }
 
-.specialty-go {
+.spec-slide-go {
   flex: 0 0 auto;
-  margin-left: auto;
   color: var(--primary);
   transition: transform 200ms var(--ease-out);
 }
 
-.specialty-card:hover .specialty-go {
+.spec-slide:hover .spec-slide-go {
   transform: translateX(4px);
+}
+
+.spec-arrows {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.spec-arrows button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: var(--primary-deep);
+  background: var(--surface-card);
+  border: 1px solid rgba(210, 216, 235, 0.7);
+  border-radius: 999px;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease-out),
+    background-color 180ms ease;
+}
+
+.spec-arrows button:disabled {
+  color: var(--outline);
+  box-shadow: none;
+  opacity: 0.45;
+  cursor: default;
+}
+
+.spec-arrows button:not(:disabled):hover {
+  transform: translateY(-2px);
+  background: var(--primary-ghost);
+}
+
+@media (max-width: 600px) {
+  .spec-slide {
+    width: 216px;
+  }
 }
 
 /* --- Preguntas frecuentes (acordeón nativo, sin JS) --- */
@@ -4973,7 +5097,10 @@ h2 {
 .footer-links a {
   display: inline-flex;
   width: fit-content;
-  min-height: 40px;
+  /* 48×48 es el mínimo táctil que verifica la suite de accesibilidad; el
+     enlace más corto ("Inicio") no llega solo con su texto. */
+  min-width: 48px;
+  min-height: 48px;
   align-items: center;
   padding: 4px 2px;
   color: #c9d4f1;
@@ -5030,10 +5157,6 @@ h2 {
 }
 
 @media (max-width: 960px) {
-  .specialty-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .home-footer-main {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -5044,10 +5167,6 @@ h2 {
 }
 
 @media (max-width: 680px) {
-  .specialty-grid {
-    grid-template-columns: 1fr;
-  }
-
   .home-cta {
     align-items: flex-start;
     flex-direction: column;
@@ -5097,6 +5216,79 @@ h2 {
   }
 }
 
+/* ============================================================
+   Mapa embebido de la clínica (OpenStreetMap, solo en la home)
+   ============================================================ */
+
+.clinic-map {
+  display: block;
+  width: 100%;
+  margin: 12px 0 2px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: var(--surface-low);
+  border: 1px solid rgba(210, 216, 235, 0.75);
+  border-radius: var(--r-md);
+}
+
+.clinic-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ============================================================
+   Fondo en vídeo de la home (opcional, lo sube el ADMIN).
+   Cuando existe, el shell aísla su contexto de apilado y el
+   vídeo queda detrás de todo el contenido pero por encima del
+   degradado del <body>. Las superficies pasan a cristal para
+   que el vídeo se lea como fondo y no compita con el texto.
+   ============================================================ */
+
+.patient-home-shell.tiene-video {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-bg-video {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+}
+
+.home-bg-video video,
+.home-bg-video img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Velo sobre el vídeo: fija el contraste del texto pase lo que pase en la
+   imagen (axe evalúa el color de fondo resuelto, no el fotograma). */
+.home-bg-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(237, 240, 248, 0.82),
+    rgba(237, 240, 248, 0.9)
+  );
+}
+
+.tiene-video .feature-card,
+.tiene-video .spec-slide,
+.tiene-video .clinic-card,
+.tiene-video .home-info article,
+.tiene-video .faq-item,
+.tiene-video .spec-arrows button {
+  background: var(--glass-strong);
+  border-color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+
 /* --------- Reduced motion: sin animaciones ni transiciones --------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -5112,5 +5304,16 @@ h2 {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
+  }
+
+  /* El componente ya evita montar el <video>, pero si llega a existir (por
+     ejemplo entre el render del servidor y la hidratación) no debe verse
+     moviéndose: queda el póster o el degradado del contenedor. */
+  .home-bg-video video {
+    display: none;
+  }
+
+  .spec-rail {
+    scroll-snap-type: none;
   }
 }

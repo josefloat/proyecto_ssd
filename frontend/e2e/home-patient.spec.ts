@@ -12,7 +12,7 @@ test.beforeAll(async () => {
 
 test.afterAll(() => server.kill());
 
-test("la home real inicia el flujo y muestra el aviso académico (HOME-1.1)", async ({ page }) => {
+test("la home real inicia el flujo y muestra la portada de la clínica (HOME-1.1)", async ({ page }) => {
   // Arrange / Act
   const response = await page.goto(BASE_URL);
 

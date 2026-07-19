@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft,
@@ -17,10 +17,11 @@ import {
   Wallet,
 } from "lucide-react";
 
-// Carrusel del hero. La foto de la clínica es la capa base SIEMPRE montada:
-// los specs consultan getByRole("img") en modo estricto, así que debe existir
-// exactamente una imagen accesible en todo momento. Las escenas ilustradas
-// son overlays aria-hidden que barren por encima con clip-path (nunca
+// Carrusel del hero. La primera foto de la clínica es la capa base SIEMPRE
+// montada: los specs consultan getByRole("img") en modo estricto, así que
+// debe existir exactamente una imagen accesible en todo momento. Todo lo
+// demás —escenas ilustradas y fotos adicionales que el ADMIN sube desde el
+// panel— son overlays aria-hidden que barren por encima con clip-path (nunca
 // opacidad: axe muestrearía texto a medio fundido). La costura del barrido
 // coincide entre el overlay que entra y el que sale, como un wipe continuo.
 // Autoplay con pausa al interactuar y barras de progreso tipo "historias";
@@ -30,19 +31,69 @@ const DURACION_MS = 7000;
 
 type Escena = "agenda" | "equipo" | "pago";
 
+export type FotoHero = Readonly<{ url: string; alt: string }>;
+
 type Diapositiva = Readonly<{
   id: string;
   escena: Escena | null;
+  foto: FotoHero | null;
   titulo: string;
   icono: typeof HeartPulse;
 }>;
 
-const DIAPOSITIVAS: readonly Diapositiva[] = [
-  { id: "foto", escena: null, titulo: "Equipo humano, atención cercana", icono: HeartPulse },
+// Escenas ilustradas fijas, en su orden narrativo: elegir hora, conocer las
+// especialidades y saber que no se paga en línea.
+const ESCENAS: readonly Omit<Diapositiva, "foto">[] = [
   { id: "agenda", escena: "agenda", titulo: "Elige fecha y hora en segundos", icono: CalendarClock },
   { id: "equipo", escena: "equipo", titulo: "Especialidades para toda tu familia", icono: Stethoscope },
   { id: "pago", escena: "pago", titulo: "Reserva gratis y paga en la clínica", icono: ShieldCheck },
 ];
+
+// Leyenda de cada foto de portada. El ADMIN sube las fotos sin escribir
+// texto, así que la leyenda es fija por posición: describe a la clínica, no
+// a la imagen concreta (el contenido visual ya va en el alt de la primera).
+const LEYENDAS_FOTO: readonly string[] = [
+  "Equipo humano, atención cercana",
+  "Un espacio pensado para cuidarte",
+  "Cerca de ti, en Ayacucho",
+  "Atención con calma y sin colas",
+  "Profesionales de tu comunidad",
+  "Tu salud, nuestra prioridad",
+];
+
+// Intercala fotos y escenas: la portada abre siempre (es la capa base) y a
+// partir de ahí se alternan escena, foto, escena, foto… Si sobran fotos o
+// sobran escenas, la cola se añade tal cual en su orden.
+function construirDiapositivas(fotos: readonly FotoHero[]): Diapositiva[] {
+  const [portada, ...resto] = fotos;
+  const diapositivas: Diapositiva[] = [
+    {
+      id: "foto-01",
+      escena: null,
+      foto: portada,
+      titulo: LEYENDAS_FOTO[0],
+      icono: HeartPulse,
+    },
+  ];
+  const total = Math.max(ESCENAS.length, resto.length);
+  for (let i = 0; i < total; i += 1) {
+    const escena = ESCENAS[i];
+    if (escena) {
+      diapositivas.push({ ...escena, foto: null });
+    }
+    const foto = resto[i];
+    if (foto) {
+      diapositivas.push({
+        id: `foto-${String(i + 2).padStart(2, "0")}`,
+        escena: null,
+        foto,
+        titulo: LEYENDAS_FOTO[(i + 1) % LEYENDAS_FOTO.length],
+        icono: HeartPulse,
+      });
+    }
+  }
+  return diapositivas;
+}
 
 const variantesBarrido = {
   enter: (direccion: number) => ({
@@ -149,15 +200,12 @@ function Caption({ diapositiva }: { diapositiva: Diapositiva }) {
   );
 }
 
-export function HeroCarousel({
-  fotoUrl,
-  fotoAlt,
-}: {
-  fotoUrl: string;
-  fotoAlt: string;
-}) {
+export function HeroCarousel({ fotos }: { fotos: readonly FotoHero[] }) {
   const reduceMotion = useReducedMotion();
-  const total = DIAPOSITIVAS.length;
+  // Las fotos llegan del servidor y no cambian durante la vida de la página,
+  // pero memorizamos para no rehacer el array en cada render del autoplay.
+  const diapositivas = useMemo(() => construirDiapositivas(fotos), [fotos]);
+  const total = diapositivas.length;
 
   const [{ indice, direccion }, setEstado] = useState({ indice: 0, direccion: 1 });
 
@@ -214,7 +262,7 @@ export function HeroCarousel({
     return () => cancelAnimationFrame(raf);
   }, [indice, irA, reduceMotion, total]);
 
-  const activa = DIAPOSITIVAS[indice];
+  const activa = diapositivas[indice];
   const transicion = reduceMotion
     ? { duration: 0 }
     : { duration: 0.85, ease: [0.32, 0.72, 0, 1] as const };
@@ -242,22 +290,26 @@ export function HeroCarousel({
       >
         <div className="hc-base">
           <Image
-            src={fotoUrl}
-            alt={fotoAlt}
+            src={diapositivas[0].foto?.url ?? ""}
+            alt={diapositivas[0].foto?.alt ?? ""}
             fill
-            priority
+            // `priority` quedó obsoleto en Next 16; con varias fotos de
+            // portada solo la primera se carga con prisa (las demás son
+            // overlays perezosos y no compiten por ser el LCP).
+            loading="eager"
+            fetchPriority="high"
             draggable={false}
             sizes="(max-width: 860px) calc(100vw - 40px), 560px"
           />
           <i className="hc-scrim" aria-hidden="true" />
-          <Caption diapositiva={DIAPOSITIVAS[0]} />
+          <Caption diapositiva={diapositivas[0]} />
         </div>
 
         <AnimatePresence custom={direccion} initial={false}>
-          {activa.escena ? (
+          {indice > 0 ? (
             <motion.div
               key={activa.id}
-              className={`hc-overlay hc-scene-${activa.escena}`}
+              className={`hc-overlay ${activa.escena ? `hc-scene-${activa.escena}` : "hc-scene-foto"}`}
               aria-hidden="true"
               custom={direccion}
               variants={variantesBarrido}
@@ -266,7 +318,18 @@ export function HeroCarousel({
               exit="exit"
               transition={transicion}
             >
-              <ArteEscena escena={activa.escena} />
+              {activa.escena ? (
+                <ArteEscena escena={activa.escena} />
+              ) : activa.foto ? (
+                <Image
+                  src={activa.foto.url}
+                  alt=""
+                  fill
+                  draggable={false}
+                  sizes="(max-width: 860px) calc(100vw - 40px), 560px"
+                />
+              ) : null}
+              {activa.foto ? <i className="hc-scrim" /> : null}
               <Caption diapositiva={activa} />
             </motion.div>
           ) : null}
@@ -274,7 +337,7 @@ export function HeroCarousel({
       </motion.div>
 
       <div className="hc-progress">
-        {DIAPOSITIVAS.map((d, i) => (
+        {diapositivas.map((d, i) => (
           <button
             key={d.id}
             type="button"
